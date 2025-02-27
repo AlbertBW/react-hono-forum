@@ -32,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/create-post")({
 function CreatePost() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
   const form = useForm({
     validators: {
       onChange: insertPostSchema,
@@ -42,7 +43,7 @@ function CreatePost() {
     },
     onSubmit: async ({ value }) => {
       const existingPosts = await queryClient.ensureQueryData(
-        getAllPostsQueryOptions,
+        getAllPostsQueryOptions
       );
 
       navigate({ to: "/posts" });

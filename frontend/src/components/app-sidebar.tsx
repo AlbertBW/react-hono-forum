@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { List, Home, Orbit, Plus, Rocket, ChevronRight } from "lucide-react";
 
 import {
   Sidebar,
@@ -10,58 +10,109 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./ui/collapsible";
+import { useLocation } from "@tanstack/react-router";
+import { Dialog, DialogTrigger } from "./ui/dialog";
+import CreateCommunityDialog from "./create-community-dialog";
 
 // Menu items.
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/",
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
+    title: "Popular",
+    url: "/c/popular",
+    icon: Rocket,
   },
   {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
+    title: "Explore",
+    url: "/explore",
+    icon: Orbit,
   },
   {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
+    title: "All",
+    url: "/c/all",
+    icon: List,
   },
 ];
 
 export function AppSidebar() {
+  const location = useLocation();
+
   return (
-    <Sidebar className="h-[calc(100vh-4.6rem)] mt-[4.6rem]" collapsible="icon">
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <Dialog>
+      <Sidebar
+        className="h-[calc(100vh-3.6rem)] mt-[3.6rem]"
+        collapsible="icon"
+      >
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      className="text-lg font-normal text-muted-foreground h-10"
+                      isActive={location.pathname === item.url}
+                    >
+                      <a href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <Collapsible
+            title={"Communities"}
+            defaultOpen
+            className="group/collapsible text-muted-foreground"
+          >
+            <SidebarGroup>
+              <SidebarGroupLabel
+                asChild
+                className="group/label text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <CollapsibleTrigger>
+                  Communities
+                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={false}
+                        className="text-base font-normal h-10"
+                      >
+                        <DialogTrigger>
+                          <Plus />
+                          <span>Create a Community</span>
+                        </DialogTrigger>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        </SidebarContent>
+      </Sidebar>
+
+      {/* Create Community Dialog */}
+      <CreateCommunityDialog />
+    </Dialog>
   );
 }

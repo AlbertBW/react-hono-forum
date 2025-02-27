@@ -110,7 +110,7 @@ function PostDeleteButton({ id }: { id: PostId }) {
         (existingPosts) => ({
           ...existingPosts,
           posts: existingPosts!.posts.filter((p) => p.id !== id),
-        }),
+        })
       );
     },
   });
@@ -120,7 +120,6 @@ function PostDeleteButton({ id }: { id: PostId }) {
       onClick={() => mutation.mutate(id)}
       variant={"outline"}
       size={"icon"}
-      className="cursor-pointer"
     >
       {mutation.isPending ? (
         <Skeleton className="h-4 w-4" />

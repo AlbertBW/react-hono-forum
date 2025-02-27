@@ -12,7 +12,7 @@ export default function Header() {
 
 function NavBar() {
   return (
-    <div className="flex justify-between items-center p-2">
+    <div className="flex justify-between items-center w-screen px-2">
       <div className="flex items-center gap-2">
         <SidebarTrigger />
         <Link to="/">

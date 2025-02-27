@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { AnyFieldApi, useForm } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form";
 import {
   createPost,
   getAllPostsQueryOptions,
@@ -12,18 +12,7 @@ import {
 import { insertPostSchema } from "../../../../server/shared-types";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-function FieldInfo({ field }: { field: AnyFieldApi }) {
-  console.log(field.state.meta.errors);
-  return (
-    <div className="text-sm text-red-500 h-4">
-      {field.state.meta.isTouched && field.state.meta.errors.length ? (
-        <em>{field.state.meta.errors[0].message}</em>
-      ) : null}
-      {field.state.meta.isValidating ? "Validating..." : null}
-    </div>
-  );
-}
+import FieldInfo from "@/components/field-info";
 
 export const Route = createFileRoute("/_authenticated/create-post")({
   component: CreatePost,

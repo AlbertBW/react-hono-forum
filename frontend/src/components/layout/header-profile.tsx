@@ -28,7 +28,7 @@ export default function HeaderProfile() {
         )}
 
         <Link to="/profile" className="[&.active]:font-bold">
-          <Avatar>
+          <Avatar className="size-9">
             {session?.user.image && (
               <AvatarImage src={session.user.image} alt="@shadcn" />
             )}

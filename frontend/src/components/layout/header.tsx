@@ -4,15 +4,19 @@ import { SidebarTrigger } from "../ui/sidebar";
 
 export default function Header() {
   return (
-    <header className="border-b border-foreground/20 sticky top-0 bg-background z-10">
-      <NavBar />
-    </header>
+    <>
+      <header className="border-b border-foreground/20 fixed top-0 bg-background h-13 z-10">
+        <NavBar />
+      </header>
+
+      <div className="h-13" />
+    </>
   );
 }
 
 function NavBar() {
   return (
-    <div className="flex justify-between items-center w-screen px-2">
+    <div className="flex justify-between items-center w-screen px-4">
       <div className="flex items-center gap-2">
         <SidebarTrigger />
         <Link to="/">
@@ -20,15 +24,6 @@ function NavBar() {
         </Link>
       </div>
       <div className="p-2 flex justify-center items-center gap-2">
-        <Link to="/posts" className="[&.active]:font-bold min-w-16 text-center">
-          Posts
-        </Link>
-        <Link
-          to="/create-post"
-          className="[&.active]:font-bold min-w-24 text-center"
-        >
-          Create Post
-        </Link>
         <HeaderProfile />
       </div>
     </div>

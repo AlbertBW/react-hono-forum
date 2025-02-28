@@ -15,10 +15,13 @@ import { Route as SignInImport } from './routes/sign-in'
 import { Route as PostsImport } from './routes/posts'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
-import { Route as CNameImport } from './routes/c/$name'
+import { Route as CAllImport } from './routes/c/all'
 import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sign-out'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCreatePostImport } from './routes/_authenticated/create-post'
+import { Route as CNameIndexImport } from './routes/c/$name/index'
+import { Route as CNameIdImport } from './routes/c/$name/$id'
+import { Route as AuthenticatedCNameCreatePostImport } from './routes/_authenticated/c/$name/create-post'
 
 // Create/Update Routes
 
@@ -45,9 +48,9 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const CNameRoute = CNameImport.update({
-  id: '/c/$name',
-  path: '/c/$name',
+const CAllRoute = CAllImport.update({
+  id: '/c/all',
+  path: '/c/all',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -68,6 +71,25 @@ const AuthenticatedCreatePostRoute = AuthenticatedCreatePostImport.update({
   path: '/create-post',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+
+const CNameIndexRoute = CNameIndexImport.update({
+  id: '/c/$name/',
+  path: '/c/$name/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CNameIdRoute = CNameIdImport.update({
+  id: '/c/$name/$id',
+  path: '/c/$name/$id',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AuthenticatedCNameCreatePostRoute =
+  AuthenticatedCNameCreatePostImport.update({
+    id: '/c/$name/create-post',
+    path: '/c/$name/create-post',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -122,12 +144,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSignOutImport
       parentRoute: typeof AuthenticatedImport
     }
-    '/c/$name': {
-      id: '/c/$name'
+    '/c/all': {
+      id: '/c/all'
+      path: '/c/all'
+      fullPath: '/c/all'
+      preLoaderRoute: typeof CAllImport
+      parentRoute: typeof rootRoute
+    }
+    '/c/$name/$id': {
+      id: '/c/$name/$id'
+      path: '/c/$name/$id'
+      fullPath: '/c/$name/$id'
+      preLoaderRoute: typeof CNameIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/c/$name/': {
+      id: '/c/$name/'
       path: '/c/$name'
       fullPath: '/c/$name'
-      preLoaderRoute: typeof CNameImport
+      preLoaderRoute: typeof CNameIndexImport
       parentRoute: typeof rootRoute
+    }
+    '/_authenticated/c/$name/create-post': {
+      id: '/_authenticated/c/$name/create-post'
+      path: '/c/$name/create-post'
+      fullPath: '/c/$name/create-post'
+      preLoaderRoute: typeof AuthenticatedCNameCreatePostImport
+      parentRoute: typeof AuthenticatedImport
     }
   }
 }
@@ -138,12 +181,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCreatePostRoute: typeof AuthenticatedCreatePostRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSignOutRoute: typeof AuthenticatedSignOutRoute
+  AuthenticatedCNameCreatePostRoute: typeof AuthenticatedCNameCreatePostRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCreatePostRoute: AuthenticatedCreatePostRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSignOutRoute: AuthenticatedSignOutRoute,
+  AuthenticatedCNameCreatePostRoute: AuthenticatedCNameCreatePostRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -158,7 +203,10 @@ export interface FileRoutesByFullPath {
   '/create-post': typeof AuthenticatedCreatePostRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
-  '/c/$name': typeof CNameRoute
+  '/c/all': typeof CAllRoute
+  '/c/$name/$id': typeof CNameIdRoute
+  '/c/$name': typeof CNameIndexRoute
+  '/c/$name/create-post': typeof AuthenticatedCNameCreatePostRoute
 }
 
 export interface FileRoutesByTo {
@@ -169,7 +217,10 @@ export interface FileRoutesByTo {
   '/create-post': typeof AuthenticatedCreatePostRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
-  '/c/$name': typeof CNameRoute
+  '/c/all': typeof CAllRoute
+  '/c/$name/$id': typeof CNameIdRoute
+  '/c/$name': typeof CNameIndexRoute
+  '/c/$name/create-post': typeof AuthenticatedCNameCreatePostRoute
 }
 
 export interface FileRoutesById {
@@ -181,7 +232,10 @@ export interface FileRoutesById {
   '/_authenticated/create-post': typeof AuthenticatedCreatePostRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/sign-out': typeof AuthenticatedSignOutRoute
-  '/c/$name': typeof CNameRoute
+  '/c/all': typeof CAllRoute
+  '/c/$name/$id': typeof CNameIdRoute
+  '/c/$name/': typeof CNameIndexRoute
+  '/_authenticated/c/$name/create-post': typeof AuthenticatedCNameCreatePostRoute
 }
 
 export interface FileRouteTypes {
@@ -194,7 +248,10 @@ export interface FileRouteTypes {
     | '/create-post'
     | '/profile'
     | '/sign-out'
+    | '/c/all'
+    | '/c/$name/$id'
     | '/c/$name'
+    | '/c/$name/create-post'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -204,7 +261,10 @@ export interface FileRouteTypes {
     | '/create-post'
     | '/profile'
     | '/sign-out'
+    | '/c/all'
+    | '/c/$name/$id'
     | '/c/$name'
+    | '/c/$name/create-post'
   id:
     | '__root__'
     | '/'
@@ -214,7 +274,10 @@ export interface FileRouteTypes {
     | '/_authenticated/create-post'
     | '/_authenticated/profile'
     | '/_authenticated/sign-out'
-    | '/c/$name'
+    | '/c/all'
+    | '/c/$name/$id'
+    | '/c/$name/'
+    | '/_authenticated/c/$name/create-post'
   fileRoutesById: FileRoutesById
 }
 
@@ -223,7 +286,9 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   PostsRoute: typeof PostsRoute
   SignInRoute: typeof SignInRoute
-  CNameRoute: typeof CNameRoute
+  CAllRoute: typeof CAllRoute
+  CNameIdRoute: typeof CNameIdRoute
+  CNameIndexRoute: typeof CNameIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -231,7 +296,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   PostsRoute: PostsRoute,
   SignInRoute: SignInRoute,
-  CNameRoute: CNameRoute,
+  CAllRoute: CAllRoute,
+  CNameIdRoute: CNameIdRoute,
+  CNameIndexRoute: CNameIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -248,7 +315,9 @@ export const routeTree = rootRoute
         "/_authenticated",
         "/posts",
         "/sign-in",
-        "/c/$name"
+        "/c/all",
+        "/c/$name/$id",
+        "/c/$name/"
       ]
     },
     "/": {
@@ -259,7 +328,8 @@ export const routeTree = rootRoute
       "children": [
         "/_authenticated/create-post",
         "/_authenticated/profile",
-        "/_authenticated/sign-out"
+        "/_authenticated/sign-out",
+        "/_authenticated/c/$name/create-post"
       ]
     },
     "/posts": {
@@ -280,8 +350,18 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/sign-out.tsx",
       "parent": "/_authenticated"
     },
-    "/c/$name": {
-      "filePath": "c/$name.tsx"
+    "/c/all": {
+      "filePath": "c/all.tsx"
+    },
+    "/c/$name/$id": {
+      "filePath": "c/$name/$id.tsx"
+    },
+    "/c/$name/": {
+      "filePath": "c/$name/index.tsx"
+    },
+    "/_authenticated/c/$name/create-post": {
+      "filePath": "_authenticated/c/$name/create-post.tsx",
+      "parent": "/_authenticated"
     }
   }
 }

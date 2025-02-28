@@ -26,6 +26,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import SignInForm from "./auth/sign-in-form";
 import { useSession } from "@/lib/auth-client";
+import { useSidebar } from "./ui/sidebar";
 
 export default function CreateCommunityDialog() {
   const { data: session, isPending: sessionPending } = useSession();
@@ -33,6 +34,7 @@ export default function CreateCommunityDialog() {
   const [name, setName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { setOpenMobile } = useSidebar();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -267,7 +269,11 @@ export default function CreateCommunityDialog() {
             selector={(state) => [state.canSubmit, state.isSubmitting]}
             children={([canSubmit, isSubmitting]) => (
               <DialogTrigger disabled={!canSubmit}>
-                <Button type="submit" disabled={!canSubmit}>
+                <Button
+                  type="submit"
+                  disabled={!canSubmit}
+                  onClick={() => setOpenMobile(false)}
+                >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center gap-2">
                       <LoadingSpinner /> Loading

@@ -2,6 +2,7 @@ import { hc } from "hono/client";
 import type { ApiRoutes } from "../../../server/app";
 import { queryOptions } from "@tanstack/react-query";
 import {
+  CommunityId,
   CreateCommunity,
   PostId,
   type CreatePost,
@@ -70,7 +71,7 @@ export const getAllCommunitiesQueryOptions = queryOptions({
 
 export type PostCard = Awaited<
   ReturnType<typeof getCommunityByName>
->["postsData"][number];
+>["posts"][number];
 export async function getCommunityByName(name: string) {
   const res = await api.communities[":name"].$get({ param: { name } });
   console.log(res.status);
@@ -116,4 +117,18 @@ export async function createCommunity({ value }: { value: CreateCommunity }) {
 
   const newCommunity = await res.json();
   return newCommunity;
+}
+
+export async function joinCommunity(id: CommunityId) {
+  const res = await api.communities.follow[":id"].$post({ param: { id } });
+  if (!res.ok) {
+    throw new Error("Failed to join community");
+  }
+}
+
+export async function leaveCommunity(id: CommunityId) {
+  const res = await api.communities.follow[":id"].$delete({ param: { id } });
+  if (!res.ok) {
+    throw new Error("Failed to join community");
+  }
 }

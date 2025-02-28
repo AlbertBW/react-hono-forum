@@ -1,4 +1,4 @@
-import { List, Home, Orbit, Plus, Rocket, ChevronRight } from "lucide-react";
+import { List, Home, Orbit, Plus, ChevronRight } from "lucide-react";
 
 import {
   Sidebar,
@@ -23,6 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllCommunitiesQueryOptions } from "@/lib/api";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useRef } from "react";
 
 // Menu items.
 const items = [
@@ -32,13 +33,8 @@ const items = [
     icon: Home,
   },
   {
-    title: "Popular",
-    url: "/c/popular",
-    icon: Rocket,
-  },
-  {
-    title: "Explore",
-    url: "/explore",
+    title: "Communites",
+    url: "/communities",
     icon: Orbit,
   },
   {
@@ -51,15 +47,13 @@ const items = [
 export function AppSidebar() {
   const location = useLocation();
   const { isPending, error, data } = useQuery(getAllCommunitiesQueryOptions);
+  const dialogTriggerRef = useRef<HTMLButtonElement>(null);
 
   const { open } = useSidebar();
 
   return (
     <Dialog>
-      <Sidebar
-        className="h-[calc(100vh-3.6rem)] mt-[3.6rem]"
-        collapsible="icon"
-      >
+      <Sidebar className="h-[calc(100vh-3.22rem)] mt-[52px]" collapsible="icon">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
@@ -104,11 +98,12 @@ export function AppSidebar() {
                         asChild
                         isActive={false}
                         className="text-base font-normal h-10"
+                        onClick={() => dialogTriggerRef.current?.click()}
                       >
-                        <DialogTrigger>
+                        <button type="button">
                           <Plus />
                           <span>Create a Community</span>
-                        </DialogTrigger>
+                        </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     {isPending ? (
@@ -184,6 +179,12 @@ export function AppSidebar() {
           </Collapsible>
         </SidebarContent>
       </Sidebar>
+
+      <DialogTrigger asChild>
+        <button ref={dialogTriggerRef} className="hidden" aria-hidden="true">
+          Open Dialog
+        </button>
+      </DialogTrigger>
 
       {/* Create Community Dialog */}
       <CreateCommunityDialog />

@@ -8,6 +8,7 @@ import {
   index,
   integer,
   pgTableCreator,
+  primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
@@ -105,4 +106,37 @@ export const community = pgTable(
 
 export const communityRelations = relations(community, ({ many }) => ({
   posts: many(post),
+  followers: many(communityFollow),
 }));
+
+export const communityFollow = pgTable(
+  "community_follow",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    communityId: text("community_id")
+      .notNull()
+      .references(() => community.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.communityId],
+    }),
+  ]
+);
+
+export const communityFollowRelations = relations(
+  communityFollow,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [communityFollow.userId],
+      references: [user.id],
+    }),
+    community: one(community, {
+      fields: [communityFollow.communityId],
+      references: [community.id],
+    }),
+  })
+);

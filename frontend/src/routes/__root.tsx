@@ -15,18 +15,16 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function Root() {
   return (
-    <>
-      <SidebarProvider className="flex flex-col">
-        <Header />
-        <div className="flex flex-row h-[calc(100vh-4.6rem)]">
-          <AppSidebar />
+    <SidebarProvider className="flex flex-col">
+      <Header />
+      <div className="flex flex-row h-[calc(100vh-4.6rem)]">
+        <AppSidebar />
 
-          <div className="h-[calc(100vh-4.6rem)] w-full">
-            <Outlet />
-          </div>
+        <div className="h-[calc(100vh-4.6rem)] w-full">
+          <Outlet />
         </div>
-        <Toaster />
-      </SidebarProvider>
-    </>
+      </div>
+      <Toaster />
+    </SidebarProvider>
   );
 }

@@ -10,7 +10,13 @@ export const insertPostSchema = createInsertSchema(post, {
     .string()
     .min(10, "Content must be at least 10 characters")
     .max(1000),
-}).omit({ userId: true, id: true, createdAt: true, updatedAt: true });
+  communityId: z.string().uuid(),
+}).omit({
+  userId: true,
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 export type CreatePost = z.infer<typeof insertPostSchema>;
 
 export const postIdSchema = z.object({ id: z.string().uuid() });
@@ -36,3 +42,4 @@ export const insertCommunitySchema = createInsertSchema(community, {
   isPrivate: z.boolean(),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 export type CreateCommunity = z.infer<typeof insertCommunitySchema>;
+export type CommunityId = Community["id"];

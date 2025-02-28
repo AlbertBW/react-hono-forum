@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { signIn } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function SignInForm() {
   return (
@@ -23,17 +24,23 @@ export default function SignInForm() {
           <div
             className={cn(
               "w-full gap-2 flex items-center",
-              "justify-between flex-col",
+              "justify-between flex-col"
             )}
           >
             <Button
               variant="outline"
               className={cn("w-full gap-2 cursor-pointer")}
               onClick={async () => {
-                await signIn.social({
+                const { error } = await signIn.social({
                   provider: "github",
                   callbackURL: "/",
                 });
+
+                if (error) {
+                  toast.error("Failed to sign in with GitHub", {
+                    description: error.statusText,
+                  });
+                }
               }}
             >
               <svg
@@ -53,10 +60,16 @@ export default function SignInForm() {
               variant="outline"
               className={cn("w-full gap-2 cursor-pointer")}
               onClick={async () => {
-                await signIn.social({
+                const { error } = await signIn.social({
                   provider: "google",
                   callbackURL: "/",
                 });
+
+                if (error) {
+                  toast.error("Failed to sign in with Google", {
+                    description: error.statusText,
+                  });
+                }
               }}
             >
               <svg

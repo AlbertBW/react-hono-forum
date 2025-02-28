@@ -3,14 +3,26 @@ import type { AppVariables } from "../app";
 import { requireAuth } from "./auth";
 import { zValidator } from "@hono/zod-validator";
 import { insertCommunitySchema } from "../shared-types";
-import { community, post, user } from "../db/schema";
+import { community, communityFollow, post, user } from "../db/schema";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
-import { username } from "better-auth/plugins";
+import { and, eq, sql } from "drizzle-orm";
 
 export const communitiesRoute = new Hono<AppVariables>()
   .get("/", async (c) => {
-    const communities = await db.query.community.findMany();
+    const communities = await db.query.community.findMany({
+      extras: {
+        postCount: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${post} p 
+          WHERE p.community_id = ${community.id})`.as("postCount"),
+        userCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${communityFollow} u
+          WHERE u.community_id = ${community.id})`.as("userCount"),
+      },
+    });
+
+    console.log(communities);
     return c.json(communities);
   })
   .post(
@@ -49,14 +61,40 @@ export const communitiesRoute = new Hono<AppVariables>()
         isPrivate: true,
         createdAt: true,
       },
+      extras: {
+        postCount: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${post} p 
+          WHERE p.community_id = ${community.id})`.as("postCount"),
+        userCount: sql<number>`(
+          SELECT COUNT(*)
+          FROM ${communityFollow} u
+          WHERE u.community_id = ${community.id})`.as("userCount"),
+      },
     });
 
     if (!communityData) {
       return c.json({ error: "not found" }, 404);
     }
 
-    if (communityData.isPrivate) {
-      return c.json({ communityData, postsData: [] });
+    const follow = session
+      ? await db.query.communityFollow.findFirst({
+          where: eq(communityFollow.userId, session.userId),
+        })
+      : undefined;
+
+    let isFollowing = false;
+    if (follow) {
+      isFollowing = follow.communityId === communityData.id;
+    }
+
+    const communityDataWithFollow = {
+      ...communityData,
+      isFollowing,
+    };
+
+    if (communityDataWithFollow.isPrivate && !isFollowing) {
+      return c.json({ community: communityDataWithFollow, posts: [] });
     }
 
     const posts = await db
@@ -74,8 +112,58 @@ export const communitiesRoute = new Hono<AppVariables>()
       communityName: communityData.name,
     }));
 
-    return c.json({ communityData, postsData });
+    return c.json({ community: communityDataWithFollow, posts: postsData });
   })
-  .delete("/:id", requireAuth, async (c) => {
-    return c.json({ community: null });
+  .post("/follow/:id", requireAuth, async (c) => {
+    const user = c.var.user;
+
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const id = c.req.param("id");
+
+    const communityExists = await db.query.community.findFirst({
+      where: eq(community.id, id),
+    });
+
+    if (!communityExists) {
+      return c.json({ error: "Community not found" }, 404);
+    }
+
+    const [follow] = await db
+      .insert(communityFollow)
+      .values({
+        userId: user.id,
+        communityId: id,
+      })
+      .returning();
+
+    return c.json(follow);
+  })
+  .delete("/follow/:id", requireAuth, async (c) => {
+    const user = c.var.user;
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    const id = c.req.param("id");
+    const follow = await db.query.communityFollow.findFirst({
+      where: and(
+        eq(communityFollow.userId, user.id),
+        eq(communityFollow.communityId, id)
+      ),
+    });
+    if (!follow) {
+      return c.json({ error: "Not following community" }, 404);
+    }
+    const [deleted] = await db
+      .delete(communityFollow)
+      .where(
+        and(
+          eq(communityFollow.userId, user.id),
+          eq(communityFollow.communityId, id)
+        )
+      )
+      .returning();
+    return c.json(deleted);
   });

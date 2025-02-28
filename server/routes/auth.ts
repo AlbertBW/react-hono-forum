@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { auth } from "../auth";
-import { type Session, type User } from "better-auth";
 import { createMiddleware } from "hono/factory";
 import type { AppVariables } from "../app";
 

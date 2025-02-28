@@ -1,7 +1,11 @@
 import { hc } from "hono/client";
 import type { ApiRoutes } from "../../../server/app";
 import { queryOptions } from "@tanstack/react-query";
-import { PostId, type CreatePost } from "../../../server/shared-types";
+import {
+  CreateCommunity,
+  PostId,
+  type CreatePost,
+} from "../../../server/shared-types";
 
 const client = hc<ApiRoutes>("/");
 
@@ -48,6 +52,45 @@ export async function createPost({ value }: { value: CreatePost }) {
   return newPost;
 }
 
+export async function getAllCommunities() {
+  const res = await api.communities.$get();
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch communities");
+  }
+  const data = await res.json();
+  return data;
+}
+
+export const getAllCommunitiesQueryOptions = queryOptions({
+  queryKey: ["get-all-communities"],
+  queryFn: getAllCommunities,
+  staleTime: 1000 * 60 * 5,
+});
+
+export type PostCard = Awaited<
+  ReturnType<typeof getCommunityByName>
+>["postsData"][number];
+export async function getCommunityByName(name: string) {
+  const res = await api.communities[":name"].$get({ param: { name } });
+  console.log(res.status);
+  if (!res.ok) {
+    throw new Error("Failed to fetch community");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
+export const getCommunityQueryOptions = (name: string) => {
+  return queryOptions({
+    queryKey: ["get-community", name],
+    queryFn: () => getCommunityByName(name),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+};
+
 export const loadingCreatePostQueryOptions = queryOptions<{
   post?: CreatePost;
 }>({
@@ -63,4 +106,14 @@ export async function deletePost(id: PostId) {
   if (!res.ok) {
     throw new Error("Failed to delete post");
   }
+}
+
+export async function createCommunity({ value }: { value: CreateCommunity }) {
+  const res = await api.communities.$post({ json: value });
+  if (!res.ok) {
+    throw new Error("Failed to create community");
+  }
+
+  const newCommunity = await res.json();
+  return newCommunity;
 }

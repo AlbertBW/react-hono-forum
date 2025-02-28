@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-
 import { insertPostSchema, postIdSchema } from "../shared-types";
 import { post } from "../db/schema";
 import { db } from "../db";
@@ -9,16 +8,9 @@ import { desc, eq } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
 
-const postSchema = z.object({
-  id: z.number().int().positive().min(1),
-  title: z.string().min(3).max(100),
-  content: z.string().min(3).max(1000),
-});
-
 export const postsRoute = new Hono<AppVariables>()
   .get("/", async (c) => {
     const user = c.var.user;
-    console.log(user);
     const posts = await db.query.post.findMany({
       orderBy: desc(post.createdAt),
     });
@@ -47,7 +39,7 @@ export const postsRoute = new Hono<AppVariables>()
     });
 
     if (!post) {
-      return c.notFound();
+      return c.json({ error: "not found" }, 404);
     }
 
     return c.json({ post: null });
@@ -66,7 +58,7 @@ export const postsRoute = new Hono<AppVariables>()
     });
 
     if (!userPost) {
-      return c.notFound();
+      return c.json({ error: "not found" }, 404);
     }
 
     const [deletedPost] = await db

@@ -16,9 +16,7 @@ function NavBar() {
       <div className="flex items-center gap-2">
         <SidebarTrigger />
         <Link to="/">
-          <h1 className="text-base sm:text-2xl font-bold font-mono">
-            react-hono-forum
-          </h1>
+          <h1 className="text-base sm:text-2xl font-bold font-mono">RHForum</h1>
         </Link>
       </div>
       <div className="p-2 flex justify-center items-center gap-2">

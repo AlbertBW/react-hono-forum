@@ -1,4 +1,3 @@
-import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "./ui/button";
 import {
   DialogContent,
@@ -6,6 +5,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "./ui/dialog";
 import { useForm } from "@tanstack/react-form";
 import { insertCommunitySchema } from "../../../server/shared-types";
@@ -19,19 +19,20 @@ import { convertImageToBase64, resizeBase64Image } from "@/lib/utils";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { LoadingSpinner } from "./ui/spinner";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Card } from "./ui/card";
+import { createCommunity } from "@/lib/api";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import SignInForm from "./auth/sign-in-form";
+import { useSession } from "@/lib/auth-client";
 
 export default function CreateCommunityDialog() {
-  return (
-    <DialogContent>
-      <CreateDialogForm />
-    </DialogContent>
-  );
-}
-
-function CreateDialogForm() {
+  const { data: session, isPending: sessionPending } = useSession();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [name, setName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,17 +53,37 @@ function CreateDialogForm() {
       name: "",
       description: "",
       icon: "",
+      isPrivate: false,
     },
     onSubmit: async ({ value }) => {
-      console.log(value);
+      try {
+        const newCommunity = await createCommunity({ value });
+
+        toast.success("Community created", {
+          description: `Successfully created community: ${newCommunity.name}`,
+        });
+        navigate({ to: `/c/${newCommunity.name}` });
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
+
+  if (sessionPending) return null;
+
+  if (!session)
+    return (
+      <DialogContent>
+        <SignInForm />
+      </DialogContent>
+    );
+
   return (
-    <>
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Create a community</DialogTitle>
         <DialogDescription>
-          A name and description for your community.
+          Add a name and description to create a new community.
         </DialogDescription>
       </DialogHeader>
       <form
@@ -188,6 +209,56 @@ function CreateDialogForm() {
             </div>
           )}
         />
+
+        <form.Field
+          name="isPrivate"
+          children={(field) => (
+            <div className="py-2">
+              <Label className="text-base font-medium">Privacy Setting</Label>
+              <RadioGroup
+                defaultValue={field.state.value ? "true" : "false"}
+                onValueChange={(value) => field.handleChange(value === "true")}
+                className="mt-2"
+              >
+                <Card
+                  className={`border transition-all py-2 ${!field.state.value ? "border-primary" : ""}`}
+                >
+                  <label
+                    htmlFor="public"
+                    className="flex items-center gap-3 p-0 px-4 cursor-pointer"
+                  >
+                    <RadioGroupItem value="false" id="public" />
+                    <div>
+                      <p className="font-medium">Public</p>
+                      <p className="text-sm text-muted-foreground">
+                        Anyone can view, post, and comment to this community
+                      </p>
+                    </div>
+                  </label>
+                </Card>
+
+                <Card
+                  className={`border transition-all py-2 ${field.state.value ? "border-primary" : ""}`}
+                >
+                  <label
+                    htmlFor="private"
+                    className="flex items-center gap-3 p-0 px-4 cursor-pointer"
+                  >
+                    <RadioGroupItem value="true" id="private" />
+                    <div>
+                      <p className="font-medium">Private</p>
+                      <p className="text-sm text-muted-foreground">
+                        Only approved users can view and contribute
+                      </p>
+                    </div>
+                  </label>
+                </Card>
+              </RadioGroup>
+
+              <FieldInfo field={field} />
+            </div>
+          )}
+        />
         <DialogFooter>
           <DialogTrigger>
             <Button variant={"outline"}>Cancel</Button>
@@ -195,19 +266,21 @@ function CreateDialogForm() {
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
             children={([canSubmit, isSubmitting]) => (
-              <Button type="submit" disabled={!canSubmit}>
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <LoadingSpinner /> Loading
-                  </div>
-                ) : (
-                  `Create Community`
-                )}
-              </Button>
+              <DialogTrigger disabled={!canSubmit}>
+                <Button type="submit" disabled={!canSubmit}>
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <LoadingSpinner /> Loading
+                    </div>
+                  ) : (
+                    `Create Community`
+                  )}
+                </Button>
+              </DialogTrigger>
             )}
           />
         </DialogFooter>
       </form>
-    </>
+    </DialogContent>
   );
 }

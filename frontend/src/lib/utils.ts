@@ -45,3 +45,20 @@ export async function resizeBase64Image(base64: string) {
     };
   });
 }
+
+export function getPostTime(createdAt: string) {
+  const createdAtDate = new Date(createdAt);
+  const diffInMinutes = Math.floor(
+    (Date.now() - createdAtDate.getTime()) / 1000 / 60
+  );
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInDays >= 1) {
+    return createdAtDate.toLocaleDateString();
+  }
+  if (diffInHours >= 1) {
+    return `${diffInHours}h`;
+  }
+  return `${diffInMinutes}m`;
+}

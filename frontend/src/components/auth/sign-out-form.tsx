@@ -9,12 +9,8 @@ import {
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-// import { useQueryClient } from "@tanstack/react-query";
-// import { userQueryOptions } from "@/lib/api";
-
 export default function SignOutForm() {
   const navigate = useNavigate();
-  // const queryClient = useQueryClient();
 
   return (
     <Card className="max-w-md">
@@ -33,9 +29,6 @@ export default function SignOutForm() {
               await signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    // queryClient.invalidateQueries({
-                    //   queryKey: userQueryOptions.queryKey,
-                    // });
                     navigate({ to: "/" });
                   },
                 },

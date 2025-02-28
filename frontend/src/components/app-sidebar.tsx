@@ -9,15 +9,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
-import { useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Dialog, DialogTrigger } from "./ui/dialog";
 import CreateCommunityDialog from "./create-community-dialog";
+import { useQuery } from "@tanstack/react-query";
+import { getAllCommunitiesQueryOptions } from "@/lib/api";
+import { Skeleton } from "./ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 // Menu items.
 const items = [
@@ -45,6 +50,9 @@ const items = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const { isPending, error, data } = useQuery(getAllCommunitiesQueryOptions);
+
+  const { open } = useSidebar();
 
   return (
     <Dialog>
@@ -63,10 +71,10 @@ export function AppSidebar() {
                       className="text-lg font-normal text-muted-foreground h-10"
                       isActive={location.pathname === item.url}
                     >
-                      <a href={item.url}>
+                      <Link to={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -103,6 +111,72 @@ export function AppSidebar() {
                         </DialogTrigger>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    {isPending ? (
+                      Array(3)
+                        .fill(0)
+                        .map((_, i) => (
+                          <SidebarMenuItem key={i}>
+                            <SidebarMenuButton
+                              asChild
+                              className="text-base font-normal h-10"
+                            >
+                              <Skeleton />
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))
+                    ) : error ? (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          className="text-base font-normal h-10"
+                        >
+                          <span>Error</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ) : (
+                      data.map((community) => (
+                        <SidebarMenuItem key={community.id}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={
+                              location.pathname === `/c/${community.name}`
+                            }
+                            className="text-base font-normal h-10"
+                          >
+                            <Link
+                              to={`/c/$name`}
+                              params={{ name: community.name }}
+                            >
+                              {community.icon ? (
+                                <Avatar
+                                  className={`${open ? "size-8" : "size-4"} transition-all`}
+                                >
+                                  <AvatarImage
+                                    src={community.icon}
+                                    alt={`${community.name} icon`}
+                                  />
+                                </Avatar>
+                              ) : (
+                                <Avatar
+                                  className={`bg-zinc-800 flex justify-center items-center transition-all ${
+                                    open ? "size-8" : "size-4 text-transparent"
+                                  }`}
+                                >
+                                  <AvatarFallback>
+                                    {community.name
+                                      ? community.name
+                                          .substring(0, 3)
+                                          .toUpperCase()
+                                      : ""}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                              <span>{community.name}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </CollapsibleContent>

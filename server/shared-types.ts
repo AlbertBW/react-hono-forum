@@ -33,5 +33,6 @@ export const insertCommunitySchema = createInsertSchema(community, {
     .min(10, "Description must be at least 10 characters")
     .max(1000),
   icon: z.string(),
+  isPrivate: z.boolean(),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 export type CreateCommunity = z.infer<typeof insertCommunitySchema>;

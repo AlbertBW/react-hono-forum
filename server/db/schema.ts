@@ -1,7 +1,16 @@
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
-import { boolean, pgTableCreator, text, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import {
+  relations,
+  type InferInsertModel,
+  type InferSelectModel,
+} from "drizzle-orm";
+import {
+  boolean,
+  index,
+  integer,
+  pgTableCreator,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 const pgTable = pgTableCreator((name) => `rhf_${name}`);
 
@@ -65,18 +74,35 @@ export const post = pgTable("post", {
   communityId: text("community_id")
     .notNull()
     .references(() => community.id, { onDelete: "cascade" }),
+  upvotes: integer().default(0).notNull(),
+  downvotes: integer().default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const community = pgTable("community", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
-  description: text("description"),
-  icon: text("icon"),
-  isPrivate: boolean("is_private").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const postRelations = relations(post, ({ one }) => ({
+  user: one(user, {
+    fields: [post.userId],
+    references: [user.id],
+  }),
+}));
+
+export const community = pgTable(
+  "community",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull().unique(),
+    description: text("description"),
+    icon: text("icon"),
+    isPrivate: boolean("is_private").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [index("community_name_idx").on(table.name)]
+);
+
+export const communityRelations = relations(community, ({ many }) => ({
+  posts: many(post),
+}));

@@ -24,6 +24,7 @@ import { getAllCommunitiesQueryOptions } from "@/lib/api";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useRef } from "react";
+import { randomGradient } from "@/lib/common-styles";
 
 // Menu items.
 const items = [
@@ -157,13 +158,9 @@ export function AppSidebar() {
                                     open ? "size-8" : "size-4 text-transparent"
                                   }`}
                                 >
-                                  <AvatarFallback>
-                                    {community.name
-                                      ? community.name
-                                          .substring(0, 3)
-                                          .toUpperCase()
-                                      : ""}
-                                  </AvatarFallback>
+                                  <AvatarFallback
+                                    className={`${randomGradient()}`}
+                                  ></AvatarFallback>
                                 </Avatar>
                               )}
                               <span>{community.name}</span>

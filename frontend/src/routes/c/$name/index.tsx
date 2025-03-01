@@ -4,34 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSpinner } from "@/components/ui/spinner";
-import {
-  getCommunityQueryOptions,
-  joinCommunity,
-  leaveCommunity,
-} from "@/lib/api";
+import { getCommunityQueryOptions } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
-import { randomBanner } from "@/lib/common-styles";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { randomGradient } from "@/lib/common-styles";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Cake, Globe, Lock, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
-import { toast } from "sonner";
+import Aside from "@/components/layout/aside";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { CommunityId } from "../../../../../server/shared-types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  JoinButton,
+  LeaveCommunity,
+} from "@/components/buttons/join-leave-community";
 
 export const Route = createFileRoute("/c/$name/")({
   component: CommunityPage,
@@ -59,7 +43,8 @@ function CommunityPage() {
       </div>
     );
   }
-  const banner = randomBanner();
+  const banner = randomGradient();
+  const background = randomGradient();
 
   const { community, posts } = data || {};
 
@@ -86,14 +71,10 @@ function CommunityPage() {
               </Avatar>
             ) : (
               <Avatar
-                className={`flex justify-center items-center size-14 md:size-20 lg:size-26 text-xl bg-black`}
+                className={`flex justify-center items-center size-14 md:size-20 lg:size-26 text-xl `}
               >
-                <AvatarFallback>
-                  {community && community.name ? (
-                    community.name.substring(0, 3).toUpperCase()
-                  ) : (
-                    <Skeleton />
-                  )}
+                <AvatarFallback className={`${background}`}>
+                  <Skeleton />
                 </AvatarFallback>
               </Avatar>
             )}
@@ -159,153 +140,8 @@ function CommunityPage() {
             </div>
           )}
         </main>
-        {isPending ? null : community ? (
-          <aside className="sticky top-18 self-start lg:w-md h-fit ml-2 hidden md:block">
-            <Card className="py-3">
-              <CardHeader className="px-4">
-                <CardTitle className="text-base text-accent-foreground/80">
-                  c/{community?.name}
-                </CardTitle>
-                <CardDescription>{community?.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="px-4">
-                <div className="text-xs text-muted-foreground flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <Cake size={20} />
-                    <span>
-                      Created{" "}
-                      {new Date(community.createdAt)
-                        .toDateString()
-                        .split(" ")
-                        .slice(1)
-                        .join(" ")}
-                    </span>
-                  </div>
-                  {community.isPrivate ? (
-                    <div className="flex items-center gap-2">
-                      <Lock size={20} />
-                      <span>Private</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Globe size={20} />
-                      <span>Public</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2">
-                  <div className="flex flex-col py-4 w-fit">
-                    <span>{community.userCount}</span>
-                    <span className="text-sm text-muted-foreground">
-                      Member{community.userCount > 1 && "s"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col py-4">
-                    <span>{community.postCount}</span>
-                    <span className="text-sm text-muted-foreground">
-                      Post{community.userCount > 1 && "s"}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </aside>
-        ) : null}
+        {isPending ? null : community ? <Aside community={community} /> : null}
       </div>
     </div>
-  );
-}
-
-function JoinButton({ id, name }: { id: CommunityId; name: string }) {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: joinCommunity,
-    onError: () => {
-      toast.error("Error", { description: `Failed to join ${name}` });
-    },
-    onSuccess: async () => {
-      toast.success(`Joined ${name}`, {
-        description: `Successfully joined ${name}!`,
-      });
-
-      const existingData = await queryClient.ensureQueryData(
-        getCommunityQueryOptions(name)
-      );
-
-      queryClient.setQueryData(getCommunityQueryOptions(name).queryKey, {
-        ...existingData,
-        community: {
-          ...existingData.community,
-          isFollowing: true,
-        },
-      });
-    },
-  });
-  return (
-    <Button
-      className="w-18"
-      disabled={mutation.isPending || !id}
-      onClick={() => mutation.mutate(id)}
-    >
-      {mutation.isPending ? <LoadingSpinner /> : "Join"}
-    </Button>
-  );
-}
-
-function LeaveCommunity({ id, name }: { id: CommunityId; name: string }) {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: leaveCommunity,
-    onError: () => {
-      toast.error("Error", { description: `Failed to leave ${name}` });
-    },
-    onSuccess: async () => {
-      toast.success(`You've left ${name}`, {
-        description: `Successfully left ${name}!`,
-      });
-
-      const existingData = await queryClient.ensureQueryData(
-        getCommunityQueryOptions(name)
-      );
-
-      queryClient.setQueryData(getCommunityQueryOptions(name).queryKey, {
-        ...existingData,
-        community: {
-          ...existingData.community,
-          isFollowing: false,
-        },
-      });
-    },
-  });
-  return (
-    <Dialog>
-      <DialogTrigger>
-        <Button className="w-18" variant={"outline"}>
-          Joined
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader className="pb-4">
-          <DialogTitle>Are you sure you want to leave {name}?</DialogTitle>
-        </DialogHeader>
-        <DialogFooter className="flex justify-end gap-2">
-          <Button
-            variant={"destructive"}
-            className="w-18"
-            disabled={mutation.isPending || !id}
-            onClick={() => mutation.mutate(id)}
-          >
-            {mutation.isPending ? <LoadingSpinner /> : "Leave"}
-          </Button>
-
-          <DialogTrigger>
-            <Button className="w-18" variant={"outline"}>
-              Cancel
-            </Button>
-          </DialogTrigger>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

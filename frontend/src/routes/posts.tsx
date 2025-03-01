@@ -17,8 +17,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Trash } from "lucide-react";
-import { PostId } from "../../../server/shared-types";
 import { toast } from "sonner";
+import { PostId } from "../../../server/db/schema";
 
 export const Route = createFileRoute("/posts")({
   component: RouteComponent,

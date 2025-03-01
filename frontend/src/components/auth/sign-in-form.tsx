@@ -10,9 +10,13 @@ import { signIn } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-export default function SignInForm() {
+export default function SignInForm({
+  borderHidden = false,
+}: {
+  borderHidden?: boolean;
+}) {
   return (
-    <Card className="max-w-md">
+    <Card className={`max-w-md ${borderHidden ? "border-0" : ""}`}>
       <CardHeader>
         <CardTitle className="text-lg md:text-xl">Sign In</CardTitle>
         <CardDescription className="text-xs md:text-sm">

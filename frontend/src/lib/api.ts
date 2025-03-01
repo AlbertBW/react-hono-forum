@@ -2,11 +2,11 @@ import { hc } from "hono/client";
 import type { ApiRoutes } from "../../../server/app";
 import { queryOptions } from "@tanstack/react-query";
 import {
-  CommunityId,
-  CreateCommunity,
+  CreatePost,
   PostId,
-  type CreatePost,
-} from "../../../server/shared-types";
+  CreateCommunity,
+  CommunityId,
+} from "../../../server/db/schema";
 
 const client = hc<ApiRoutes>("/");
 
@@ -63,6 +63,23 @@ export async function getAllCommunities() {
   return data;
 }
 
+export async function getPostById(id: PostId) {
+  const res = await api.posts[":id"].$get({ param: { id } });
+  if (!res.ok) {
+    throw new Error("Failed to fetch post");
+  }
+  const data = await res.json();
+  return data;
+}
+
+export const getPostQueryOptions = (id: PostId) =>
+  queryOptions({
+    queryKey: ["get-post", id],
+    queryFn: () => getPostById(id),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+
 export const getAllCommunitiesQueryOptions = queryOptions({
   queryKey: ["get-all-communities"],
   queryFn: getAllCommunities,
@@ -72,6 +89,9 @@ export const getAllCommunitiesQueryOptions = queryOptions({
 export type PostCard = Awaited<
   ReturnType<typeof getCommunityByName>
 >["posts"][number];
+export type Community = Awaited<
+  ReturnType<typeof getCommunityByName>
+>["community"];
 export async function getCommunityByName(name: string) {
   const res = await api.communities[":name"].$get({ param: { name } });
   console.log(res.status);
@@ -131,4 +151,42 @@ export async function leaveCommunity(id: CommunityId) {
   if (!res.ok) {
     throw new Error("Failed to join community");
   }
+}
+
+export async function createVote(id: PostId, value: number) {
+  const res = await api.posts[":id"].vote[":value"].$post({
+    param: { id, value: value.toString() },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to vote");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
+export async function deleteVote(id: PostId) {
+  const res = await api.posts[":id"].vote.$delete({ param: { id } });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete vote");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
+export async function updateVote(id: PostId, value: number) {
+  console.log("create vote", id, value);
+  const res = await api.posts[":id"].vote[":value"].$put({
+    param: { id, value: value.toString() },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update vote");
+  }
+
+  const data = await res.json();
+  return data;
 }

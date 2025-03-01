@@ -11,7 +11,10 @@ import {
   primaryKey,
   text,
   timestamp,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
 const pgTable = pgTableCreator((name) => `rhf_${name}`);
 
@@ -75,16 +78,49 @@ export const post = pgTable("post", {
   communityId: text("community_id")
     .notNull()
     .references(() => community.id, { onDelete: "cascade" }),
-  upvotes: integer().default(0).notNull(),
-  downvotes: integer().default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const postRelations = relations(post, ({ one }) => ({
+export const postRelations = relations(post, ({ one, many }) => ({
   user: one(user, {
     fields: [post.userId],
     references: [user.id],
+  }),
+  community: one(community, {
+    fields: [post.communityId],
+    references: [community.id],
+  }),
+  votes: many(postVote),
+}));
+
+export const postVote = pgTable(
+  "post_vote",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "set null" }),
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    value: integer("value").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.postId],
+    }),
+  ]
+);
+
+export const postVoteRelations = relations(postVote, ({ one }) => ({
+  user: one(user, {
+    fields: [postVote.userId],
+    references: [user.id],
+  }),
+  post: one(post, {
+    fields: [postVote.postId],
+    references: [post.id],
   }),
 }));
 
@@ -140,3 +176,72 @@ export const communityFollowRelations = relations(
     }),
   })
 );
+
+export const comment = pgTable("comment", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  content: text("content").notNull(),
+  userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+  postId: text("post_id").references(() => post.id, { onDelete: "cascade" }),
+  parentId: text("parent_id").references((): AnyPgColumn => comment.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const commentRelations = relations(comment, ({ one, many }) => ({
+  user: one(user, {
+    fields: [comment.userId],
+    references: [user.id],
+  }),
+  post: one(post, {
+    fields: [comment.postId],
+    references: [post.id],
+  }),
+  parent: one(comment, {
+    fields: [comment.parentId],
+    references: [comment.id],
+  }),
+  replies: many(comment, { relationName: "parent" }),
+}));
+
+export type Post = InferSelectModel<typeof post>;
+export const insertPostSchema = createInsertSchema(post, {
+  title: z.string().min(3, "Title must be at least 3 characters").max(100),
+  content: z
+    .string()
+    .min(10, "Content must be at least 10 characters")
+    .max(1000),
+  communityId: z.string().uuid(),
+}).omit({
+  userId: true,
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CreatePost = z.infer<typeof insertPostSchema>;
+
+export const postIdSchema = z.object({ id: z.string().uuid() });
+export type PostId = Post["id"];
+
+export type Community = InferSelectModel<typeof community>;
+export const insertCommunitySchema = createInsertSchema(community, {
+  name: z
+    .string()
+    .min(3, "Name must be at least 3 characters")
+    .max(30, "Name must be no more than 30 characters")
+    .refine((name) => !name.includes(" "), {
+      message: "Name cannot contain spaces",
+    })
+    .refine((name) => /^[a-zA-Z0-9]+$/.test(name), {
+      message: "Name can only contain letters and numbers",
+    }),
+  description: z
+    .string()
+    .min(10, "Description must be at least 10 characters")
+    .max(1000),
+  icon: z.string(),
+  isPrivate: z.boolean(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
+export type CreateCommunity = z.infer<typeof insertCommunitySchema>;
+export type CommunityId = Community["id"];

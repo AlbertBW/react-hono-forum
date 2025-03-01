@@ -3,14 +3,19 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Skeleton } from "./ui/skeleton";
 import { getPostTime } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { type PostCard } from "@/lib/api";
+import VoteButtons from "./buttons/vote-buttons";
 
 export default function PostCard({ post }: { post: PostCard }) {
+  if (!post.communityName) {
+    throw new Error("Community name is required");
+  }
+
   return (
     <article className="py-1">
       <Link
-        to="/"
+        to={"/c/$name/$id"}
+        params={{ name: post.communityName, id: post.id }}
         className="flex flex-col gap-2 p-2 hover:bg-muted/20 rounded-xl"
       >
         <div className="flex items-center gap-2">
@@ -45,30 +50,7 @@ export default function PostCard({ post }: { post: PostCard }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div
-            className="flex items-center gap-1 bg-zinc-900 size-fit rounded-full hover:cursor-default"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <Button
-              variant={"ghost"}
-              className="rounded-full hover:text-green-500"
-            >
-              <ThumbsUp />
-            </Button>
-
-            <span>1</span>
-
-            <Button
-              variant={"ghost"}
-              className="rounded-full hover:text-red-500"
-            >
-              <ThumbsDown />
-            </Button>
-          </div>
-
+          <VoteButtons post={post} />
           <div>
             <Button
               variant={"ghost"}

@@ -9,10 +9,10 @@ import {
   getAllPostsQueryOptions,
   loadingCreatePostQueryOptions,
 } from "@/lib/api";
-import { insertPostSchema } from "../../../../server/shared-types";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import FieldInfo from "@/components/field-info";
+import { insertPostSchema } from "../../../../server/db/schema";
 
 export const Route = createFileRoute("/_authenticated/create-post")({
   component: CreatePost,

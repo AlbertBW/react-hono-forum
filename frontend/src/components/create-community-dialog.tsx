@@ -8,7 +8,6 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { useForm } from "@tanstack/react-form";
-import { insertCommunitySchema } from "../../../server/shared-types";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
@@ -27,6 +26,7 @@ import { toast } from "sonner";
 import SignInForm from "./auth/sign-in-form";
 import { useSession } from "@/lib/auth-client";
 import { useSidebar } from "./ui/sidebar";
+import { insertCommunitySchema } from "../../../server/db/schema";
 
 export default function CreateCommunityDialog() {
   const { data: session, isPending: sessionPending } = useSession();
@@ -76,7 +76,7 @@ export default function CreateCommunityDialog() {
   if (!session)
     return (
       <DialogContent>
-        <SignInForm />
+        <SignInForm borderHidden />
       </DialogContent>
     );
 

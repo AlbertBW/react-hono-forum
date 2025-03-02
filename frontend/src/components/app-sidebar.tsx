@@ -20,11 +20,11 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Dialog, DialogTrigger } from "./ui/dialog";
 import CreateCommunityDialog from "./create-community-dialog";
 import { useQuery } from "@tanstack/react-query";
-import { getAllCommunitiesQueryOptions } from "@/lib/api";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useRef } from "react";
 import { randomGradient } from "@/lib/common-styles";
+import { getAllCommunitiesQueryOptions } from "@/api/community.api";
 
 // Menu items.
 const items = [

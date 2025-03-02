@@ -11,29 +11,29 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as ThreadsImport } from './routes/threads'
 import { Route as SignInImport } from './routes/sign-in'
-import { Route as PostsImport } from './routes/posts'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
 import { Route as CAllImport } from './routes/c/all'
 import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sign-out'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedCreatePostImport } from './routes/_authenticated/create-post'
+import { Route as AuthenticatedCreateThreadImport } from './routes/_authenticated/create-thread'
 import { Route as CNameIndexImport } from './routes/c/$name/index'
 import { Route as CNameIdImport } from './routes/c/$name/$id'
-import { Route as AuthenticatedCNameCreatePostImport } from './routes/_authenticated/c/$name/create-post'
+import { Route as AuthenticatedCNameCreateThreadImport } from './routes/_authenticated/c/$name/create-thread'
 
 // Create/Update Routes
+
+const ThreadsRoute = ThreadsImport.update({
+  id: '/threads',
+  path: '/threads',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const SignInRoute = SignInImport.update({
   id: '/sign-in',
   path: '/sign-in',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const PostsRoute = PostsImport.update({
-  id: '/posts',
-  path: '/posts',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -66,9 +66,9 @@ const AuthenticatedProfileRoute = AuthenticatedProfileImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
-const AuthenticatedCreatePostRoute = AuthenticatedCreatePostImport.update({
-  id: '/create-post',
-  path: '/create-post',
+const AuthenticatedCreateThreadRoute = AuthenticatedCreateThreadImport.update({
+  id: '/create-thread',
+  path: '/create-thread',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
@@ -84,10 +84,10 @@ const CNameIdRoute = CNameIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthenticatedCNameCreatePostRoute =
-  AuthenticatedCNameCreatePostImport.update({
-    id: '/c/$name/create-post',
-    path: '/c/$name/create-post',
+const AuthenticatedCNameCreateThreadRoute =
+  AuthenticatedCNameCreateThreadImport.update({
+    id: '/c/$name/create-thread',
+    path: '/c/$name/create-thread',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -109,13 +109,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImport
       parentRoute: typeof rootRoute
     }
-    '/posts': {
-      id: '/posts'
-      path: '/posts'
-      fullPath: '/posts'
-      preLoaderRoute: typeof PostsImport
-      parentRoute: typeof rootRoute
-    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
@@ -123,11 +116,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/create-post': {
-      id: '/_authenticated/create-post'
-      path: '/create-post'
-      fullPath: '/create-post'
-      preLoaderRoute: typeof AuthenticatedCreatePostImport
+    '/threads': {
+      id: '/threads'
+      path: '/threads'
+      fullPath: '/threads'
+      preLoaderRoute: typeof ThreadsImport
+      parentRoute: typeof rootRoute
+    }
+    '/_authenticated/create-thread': {
+      id: '/_authenticated/create-thread'
+      path: '/create-thread'
+      fullPath: '/create-thread'
+      preLoaderRoute: typeof AuthenticatedCreateThreadImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/profile': {
@@ -165,11 +165,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CNameIndexImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/c/$name/create-post': {
-      id: '/_authenticated/c/$name/create-post'
-      path: '/c/$name/create-post'
-      fullPath: '/c/$name/create-post'
-      preLoaderRoute: typeof AuthenticatedCNameCreatePostImport
+    '/_authenticated/c/$name/create-thread': {
+      id: '/_authenticated/c/$name/create-thread'
+      path: '/c/$name/create-thread'
+      fullPath: '/c/$name/create-thread'
+      preLoaderRoute: typeof AuthenticatedCNameCreateThreadImport
       parentRoute: typeof AuthenticatedImport
     }
   }
@@ -178,17 +178,17 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedCreatePostRoute: typeof AuthenticatedCreatePostRoute
+  AuthenticatedCreateThreadRoute: typeof AuthenticatedCreateThreadRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSignOutRoute: typeof AuthenticatedSignOutRoute
-  AuthenticatedCNameCreatePostRoute: typeof AuthenticatedCNameCreatePostRoute
+  AuthenticatedCNameCreateThreadRoute: typeof AuthenticatedCNameCreateThreadRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedCreatePostRoute: AuthenticatedCreatePostRoute,
+  AuthenticatedCreateThreadRoute: AuthenticatedCreateThreadRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSignOutRoute: AuthenticatedSignOutRoute,
-  AuthenticatedCNameCreatePostRoute: AuthenticatedCNameCreatePostRoute,
+  AuthenticatedCNameCreateThreadRoute: AuthenticatedCNameCreateThreadRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -198,44 +198,44 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
-  '/posts': typeof PostsRoute
   '/sign-in': typeof SignInRoute
-  '/create-post': typeof AuthenticatedCreatePostRoute
+  '/threads': typeof ThreadsRoute
+  '/create-thread': typeof AuthenticatedCreateThreadRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name': typeof CNameIndexRoute
-  '/c/$name/create-post': typeof AuthenticatedCNameCreatePostRoute
+  '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
-  '/posts': typeof PostsRoute
   '/sign-in': typeof SignInRoute
-  '/create-post': typeof AuthenticatedCreatePostRoute
+  '/threads': typeof ThreadsRoute
+  '/create-thread': typeof AuthenticatedCreateThreadRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name': typeof CNameIndexRoute
-  '/c/$name/create-post': typeof AuthenticatedCNameCreatePostRoute
+  '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/posts': typeof PostsRoute
   '/sign-in': typeof SignInRoute
-  '/_authenticated/create-post': typeof AuthenticatedCreatePostRoute
+  '/threads': typeof ThreadsRoute
+  '/_authenticated/create-thread': typeof AuthenticatedCreateThreadRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/': typeof CNameIndexRoute
-  '/_authenticated/c/$name/create-post': typeof AuthenticatedCNameCreatePostRoute
+  '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
 
 export interface FileRouteTypes {
@@ -243,49 +243,49 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
-    | '/posts'
     | '/sign-in'
-    | '/create-post'
+    | '/threads'
+    | '/create-thread'
     | '/profile'
     | '/sign-out'
     | '/c/all'
     | '/c/$name/$id'
     | '/c/$name'
-    | '/c/$name/create-post'
+    | '/c/$name/create-thread'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | ''
-    | '/posts'
     | '/sign-in'
-    | '/create-post'
+    | '/threads'
+    | '/create-thread'
     | '/profile'
     | '/sign-out'
     | '/c/all'
     | '/c/$name/$id'
     | '/c/$name'
-    | '/c/$name/create-post'
+    | '/c/$name/create-thread'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/posts'
     | '/sign-in'
-    | '/_authenticated/create-post'
+    | '/threads'
+    | '/_authenticated/create-thread'
     | '/_authenticated/profile'
     | '/_authenticated/sign-out'
     | '/c/all'
     | '/c/$name/$id'
     | '/c/$name/'
-    | '/_authenticated/c/$name/create-post'
+    | '/_authenticated/c/$name/create-thread'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  PostsRoute: typeof PostsRoute
   SignInRoute: typeof SignInRoute
+  ThreadsRoute: typeof ThreadsRoute
   CAllRoute: typeof CAllRoute
   CNameIdRoute: typeof CNameIdRoute
   CNameIndexRoute: typeof CNameIndexRoute
@@ -294,8 +294,8 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  PostsRoute: PostsRoute,
   SignInRoute: SignInRoute,
+  ThreadsRoute: ThreadsRoute,
   CAllRoute: CAllRoute,
   CNameIdRoute: CNameIdRoute,
   CNameIndexRoute: CNameIndexRoute,
@@ -313,8 +313,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/_authenticated",
-        "/posts",
         "/sign-in",
+        "/threads",
         "/c/all",
         "/c/$name/$id",
         "/c/$name/"
@@ -326,20 +326,20 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
-        "/_authenticated/create-post",
+        "/_authenticated/create-thread",
         "/_authenticated/profile",
         "/_authenticated/sign-out",
-        "/_authenticated/c/$name/create-post"
+        "/_authenticated/c/$name/create-thread"
       ]
-    },
-    "/posts": {
-      "filePath": "posts.tsx"
     },
     "/sign-in": {
       "filePath": "sign-in.tsx"
     },
-    "/_authenticated/create-post": {
-      "filePath": "_authenticated/create-post.tsx",
+    "/threads": {
+      "filePath": "threads.tsx"
+    },
+    "/_authenticated/create-thread": {
+      "filePath": "_authenticated/create-thread.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/profile": {
@@ -359,8 +359,8 @@ export const routeTree = rootRoute
     "/c/$name/": {
       "filePath": "c/$name/index.tsx"
     },
-    "/_authenticated/c/$name/create-post": {
-      "filePath": "_authenticated/c/$name/create-post.tsx",
+    "/_authenticated/c/$name/create-thread": {
+      "filePath": "_authenticated/c/$name/create-thread.tsx",
       "parent": "/_authenticated"
     }
   }

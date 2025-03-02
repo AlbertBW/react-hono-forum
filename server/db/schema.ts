@@ -1,8 +1,4 @@
-import {
-  relations,
-  type InferInsertModel,
-  type InferSelectModel,
-} from "drizzle-orm";
+import { relations, type InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -29,10 +25,10 @@ export const user = pgTable("user", {
 });
 
 export const userRelations = relations(user, ({ many }) => ({
-  posts: many(post),
+  threads: many(thread),
   comments: many(comment),
   communities: many(community),
-  votes: many(postVote),
+  votes: many(threadVote),
   sessions: many(session),
   accounts: many(account),
 }));
@@ -77,7 +73,7 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at"),
 });
 
-export const post = pgTable("post", {
+export const thread = pgTable("thread", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -91,46 +87,46 @@ export const post = pgTable("post", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const postRelations = relations(post, ({ one, many }) => ({
+export const threadRelations = relations(thread, ({ one, many }) => ({
   user: one(user, {
-    fields: [post.userId],
+    fields: [thread.userId],
     references: [user.id],
   }),
   community: one(community, {
-    fields: [post.communityId],
+    fields: [thread.communityId],
     references: [community.id],
   }),
-  votes: many(postVote),
+  votes: many(threadVote),
   comments: many(comment),
 }));
 
-export const postVote = pgTable(
-  "post_vote",
+export const threadVote = pgTable(
+  "thread_vote",
   {
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "set null" }),
-    postId: text("post_id")
+    threadId: text("thread_id")
       .notNull()
-      .references(() => post.id, { onDelete: "cascade" }),
+      .references(() => thread.id, { onDelete: "cascade" }),
     value: integer("value").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     primaryKey({
-      columns: [table.userId, table.postId],
+      columns: [table.userId, table.threadId],
     }),
   ]
 );
 
-export const postVoteRelations = relations(postVote, ({ one }) => ({
+export const threadVoteRelations = relations(threadVote, ({ one }) => ({
   user: one(user, {
-    fields: [postVote.userId],
+    fields: [threadVote.userId],
     references: [user.id],
   }),
-  post: one(post, {
-    fields: [postVote.postId],
-    references: [post.id],
+  thread: one(thread, {
+    fields: [threadVote.threadId],
+    references: [thread.id],
   }),
 }));
 
@@ -151,7 +147,7 @@ export const community = pgTable(
 );
 
 export const communityRelations = relations(community, ({ many }) => ({
-  posts: many(post),
+  threads: many(thread),
   followers: many(communityFollow),
 }));
 
@@ -193,7 +189,9 @@ export const comment = pgTable("comment", {
     .$defaultFn(() => crypto.randomUUID()),
   content: text("content").notNull(),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
-  postId: text("post_id").references(() => post.id, { onDelete: "cascade" }),
+  threadId: text("thread_id").references(() => thread.id, {
+    onDelete: "cascade",
+  }),
   parentId: text("parent_id").references((): AnyPgColumn => comment.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -204,9 +202,9 @@ export const commentRelations = relations(comment, ({ one, many }) => ({
     fields: [comment.userId],
     references: [user.id],
   }),
-  post: one(post, {
-    fields: [comment.postId],
-    references: [post.id],
+  thread: one(thread, {
+    fields: [comment.threadId],
+    references: [thread.id],
   }),
   parent: one(comment, {
     fields: [comment.parentId],
@@ -214,10 +212,41 @@ export const commentRelations = relations(comment, ({ one, many }) => ({
     relationName: "parent",
   }),
   replies: many(comment, { relationName: "replies" }),
+  votes: many(commentVote),
 }));
 
-export type Post = InferSelectModel<typeof post>;
-export const insertPostSchema = createInsertSchema(post, {
+export const commentVote = pgTable(
+  "comment_vote",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "set null" }),
+    commentId: text("comment_id")
+      .notNull()
+      .references(() => comment.id, { onDelete: "cascade" }),
+    value: integer("value").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.commentId],
+    }),
+  ]
+);
+
+export const commentVoteRelations = relations(commentVote, ({ one }) => ({
+  user: one(user, {
+    fields: [commentVote.userId],
+    references: [user.id],
+  }),
+  comment: one(comment, {
+    fields: [commentVote.commentId],
+    references: [comment.id],
+  }),
+}));
+
+export type Thread = InferSelectModel<typeof thread>;
+export const insertThreadSchema = createInsertSchema(thread, {
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
   content: z
     .string()
@@ -230,10 +259,10 @@ export const insertPostSchema = createInsertSchema(post, {
   createdAt: true,
   updatedAt: true,
 });
-export type CreatePost = z.infer<typeof insertPostSchema>;
+export type CreateThread = z.infer<typeof insertThreadSchema>;
 
-export const postIdSchema = z.object({ id: z.string().uuid() });
-export type PostId = Post["id"];
+export const threadIdSchema = z.object({ id: z.string().uuid() });
+export type ThreadId = Thread["id"];
 
 export type Community = InferSelectModel<typeof community>;
 export const insertCommunitySchema = createInsertSchema(community, {
@@ -259,7 +288,7 @@ export type CommunityId = Community["id"];
 
 export const insertCommentSchema = createInsertSchema(comment, {
   content: z.string().min(3, "Content must be at least 3 characters").max(1000),
-  postId: z.string().uuid(),
+  threadId: z.string().uuid(),
   parentId: z.string().uuid().nullish(),
 }).omit({
   userId: true,

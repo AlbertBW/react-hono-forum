@@ -46,7 +46,7 @@ export async function resizeBase64Image(base64: string) {
   });
 }
 
-export function getPostTime(createdAt: string) {
+export function getTimeAgo(createdAt: string) {
   const createdAtDate = new Date(createdAt);
   const diffInMinutes = Math.floor(
     (Date.now() - createdAtDate.getTime()) / 1000 / 60

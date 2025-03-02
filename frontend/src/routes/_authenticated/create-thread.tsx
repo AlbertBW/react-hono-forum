@@ -4,66 +4,63 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@tanstack/react-form";
-import {
-  createPost,
-  getAllPostsQueryOptions,
-  loadingCreatePostQueryOptions,
-} from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import FieldInfo from "@/components/field-info";
-import { insertPostSchema } from "../../../../server/db/schema";
+import { insertThreadSchema } from "../../../../server/db/schema";
+import { getAllThreadsQueryOptions, createThread } from "@/api/thread.api";
+import { loadingCreateThreadQueryOptions } from "@/lib/api";
 
-export const Route = createFileRoute("/_authenticated/create-post")({
-  component: CreatePost,
+export const Route = createFileRoute("/_authenticated/create-thread")({
+  component: CreateThread,
 });
 
-function CreatePost() {
+function CreateThread() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const form = useForm({
     validators: {
-      onChange: insertPostSchema,
+      onChange: insertThreadSchema,
     },
     defaultValues: {
       title: "",
       content: "",
     },
     onSubmit: async ({ value }) => {
-      const existingPosts = await queryClient.ensureQueryData(
-        getAllPostsQueryOptions
+      const existingThreads = await queryClient.ensureQueryData(
+        getAllThreadsQueryOptions
       );
 
-      navigate({ to: "/posts" });
+      navigate({ to: "/threads" });
 
       // loading state
-      queryClient.setQueryData(loadingCreatePostQueryOptions.queryKey, {
-        post: value,
+      queryClient.setQueryData(loadingCreateThreadsQueryOptions.queryKey, {
+        thread: value,
       });
 
       try {
-        const newPost = await createPost({ value });
+        const newThread = await createThread({ value });
 
-        queryClient.setQueryData(getAllPostsQueryOptions.queryKey, {
-          ...existingPosts,
-          posts: [newPost, ...existingPosts.posts],
+        queryClient.setQueryData(getAllThreadsQueryOptions.queryKey, {
+          ...existingThreads,
+          threads: [newThread, ...existingThreads.threads],
         });
         // sucess state
-        toast.success("Post created", {
-          description: `Successfully created post: ${newPost.title}`,
+        toast.success("thread created", {
+          description: `Successfully created thread: ${newThread.title}`,
         });
       } catch {
         // error state
-        toast.error("Error", { description: "Failed to create new post" });
+        toast.error("Error", { description: "Failed to create new thread" });
       } finally {
-        queryClient.setQueryData(loadingCreatePostQueryOptions.queryKey, {});
+        queryClient.setQueryData(loadingCreateThreadQueryOptions.queryKey, {});
       }
     },
   });
   return (
     <div className="flex flex-col justify-center items-center">
-      <h2>Create Post</h2>
+      <h2>Create thread</h2>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -123,7 +120,7 @@ function CreatePost() {
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (
             <Button type="submit" disabled={!canSubmit}>
-              {isSubmitting ? "..." : "Create Post"}
+              {isSubmitting ? "..." : "Create thread"}
             </Button>
           )}
         />

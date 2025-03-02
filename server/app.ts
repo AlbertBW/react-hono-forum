@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
-import { postsRoute } from "./routes/posts";
+import { threadsRoute } from "./routes/threads";
 import { serveStatic } from "hono/bun";
 import { authRoute, getUser } from "./routes/auth";
 import { cors } from "hono/cors";
@@ -37,7 +37,7 @@ app.use("*", getUser);
 const apiRoutes = app
   .basePath("/api")
   .route("/auth", authRoute)
-  .route("/posts", postsRoute)
+  .route("/threads", threadsRoute)
   .route("/users", usersRoute)
   .route("/communities", communitiesRoute)
   .route("/comments", commentsRoute);

@@ -6,8 +6,8 @@ import {
   community,
   communityFollow,
   insertCommunitySchema,
-  post,
-  postVote,
+  thread,
+  threadVote,
   user,
 } from "../db/schema";
 import { db } from "../db";
@@ -22,11 +22,11 @@ export const communitiesRoute = new Hono<AppVariables>()
         description: community.description,
         icon: community.icon,
         isPrivate: community.isPrivate,
-        postCount: countDistinct(post.id),
+        threadCount: countDistinct(thread.id),
         userCount: countDistinct(communityFollow.userId),
       })
       .from(community)
-      .leftJoin(post, eq(post.communityId, community.id))
+      .leftJoin(thread, eq(thread.communityId, community.id))
       .leftJoin(communityFollow, eq(communityFollow.communityId, community.id))
       .groupBy(
         community.id,
@@ -43,13 +43,13 @@ export const communitiesRoute = new Hono<AppVariables>()
     requireAuth,
     zValidator("json", insertCommunitySchema),
     async (c) => {
-      const communityPost = c.req.valid("json");
+      const communityThread = c.req.valid("json");
       const user = c.var.user!;
 
       const [newCommunity] = await db
         .insert(community)
         .values({
-          ...communityPost,
+          ...communityThread,
         })
         .returning();
 
@@ -69,12 +69,12 @@ export const communitiesRoute = new Hono<AppVariables>()
         icon: community.icon,
         isPrivate: community.isPrivate,
         createdAt: community.createdAt,
-        postCount: countDistinct(post.id),
+        threadCount: countDistinct(thread.id),
         userCount: countDistinct(communityFollow.userId),
       })
       .from(community)
       .where(sql`lower(${community.name}) = lower(${name})`)
-      .leftJoin(post, eq(post.communityId, community.id))
+      .leftJoin(thread, eq(thread.communityId, community.id))
       .leftJoin(communityFollow, eq(communityFollow.communityId, community.id))
       .groupBy(
         community.id,

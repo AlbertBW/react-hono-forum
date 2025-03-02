@@ -1,9 +1,4 @@
 import {
-  joinCommunity,
-  getCommunityQueryOptions,
-  leaveCommunity,
-} from "@/lib/api";
-import {
   Dialog,
   DialogTrigger,
   DialogContent,
@@ -15,6 +10,11 @@ import { CommunityId } from "../../../../server/db/schema";
 import { Button } from "../ui/button";
 import { DialogHeader, DialogFooter } from "../ui/dialog";
 import { LoadingSpinner } from "../ui/spinner";
+import {
+  joinCommunity,
+  getCommunityQueryOptions,
+  leaveCommunity,
+} from "@/api/community.api";
 
 export function JoinButton({ id, name }: { id: CommunityId; name: string }) {
   const queryClient = useQueryClient();
@@ -34,10 +34,7 @@ export function JoinButton({ id, name }: { id: CommunityId; name: string }) {
 
       queryClient.setQueryData(getCommunityQueryOptions(name).queryKey, {
         ...existingData,
-        community: {
-          ...existingData.community,
-          isFollowing: true,
-        },
+        isFollowing: true,
       });
     },
   });
@@ -76,10 +73,7 @@ export function LeaveCommunity({
 
       queryClient.setQueryData(getCommunityQueryOptions(name).queryKey, {
         ...existingData,
-        community: {
-          ...existingData.community,
-          isFollowing: false,
-        },
+        isFollowing: false,
       });
     },
   });

@@ -1,9 +1,8 @@
-import PostCard from "@/components/post-card";
+import ThreadCard from "@/components/thread-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCommunityQueryOptions, getPostsQueryOptions } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { randomGradient } from "@/lib/common-styles";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +14,8 @@ import {
   JoinButton,
   LeaveCommunity,
 } from "@/components/buttons/join-leave-community";
+import { getCommunityQueryOptions } from "@/api/community.api";
+import { getThreadsQueryOptions } from "@/api/thread.api";
 
 export const Route = createFileRoute("/c/$name/")({
   component: CommunityPage,
@@ -24,13 +25,13 @@ function CommunityPage() {
   const { name } = Route.useParams();
   const { data: userData, isPending: userPending } = useSession();
   const communityQueryOption = getCommunityQueryOptions(name);
-  const postsQueryOptions = getPostsQueryOptions(name);
+  const threadsQueryOptions = getThreadsQueryOptions(name);
   const { isPending, error, data: community } = useQuery(communityQueryOption);
   const {
-    isPending: postPending,
-    error: postError,
-    data: initialPosts,
-  } = useQuery(postsQueryOptions);
+    isPending: threadPending,
+    error: threadError,
+    data: initialThreads,
+  } = useQuery(threadsQueryOptions);
   const navigate = useNavigate();
 
   if (error || (!isPending && !community)) {
@@ -96,12 +97,12 @@ function CommunityPage() {
           <div className="flex justify-end sm:items-end gap-4">
             <Button
               onClick={() =>
-                navigate({ to: `/c/${community.name}/create-post` })
+                navigate({ to: `/c/${community.name}/create-thread` })
               }
               variant={"outline"}
             >
               <Plus />
-              Create Post
+              Create Thread
             </Button>
 
             {isPending ? (
@@ -120,28 +121,28 @@ function CommunityPage() {
 
       <div className="flex relative">
         <main className="w-full">
-          {postPending ? (
+          {threadPending ? (
             <div className="flex flex-col justify-center items-center w-full gap-4 mt-4"></div>
-          ) : postError ? (
+          ) : threadError ? (
             <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
-              <h3 className="text-lg font-bold">Failed to Load Posts</h3>
+              <h3 className="text-lg font-bold">Failed to Load threads</h3>
               <p className="text-sm text-muted-foreground">
-                An error occurred while trying to load posts.
+                An error occurred while trying to load threads.
               </p>
             </div>
-          ) : initialPosts && initialPosts.length > 0 ? (
+          ) : initialThreads && initialThreads.length > 0 ? (
             <>
               <Separator />
-              {initialPosts.map((post) => (
-                <Fragment key={post.id}>
-                  <PostCard post={post} />
+              {initialThreads.map((thread) => (
+                <Fragment key={thread.id}>
+                  <ThreadCard thread={thread} />
                   <Separator />
                 </Fragment>
               ))}
             </>
           ) : (
             <div className="flex flex-col gap-4 mt-4">
-              <h3 className="text-lg font-bold">No Posts Yet</h3>
+              <h3 className="text-lg font-bold">No Threads Yet</h3>
               <p className="text-sm text-muted-foreground">
                 {!userPending
                   ? userData

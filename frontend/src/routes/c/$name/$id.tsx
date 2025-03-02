@@ -2,13 +2,8 @@ import VoteButtons from "@/components/buttons/vote-buttons";
 import Aside from "@/components/layout/aside";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  createComment,
-  getCommunityQueryOptions,
-  getPostQueryOptions,
-} from "@/lib/api";
 import { randomGradient } from "@/lib/common-styles";
-import { getPostTime } from "@/lib/utils";
+import { getTimeAgo } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -30,6 +25,9 @@ import {
 } from "@/components/ui/dialog";
 import FieldInfo from "@/components/field-info";
 import { toast } from "sonner";
+import { createComment, getCommentsQueryOptions } from "@/api/comment.api";
+import { getCommunityQueryOptions } from "@/api/community.api";
+import { getThreadQueryOptions } from "@/api/thread.api";
 
 export const Route = createFileRoute("/c/$name/$id")({
   component: RouteComponent,
@@ -40,8 +38,8 @@ function RouteComponent() {
   const communityQueryOption = getCommunityQueryOptions(name);
   const { data: community } = useQuery(communityQueryOption);
 
-  const getPost = getPostQueryOptions(id);
-  const { isPending, error, data: post } = useQuery(getPost);
+  const getThread = getThreadQueryOptions(id);
+  const { isPending, error, data: thread } = useQuery(getThread);
 
   const navigate = useNavigate();
 
@@ -53,8 +51,8 @@ function RouteComponent() {
     return <div>Error: {error.message}</div>;
   }
 
-  if (!post || !community) {
-    return <div>Post not found</div>;
+  if (!thread || !community) {
+    return <div>Thread not found</div>;
   }
 
   return (
@@ -97,7 +95,7 @@ function RouteComponent() {
                 •
               </span>
               <span className="text-xs font-semibold text-muted-foreground">
-                {getPostTime(post.createdAt)}
+                {getTimeAgo(thread.createdAt)}
               </span>
             </div>
             <Link
@@ -105,34 +103,34 @@ function RouteComponent() {
               to={"/c/$name"}
               params={{ name }}
             >
-              {post.username}
+              {thread.username}
             </Link>
           </div>
         </div>
         <div className="flex flex-col gap-4 pt-1">
-          <h2 className="text-3xl font-semibold">{post.title}</h2>
-          <p>{post.content}</p>
+          <h2 className="text-3xl font-semibold">{thread.title}</h2>
+          <p>{thread.content}</p>
         </div>
         <div className="flex items-center gap-2 py-6">
           <VoteButtons
-            communityName={post.communityName!}
-            downvotes={post.downvotes}
-            postId={post.id}
-            upvotes={post.upvotes}
-            userVote={post.userVote}
+            communityName={thread.communityName!}
+            downvotes={thread.downvotes}
+            threadId={thread.id}
+            upvotes={thread.upvotes}
+            userVote={thread.userVote}
           />
           <div>
             <Button
               variant={"ghost"}
               className="text-muted-foreground hover:text-foreground rounded-full"
             >
-              {post.commentsCount} Comments
+              {thread.commentsCount} Comments
             </Button>
           </div>
         </div>
 
-        <CreateComment postId={post.id} />
-        <Comments postId={post.id} />
+        <CreateComment threadId={thread.id} />
+        <Comments threadId={thread.id} />
       </main>
       <Aside community={community} header button />
     </div>
@@ -140,10 +138,10 @@ function RouteComponent() {
 }
 
 function CreateComment({
-  postId,
+  threadId,
   parentId,
 }: {
-  postId: string;
+  threadId: string;
   parentId?: string;
 }) {
   const [formOpen, setFormOpen] = useState(false);
@@ -154,13 +152,13 @@ function CreateComment({
       onChange: insertCommentSchema,
     },
     defaultValues: {
-      postId,
+      threadId,
       content: "",
     },
     onSubmit: async ({ value }) => {
       try {
-        await createComment(postId, value.content, parentId);
-        // queryClient.invalidateQueries(getCommentsQueryOptions(postId));
+        await createComment(threadId, value.content, parentId);
+        // queryClient.invalidateQueries(getCommentsQueryOptions(threadId));
         toast.success("Comment created", {
           description: `Successfully created comment`,
         });
@@ -192,7 +190,8 @@ function CreateComment({
                   onClick={() => {
                     setFormOpen(true);
                   }}
-                  className={`${!formOpen ? "resize-none" : "min-h-16 field-sizing-content"} min-h-10 whitespace-pre-line`}
+                  placeholder="Write a comment..."
+                  className={`${!formOpen ? "resize-none min-h-10" : "min-h-16 field-sizing-content"} whitespace-pre-line`}
                   id={field.name}
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
@@ -265,6 +264,24 @@ function CreateComment({
   );
 }
 
-function Comments({ postId }: { postId: string }) {
-  return <div></div>;
+function Comments({ threadId }: { threadId: string }) {
+  const {
+    isPending,
+    error,
+    data: comments,
+  } = useQuery(getCommentsQueryOptions(threadId));
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (!comments || comments.length === 0) {
+    return <div>No comments</div>;
+  }
+
+  return null;
 }

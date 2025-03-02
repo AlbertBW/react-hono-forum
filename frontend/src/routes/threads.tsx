@@ -9,24 +9,23 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import {
-  deletePost,
-  getAllPostsQueryOptions,
-  loadingCreatePostQueryOptions,
-} from "@/lib/api";
+import { loadingCreateThreadQueryOptions } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Trash } from "lucide-react";
 import { toast } from "sonner";
-import { PostId } from "../../../server/db/schema";
+import { ThreadId } from "../../../server/db/schema";
+import { getAllThreadsQueryOptions, deleteThread } from "@/api/thread.api";
 
-export const Route = createFileRoute("/posts")({
+export const Route = createFileRoute("/threads")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { isPending, error, data } = useQuery(getAllPostsQueryOptions);
-  const { data: loadingCreatePost } = useQuery(loadingCreatePostQueryOptions);
+  const { isPending, error, data } = useQuery(getAllThreadsQueryOptions);
+  const { data: loadingCreateThread } = useQuery(
+    loadingCreateThreadQueryOptions
+  );
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -34,7 +33,7 @@ function RouteComponent() {
 
   return (
     <>
-      <h1>Posts</h1>
+      <h1>Threads</h1>
       <Table>
         <TableCaption>A list of your recent invoices.</TableCaption>
         <TableHeader>
@@ -46,13 +45,13 @@ function RouteComponent() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loadingCreatePost?.post && (
+          {loadingCreateThread?.thread && (
             <TableRow>
               <TableCell>
                 <Skeleton className="h-4" />
               </TableCell>
-              <TableCell>{loadingCreatePost.post.title}</TableCell>
-              <TableCell>{loadingCreatePost.post.content}</TableCell>
+              <TableCell>{loadingCreateThread.thread.title}</TableCell>
+              <TableCell>{loadingCreateThread.thread.content}</TableCell>
               <TableCell>
                 <Skeleton className="h-4" />
               </TableCell>
@@ -77,13 +76,13 @@ function RouteComponent() {
                     </TableCell>
                   </TableRow>
                 ))
-            : data.posts.map((post) => (
-                <TableRow key={post.id}>
-                  <TableCell>{post.id}</TableCell>
-                  <TableCell>{post.title}</TableCell>
-                  <TableCell>{post.content}</TableCell>
+            : data.threads.map((thread) => (
+                <TableRow key={thread.id}>
+                  <TableCell>{thread.id}</TableCell>
+                  <TableCell>{thread.title}</TableCell>
+                  <TableCell>{thread.content}</TableCell>
                   <TableCell>
-                    <PostDeleteButton id={post.id} />
+                    <ThreadDeleteButton id={thread.id} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -93,23 +92,23 @@ function RouteComponent() {
   );
 }
 
-function PostDeleteButton({ id }: { id: PostId }) {
+function ThreadDeleteButton({ id }: { id: ThreadId }) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: deletePost,
+    mutationFn: deleteThread,
     onError: () => {
-      toast.error("Error", { description: `Failed to delete post: ${id}` });
+      toast.error("Error", { description: `Failed to delete thread: ${id}` });
     },
     onSuccess: () => {
-      toast.success("Post deleted", {
-        description: `Successfully deleted post: ${id}`,
+      toast.success("Thread deleted", {
+        description: `Successfully deleted thread: ${id}`,
       });
 
       queryClient.setQueryData(
-        getAllPostsQueryOptions.queryKey,
-        (existingPosts) => ({
-          ...existingPosts,
-          posts: existingPosts!.posts.filter((p) => p.id !== id),
+        getAllThreadsQueryOptions.queryKey,
+        (existingThreads) => ({
+          ...existingThreads,
+          posts: existingThreads!.posts.filter((t) => t.id !== id),
         })
       );
     },

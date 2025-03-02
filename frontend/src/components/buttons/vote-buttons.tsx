@@ -1,25 +1,27 @@
-import {
-  deleteVote,
-  updateVote,
-  createVote,
-  getPostQueryOptions,
-  getPostsQueryOptions,
-} from "@/lib/api";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { useSession } from "@/lib/auth-client";
-import { PostId } from "../../../../server/db/schema";
+import { ThreadId } from "../../../../server/db/schema";
+import {
+  deleteThreadVote,
+  updateThreadVote,
+  createThreadVote,
+} from "@/api/thread-vote.api";
+import {
+  getThreadQueryOptions,
+  getThreadsQueryOptions,
+} from "@/api/thread.api";
 
 export default function VoteButtons({
-  postId,
+  threadId,
   communityName,
   upvotes,
   downvotes,
   userVote,
 }: {
-  postId: PostId;
+  threadId: ThreadId;
   communityName: string;
   upvotes: number;
   downvotes: number;
@@ -27,10 +29,17 @@ export default function VoteButtons({
 }) {
   const { isPending: isSessionLoading, data: sessionData } = useSession();
   const queryClient = useQueryClient();
-  const postsQueryOptions = getPostsQueryOptions(communityName);
-  const getPost = getPostQueryOptions(postId);
+  const threadsQueryOptions = getThreadsQueryOptions(communityName);
+  const getThread = getThreadQueryOptions(threadId);
 
-  console.log("userVote", userVote, postId, upvotes, downvotes, communityName);
+  console.log(
+    "userVote",
+    userVote,
+    threadId,
+    upvotes,
+    downvotes,
+    communityName
+  );
 
   const handleVote = async (value: number) => {
     if (!sessionData) {
@@ -38,86 +47,86 @@ export default function VoteButtons({
       return;
     }
 
-    const existingPostArray =
-      await queryClient.ensureQueryData(postsQueryOptions);
+    const existingThreadArray =
+      await queryClient.ensureQueryData(threadsQueryOptions);
 
-    const existingPost = await queryClient.ensureQueryData(getPost);
+    const existingThread = await queryClient.ensureQueryData(getThread);
 
     if (userVote === value) {
       // Delete vote
       queryClient.setQueryData(
-        postsQueryOptions.queryKey,
-        existingPostArray.map((p) =>
-          p.id === postId
+        threadsQueryOptions.queryKey,
+        existingThreadArray.map((t) =>
+          t.id === threadId
             ? {
-                ...p,
+                ...t,
                 userVote: null,
-                upvotes: value === 1 ? p.upvotes - 1 : p.upvotes,
-                downvotes: value === -1 ? p.downvotes - 1 : p.downvotes,
+                upvotes: value === 1 ? t.upvotes - 1 : t.upvotes,
+                downvotes: value === -1 ? t.downvotes - 1 : t.downvotes,
               }
-            : p
+            : t
         )
       );
 
-      queryClient.setQueryData(getPost.queryKey, {
-        ...existingPost,
+      queryClient.setQueryData(getThread.queryKey, {
+        ...existingThread,
         userVote: null,
         upvotes: value === 1 ? upvotes - 1 : upvotes,
         downvotes: value === -1 ? downvotes - 1 : downvotes,
       });
 
-      return await deleteVote(postId);
+      return await deleteThreadVote(threadId);
     }
 
     if (userVote && userVote !== value) {
       // Update vote
       queryClient.setQueryData(
-        postsQueryOptions.queryKey,
-        existingPostArray.map((p) =>
-          p.id === postId
+        threadsQueryOptions.queryKey,
+        existingThreadArray.map((t) =>
+          t.id === threadId
             ? {
-                ...p,
+                ...t,
                 userVote: value,
-                upvotes: value === 1 ? p.upvotes + 1 : p.upvotes - 1,
-                downvotes: value === -1 ? p.downvotes + 1 : p.downvotes - 1,
+                upvotes: value === 1 ? t.upvotes + 1 : t.upvotes - 1,
+                downvotes: value === -1 ? t.downvotes + 1 : t.downvotes - 1,
               }
-            : p
+            : t
         )
       );
 
-      queryClient.setQueryData(getPost.queryKey, {
-        ...existingPost,
+      queryClient.setQueryData(getThread.queryKey, {
+        ...existingThread,
         userVote: value,
         upvotes: value === 1 ? upvotes + 1 : upvotes - 1,
         downvotes: value === -1 ? downvotes + 1 : downvotes - 1,
       });
 
-      return await updateVote(postId, value);
+      return await updateThreadVote(threadId, value);
     }
 
     // Create vote
     queryClient.setQueryData(
-      postsQueryOptions.queryKey,
-      existingPostArray.map((p) =>
-        p.id === postId
+      threadsQueryOptions.queryKey,
+      existingThreadArray.map((t) =>
+        t.id === threadId
           ? {
-              ...p,
+              ...t,
               userVote: value,
-              upvotes: value === 1 ? p.upvotes + 1 : p.upvotes,
-              downvotes: value === -1 ? p.downvotes + 1 : p.downvotes,
+              upvotes: value === 1 ? t.upvotes + 1 : t.upvotes,
+              downvotes: value === -1 ? t.downvotes + 1 : t.downvotes,
             }
-          : p
+          : t
       )
     );
 
-    queryClient.setQueryData(getPost.queryKey, {
-      ...existingPost,
+    queryClient.setQueryData(getThread.queryKey, {
+      ...existingThread,
       userVote: value,
       upvotes: value === 1 ? upvotes + 1 : upvotes,
       downvotes: value === -1 ? downvotes + 1 : downvotes,
     });
 
-    return await createVote(postId, value);
+    return await createThreadVote(threadId, value);
   };
 
   const mutation = useMutation({
@@ -125,8 +134,8 @@ export default function VoteButtons({
     onError: () => {
       toast.error("Error", { description: `Failed to vote` });
       // invalidate the query to refetch the data
-      queryClient.invalidateQueries(postsQueryOptions);
-      queryClient.invalidateQueries(getPost);
+      queryClient.invalidateQueries(threadsQueryOptions);
+      queryClient.invalidateQueries(getThread);
     },
     onSuccess: () => {},
   });

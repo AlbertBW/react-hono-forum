@@ -20,13 +20,13 @@ import { AvatarFallback } from "@radix-ui/react-avatar";
 import { LoadingSpinner } from "./ui/spinner";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Card } from "./ui/card";
-import { createCommunity } from "@/lib/api";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import SignInForm from "./auth/sign-in-form";
 import { useSession } from "@/lib/auth-client";
 import { useSidebar } from "./ui/sidebar";
 import { insertCommunitySchema } from "../../../server/db/schema";
+import { createCommunity } from "@/api/community.api";
 
 export default function CreateCommunityDialog() {
   const { data: session, isPending: sessionPending } = useSession();

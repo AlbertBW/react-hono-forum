@@ -7,9 +7,9 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Lock } from "lucide-react";
-import { Community } from "@/lib/api";
 import { JoinButton, LeaveCommunity } from "../buttons/join-leave-community";
 import { useSession } from "@/lib/auth-client";
+import { Community } from "@/api/community.api";
 
 export default function Aside({
   community,
@@ -78,9 +78,9 @@ export default function Aside({
               </span>
             </div>
             <div className="flex flex-col pt-4">
-              <span>{community.postCount}</span>
+              <span>{community.threadCount}</span>
               <span className="text-sm text-muted-foreground">
-                Post{community.userCount > 1 && "s"}
+                Thread{community.userCount > 1 && "s"}
               </span>
             </div>
           </div>

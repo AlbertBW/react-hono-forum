@@ -2,7 +2,6 @@ import FieldInfo from "@/components/field-info";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createPost, getCommunityQueryOptions } from "@/lib/api";
 import { Label } from "@radix-ui/react-label";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,9 +9,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { randomGradient } from "@/lib/common-styles";
-import { insertPostSchema } from "../../../../../../server/db/schema";
+import { insertThreadSchema } from "../../../../../../server/db/schema";
+import { getCommunityQueryOptions } from "@/api/community.api";
+import { createThread } from "@/api/thread.api";
 
-export const Route = createFileRoute("/_authenticated/c/$name/create-post")({
+export const Route = createFileRoute("/_authenticated/c/$name/create-thread")({
   component: RouteComponent,
 });
 
@@ -25,7 +26,7 @@ function RouteComponent() {
 
   const form = useForm({
     validators: {
-      onChange: insertPostSchema,
+      onChange: insertThreadSchema,
     },
     defaultValues: {
       title: "",
@@ -38,15 +39,15 @@ function RouteComponent() {
           throw new Error("Community not found");
         }
 
-        const newPost = await createPost({ value });
+        const newThread = await createThread({ value });
         if (community) {
-          navigate({ to: `/c/${community.name}/${newPost.id}` });
+          navigate({ to: `/c/${community.name}/${newThread.id}` });
         }
 
         // invalidate the query so the new post shows up
         queryClient.invalidateQueries(communityQueryOption);
         toast.success("Post created", {
-          description: `Successfully created post: ${newPost.title}`,
+          description: `Successfully created post: ${newThread.title}`,
         });
       } catch {
         toast.error("Error", { description: "Failed to create new post" });
@@ -68,7 +69,9 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col justify-center items-start pt-4 gap-6 max-w-3xl m-auto">
-      <h2 className="font-bold text-2xl text-muted-foreground">Create Post</h2>
+      <h2 className="font-bold text-2xl text-muted-foreground">
+        Create Thread
+      </h2>
       <div className="flex items-center gap-4 bg-accent/60 p-2 px-3 rounded-full">
         {community && community.icon ? (
           <Avatar className={`size-8`}>
@@ -162,7 +165,7 @@ function RouteComponent() {
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => (
             <Button type="submit" disabled={!canSubmit || isSubmitting}>
-              {isSubmitting ? "..." : "Create Post"}
+              {isSubmitting ? "..." : "Create Thread"}
             </Button>
           )}
         />

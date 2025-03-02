@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Skeleton } from "./ui/skeleton";
-import { getPostTime } from "@/lib/utils";
+import { getTimeAgo } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { type PostCard } from "@/lib/api";
 import VoteButtons from "./buttons/vote-buttons";
+import type { ThreadCard } from "@/api/thread.api";
 
-export default function PostCard({ post }: { post: PostCard }) {
-  if (!post.communityName) {
+export default function ThreadCard({ thread }: { thread: ThreadCard }) {
+  if (!thread.communityName) {
     throw new Error("Community name is required");
   }
 
@@ -15,7 +15,7 @@ export default function PostCard({ post }: { post: PostCard }) {
     <article className="py-1">
       <Link
         to={"/c/$name/$id"}
-        params={{ name: post.communityName, id: post.id }}
+        params={{ name: thread.communityName, id: thread.id }}
         className="flex flex-col gap-2 p-2 hover:bg-muted/20 rounded-xl"
       >
         <div className="flex items-center gap-2">
@@ -32,37 +32,37 @@ export default function PostCard({ post }: { post: PostCard }) {
               to={"/profile"}
               className="text-xs font-semibold text-muted-foreground hover:underline"
             >
-              {post.username || "Anonymous"}
+              {thread.username || "Anonymous"}
             </Link>
             <span className="text-xs font-semibold text-muted-foreground">
               •
             </span>
             <span className="text-xs font-semibold text-muted-foreground">
-              {getPostTime(post.createdAt)}
+              {getTimeAgo(thread.createdAt)}
             </span>
           </div>
         </div>
 
         <div>
           <Link to={"/"} className="text-base sm:text-lg font-semibold">
-            {post.title}
+            {thread.title}
           </Link>
         </div>
 
         <div className="flex items-center gap-2">
           <VoteButtons
-            communityName={post.communityName!}
-            downvotes={post.downvotes}
-            postId={post.id}
-            upvotes={post.upvotes}
-            userVote={post.userVote}
+            communityName={thread.communityName!}
+            downvotes={thread.downvotes}
+            threadId={thread.id}
+            upvotes={thread.upvotes}
+            userVote={thread.userVote}
           />
           <div>
             <Button
               variant={"ghost"}
               className="text-muted-foreground hover:text-foreground rounded-full"
             >
-              {post.commentsCount} Comments
+              {thread.commentsCount} Comments
             </Button>
           </div>
         </div>

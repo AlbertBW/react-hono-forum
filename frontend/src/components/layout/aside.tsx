@@ -9,6 +9,7 @@ import {
 import { Lock } from "lucide-react";
 import { Community } from "@/lib/api";
 import { JoinButton, LeaveCommunity } from "../buttons/join-leave-community";
+import { useSession } from "@/lib/auth-client";
 
 export default function Aside({
   community,
@@ -19,6 +20,7 @@ export default function Aside({
   header?: boolean;
   button?: boolean;
 }) {
+  const { data } = useSession();
   return (
     <aside className="sticky top-18 self-start lg:w-md h-fit ml-2 hidden md:block">
       <Card className="py-3">
@@ -28,6 +30,7 @@ export default function Aside({
               <div className="flex items-center gap-2 w-full justify-between">
                 <span className="text-xl">{community.name}</span>
                 {button &&
+                  data &&
                   (community.isFollowing ? (
                     <LeaveCommunity id={community.id} name={community.name} />
                   ) : (

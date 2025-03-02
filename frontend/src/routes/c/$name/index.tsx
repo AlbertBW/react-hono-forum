@@ -3,8 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingSpinner } from "@/components/ui/spinner";
-import { getCommunityQueryOptions } from "@/lib/api";
+import { getCommunityQueryOptions, getPostsQueryOptions } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 import { randomGradient } from "@/lib/common-styles";
 import { useQuery } from "@tanstack/react-query";
@@ -25,10 +24,16 @@ function CommunityPage() {
   const { name } = Route.useParams();
   const { data: userData, isPending: userPending } = useSession();
   const communityQueryOption = getCommunityQueryOptions(name);
-  const { isPending, error, data } = useQuery(communityQueryOption);
+  const postsQueryOptions = getPostsQueryOptions(name);
+  const { isPending, error, data: community } = useQuery(communityQueryOption);
+  const {
+    isPending: postPending,
+    error: postError,
+    data: initialPosts,
+  } = useQuery(postsQueryOptions);
   const navigate = useNavigate();
 
-  if (error) {
+  if (error || (!isPending && !community)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] p-4">
         <h1 className="text-4xl font-bold mb-4">Community Not Found</h1>
@@ -45,8 +50,6 @@ function CommunityPage() {
   }
   const banner = randomGradient();
   const background = randomGradient();
-
-  const { community, posts } = data || {};
 
   return (
     <div className="sm:p-4 max-w-7xl mx-auto">
@@ -117,14 +120,19 @@ function CommunityPage() {
 
       <div className="flex relative">
         <main className="w-full">
-          {isPending ? (
+          {postPending ? (
+            <div className="flex flex-col justify-center items-center w-full gap-4 mt-4"></div>
+          ) : postError ? (
             <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
-              <LoadingSpinner />
+              <h3 className="text-lg font-bold">Failed to Load Posts</h3>
+              <p className="text-sm text-muted-foreground">
+                An error occurred while trying to load posts.
+              </p>
             </div>
-          ) : posts && posts.length > 0 ? (
+          ) : initialPosts && initialPosts.length > 0 ? (
             <>
               <Separator />
-              {posts.map((post) => (
+              {initialPosts.map((post) => (
                 <Fragment key={post.id}>
                   <PostCard post={post} />
                   <Separator />
@@ -135,7 +143,11 @@ function CommunityPage() {
             <div className="flex flex-col gap-4 mt-4">
               <h3 className="text-lg font-bold">No Posts Yet</h3>
               <p className="text-sm text-muted-foreground">
-                Be the first to post in this community!
+                {!userPending
+                  ? userData
+                    ? "Be the first to post in this community!"
+                    : "Sign in to post in this community!"
+                  : null}
               </p>
             </div>
           )}

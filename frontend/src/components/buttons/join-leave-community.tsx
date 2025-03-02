@@ -85,7 +85,7 @@ export function LeaveCommunity({
   });
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button className="w-18" variant={"outline"}>
           Joined
         </Button>

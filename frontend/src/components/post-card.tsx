@@ -50,13 +50,19 @@ export default function PostCard({ post }: { post: PostCard }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <VoteButtons post={post} />
+          <VoteButtons
+            communityName={post.communityName!}
+            downvotes={post.downvotes}
+            postId={post.id}
+            upvotes={post.upvotes}
+            userVote={post.userVote}
+          />
           <div>
             <Button
               variant={"ghost"}
               className="text-muted-foreground hover:text-foreground rounded-full"
             >
-              12 Comments
+              {post.commentsCount} Comments
             </Button>
           </div>
         </div>

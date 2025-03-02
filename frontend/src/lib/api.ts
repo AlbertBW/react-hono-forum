@@ -64,7 +64,7 @@ export async function getAllCommunities() {
 }
 
 export async function getPostById(id: PostId) {
-  const res = await api.posts[":id"].$get({ param: { id } });
+  const res = await api.posts.single[":id"].$get({ param: { id } });
   if (!res.ok) {
     throw new Error("Failed to fetch post");
   }
@@ -80,18 +80,35 @@ export const getPostQueryOptions = (id: PostId) =>
     retry: false,
   });
 
+export type PostCard = Awaited<
+  ReturnType<typeof getPostsByCommunityName>
+>[number];
+export async function getPostsByCommunityName(communityName: string) {
+  const res = await api.posts.community[":name"].$get({
+    param: { name: communityName },
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+  const data = await res.json();
+  return data;
+}
+
+export const getPostsQueryOptions = (communityName: string) =>
+  queryOptions({
+    queryKey: ["get-posts", communityName],
+    queryFn: () => getPostsByCommunityName(communityName),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+
 export const getAllCommunitiesQueryOptions = queryOptions({
   queryKey: ["get-all-communities"],
   queryFn: getAllCommunities,
   staleTime: 1000 * 60 * 5,
 });
 
-export type PostCard = Awaited<
-  ReturnType<typeof getCommunityByName>
->["posts"][number];
-export type Community = Awaited<
-  ReturnType<typeof getCommunityByName>
->["community"];
+export type Community = Awaited<ReturnType<typeof getCommunityByName>>;
 export async function getCommunityByName(name: string) {
   const res = await api.communities[":name"].$get({ param: { name } });
   console.log(res.status);
@@ -185,6 +202,27 @@ export async function updateVote(id: PostId, value: number) {
 
   if (!res.ok) {
     throw new Error("Failed to update vote");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
+export async function createComment(
+  postId: PostId,
+  content: string,
+  parentId?: string
+) {
+  const res = await api.comments.$post({
+    json: {
+      postId,
+      content,
+      parentId,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to create comment");
   }
 
   const data = await res.json();

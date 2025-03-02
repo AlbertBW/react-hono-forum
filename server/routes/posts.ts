@@ -2,7 +2,9 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import {
+  comment,
   community,
+  communityFollow,
   insertPostSchema,
   post,
   postIdSchema,
@@ -10,7 +12,7 @@ import {
   user,
 } from "../db/schema";
 import { db } from "../db";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
 
@@ -26,9 +28,11 @@ export const postsRoute = new Hono<AppVariables>()
   .post("/", requireAuth, zValidator("json", insertPostSchema), async (c) => {
     const userPost = c.req.valid("json");
     const user = c.var.user;
+
     if (!user) {
       return c.json({ error: "Unauthorized" }, 401);
     }
+
     const [newPost] = await db
       .insert(post)
       .values({ ...userPost, userId: user.id })
@@ -43,8 +47,90 @@ export const postsRoute = new Hono<AppVariables>()
     c.status(201);
     return c.json(newPost);
   })
-  .get("/:id", zValidator("param", postIdSchema), async (c) => {
+  .get("/community/:name", async (c) => {
+    const communityName = c.req.param("name");
+    const currentUser = c.var.user;
+
+    const posts = await db
+      .select({
+        id: post.id,
+        title: post.title,
+        createdAt: post.createdAt,
+        username: user.name,
+        communityName: community.name,
+        communityId: post.communityId,
+        communityPrivate: community.isPrivate,
+        upvotes:
+          sql<number>`(SELECT COUNT(*) FROM ${postVote} WHERE ${postVote.postId} = ${post.id} AND ${postVote.value} > 0)`.as(
+            "upvotes"
+          ),
+        downvotes:
+          sql<number>`(SELECT COUNT(*) FROM ${postVote} WHERE ${postVote.postId} = ${post.id} AND ${postVote.value} < 0)`.as(
+            "downvotes"
+          ),
+        commentsCount: count(comment.id),
+      })
+      .from(post)
+      .innerJoin(community, eq(post.communityId, community.id))
+      .where(sql`lower(${community.name}) = lower(${communityName})`)
+      .leftJoin(user, eq(post.userId, user.id))
+      .leftJoin(postVote, eq(postVote.postId, post.id))
+      .leftJoin(comment, eq(comment.postId, post.id))
+      .orderBy(desc(post.createdAt))
+      .groupBy(
+        post.id,
+        post.title,
+        post.createdAt,
+        user.name,
+        community.name,
+        community.isPrivate,
+        postVote.value
+      );
+
+    if (posts.length === 0) {
+      return c.json([], 200);
+    }
+
+    let userFollowing = null as boolean | null;
+
+    if (currentUser) {
+      const following = await db.query.communityFollow.findFirst({
+        where: (follow, { and, eq }) =>
+          and(
+            eq(follow.userId, currentUser.id),
+            eq(follow.communityId, posts[0].communityId)
+          ),
+      });
+
+      userFollowing = following ? true : false;
+    }
+
+    if (posts[0].communityPrivate && !userFollowing) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    let postsWithUserVotes = posts.map((post) => {
+      return { ...post, userVote: null as number | null };
+    });
+
+    if (currentUser) {
+      const postsIds = posts.map((post) => post.id);
+      const userVotes = await db.query.postVote.findMany({
+        where: (vote, { and, inArray }) =>
+          and(inArray(vote.postId, postsIds), eq(vote.userId, currentUser.id)),
+      });
+
+      postsWithUserVotes = posts.map((post) => {
+        const userVote = userVotes.find((vote) => vote.postId === post.id);
+        return { ...post, userVote: userVote?.value ?? null };
+      });
+    }
+
+    return c.json(postsWithUserVotes, 200);
+  })
+  .get("/single/:id", zValidator("param", postIdSchema), async (c) => {
     const { id } = c.req.valid("param");
+    const currentUser = c.var.user;
 
     const [data] = await db
       .select({
@@ -62,21 +148,20 @@ export const postsRoute = new Hono<AppVariables>()
           sql<number>`(SELECT COUNT(*) FROM ${postVote} WHERE ${postVote.postId} = ${post.id} AND ${postVote.value} < 0)`.as(
             "downvotes"
           ),
-        userVote: postVote.value,
+        commentsCount: count(comment.id),
       })
       .from(post)
       .where(eq(post.id, id))
       .leftJoin(user, eq(post.userId, user.id))
       .leftJoin(community, eq(post.communityId, community.id))
-      .leftJoin(postVote, eq(postVote.postId, post.id))
+      .leftJoin(comment, eq(comment.postId, post.id))
       .groupBy(
         post.id,
         post.title,
         post.content,
         post.createdAt,
         user.name,
-        community.name,
-        postVote.value
+        community.name
       )
       .limit(1);
 
@@ -84,14 +169,21 @@ export const postsRoute = new Hono<AppVariables>()
       return c.json({ error: "not found" }, 404);
     }
 
-    return c.json(data);
-  })
-  .delete("/:id", requireAuth, zValidator("param", postIdSchema), async (c) => {
-    const user = c.var.user;
-    if (!user) {
-      return c.json({ error: "Unauthorized" }, 401);
+    let userVote = null as number | null;
+
+    if (currentUser) {
+      const vote = await db.query.postVote.findFirst({
+        where: (vote, { and, eq }) =>
+          and(eq(vote.postId, id), eq(vote.userId, currentUser.id)),
+      });
+
+      userVote = vote?.value ?? null;
     }
 
+    return c.json({ ...data, userVote });
+  })
+  .delete("/:id", requireAuth, zValidator("param", postIdSchema), async (c) => {
+    const user = c.var.user!;
     const id = z.string().uuid().parse(c.req.param("id"));
 
     const userPost = await db.query.post.findFirst({
@@ -121,11 +213,7 @@ export const postsRoute = new Hono<AppVariables>()
       })
     ),
     async (c) => {
-      const user = c.var.user;
-      if (!user) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
+      const user = c.var.user!;
       const id = c.req.valid("param").id;
       const value = c.req.valid("param").value;
 
@@ -152,11 +240,7 @@ export const postsRoute = new Hono<AppVariables>()
     requireAuth,
     zValidator("param", postIdSchema),
     async (c) => {
-      const user = c.var.user;
-      if (!user) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
+      const user = c.var.user!;
       const id = c.req.valid("param").id;
 
       const existingVote = await db.query.postVote.findFirst({
@@ -188,11 +272,7 @@ export const postsRoute = new Hono<AppVariables>()
       })
     ),
     async (c) => {
-      const user = c.var.user;
-      if (!user) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
+      const user = c.var.user!;
       const id = c.req.valid("param").id;
       const value = c.req.valid("param").value;
 

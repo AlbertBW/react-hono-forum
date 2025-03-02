@@ -5,9 +5,9 @@ import { serveStatic } from "hono/bun";
 import { authRoute, getUser } from "./routes/auth";
 import { cors } from "hono/cors";
 import { usersRoute } from "./routes/users";
-import { sessionRoute } from "./routes/session";
 import type { Session, User } from "better-auth";
 import { communitiesRoute } from "./routes/community";
+import { commentsRoute } from "./routes/comments";
 
 export type AppVariables = {
   Variables: {
@@ -39,7 +39,8 @@ const apiRoutes = app
   .route("/auth", authRoute)
   .route("/posts", postsRoute)
   .route("/users", usersRoute)
-  .route("/communities", communitiesRoute);
+  .route("/communities", communitiesRoute)
+  .route("/comments", commentsRoute);
 
 app.get("*", serveStatic({ root: "./frontend/dist" }));
 app.get("*", serveStatic({ path: "./frontend/dist/index.html" }));

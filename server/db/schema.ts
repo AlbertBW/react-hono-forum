@@ -28,6 +28,15 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at").notNull(),
 });
 
+export const userRelations = relations(user, ({ many }) => ({
+  posts: many(post),
+  comments: many(comment),
+  communities: many(community),
+  votes: many(postVote),
+  sessions: many(session),
+  accounts: many(account),
+}));
+
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),
@@ -92,6 +101,7 @@ export const postRelations = relations(post, ({ one, many }) => ({
     references: [community.id],
   }),
   votes: many(postVote),
+  comments: many(comment),
 }));
 
 export const postVote = pgTable(
@@ -201,8 +211,9 @@ export const commentRelations = relations(comment, ({ one, many }) => ({
   parent: one(comment, {
     fields: [comment.parentId],
     references: [comment.id],
+    relationName: "parent",
   }),
-  replies: many(comment, { relationName: "parent" }),
+  replies: many(comment, { relationName: "replies" }),
 }));
 
 export type Post = InferSelectModel<typeof post>;
@@ -245,3 +256,15 @@ export const insertCommunitySchema = createInsertSchema(community, {
 }).omit({ id: true, createdAt: true, updatedAt: true });
 export type CreateCommunity = z.infer<typeof insertCommunitySchema>;
 export type CommunityId = Community["id"];
+
+export const insertCommentSchema = createInsertSchema(comment, {
+  content: z.string().min(3, "Content must be at least 3 characters").max(1000),
+  postId: z.string().uuid(),
+  parentId: z.string().uuid().nullish(),
+}).omit({
+  userId: true,
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CreateComment = z.infer<typeof insertCommentSchema>;

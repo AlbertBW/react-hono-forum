@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "bun index.ts",
-    "dev": "bun --watch index.ts"
+    "dev": "bun --watch index.ts",
+    "build:frontend": "cd ../frontend && bun install && bunx --bun vite build",
+    "start:prod": "bun run build:frontend && bun index.ts"
   },
   "private": true,
   "devDependencies": {

@@ -20,7 +20,7 @@ function RouteComponent() {
   const { name } = Route.useParams();
   const communityQueryOption = getCommunityQueryOptions(name);
   const navigate = useNavigate();
-  const { isPending, error, data } = useQuery(communityQueryOption);
+  const { isPending, error, data: community } = useQuery(communityQueryOption);
   const queryClient = useQueryClient();
 
   const form = useForm({
@@ -34,7 +34,7 @@ function RouteComponent() {
     },
     onSubmit: async ({ value }) => {
       try {
-        if (!data) {
+        if (!community) {
           throw new Error("Community not found");
         }
 
@@ -57,8 +57,6 @@ function RouteComponent() {
   if (error) {
     return <div>{error.message}</div>;
   }
-
-  const { community } = data || {};
 
   if (isPending) {
     return <div>Loading...</div>;

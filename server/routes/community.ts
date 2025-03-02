@@ -11,7 +11,7 @@ import {
   user,
 } from "../db/schema";
 import { db } from "../db";
-import { and, count, countDistinct, desc, eq, sql, sum } from "drizzle-orm";
+import { and, countDistinct, desc, eq, sql } from "drizzle-orm";
 
 export const communitiesRoute = new Hono<AppVariables>()
   .get("/", async (c) => {
@@ -44,10 +44,7 @@ export const communitiesRoute = new Hono<AppVariables>()
     zValidator("json", insertCommunitySchema),
     async (c) => {
       const communityPost = c.req.valid("json");
-      const user = c.var.user;
-      if (!user) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
+      const user = c.var.user!;
 
       const [newCommunity] = await db
         .insert(community)
@@ -97,63 +94,18 @@ export const communitiesRoute = new Hono<AppVariables>()
         })
       : undefined;
 
-    let isFollowing = false;
+    let isFollowing = null as boolean | null;
     if (follow) {
       isFollowing = follow.communityId === communityData.id;
     }
 
-    const communityDataWithFollow = {
+    return c.json({
       ...communityData,
       isFollowing,
-    };
-
-    if (communityDataWithFollow.isPrivate && !isFollowing) {
-      return c.json({ community: communityDataWithFollow, posts: [] });
-    }
-
-    const posts = await db
-      .select({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        createdAt: post.createdAt,
-        username: user.name,
-        communityName: community.name,
-        upvotes:
-          sql<number>`(SELECT COUNT(*) FROM ${postVote} WHERE ${postVote.postId} = ${post.id} AND ${postVote.value} > 0)`.as(
-            "upvotes"
-          ),
-        downvotes:
-          sql<number>`(SELECT COUNT(*) FROM ${postVote} WHERE ${postVote.postId} = ${post.id} AND ${postVote.value} < 0)`.as(
-            "downvotes"
-          ),
-        userVote: postVote.value,
-      })
-      .from(post)
-      .where(eq(post.communityId, communityDataWithFollow.id))
-      .leftJoin(user, eq(post.userId, user.id))
-      .leftJoin(community, eq(post.communityId, community.id))
-      .leftJoin(postVote, eq(postVote.postId, post.id))
-      .orderBy(desc(post.createdAt))
-      .groupBy(
-        post.id,
-        post.title,
-        post.content,
-        post.createdAt,
-        user.name,
-        community.name,
-        postVote.value
-      );
-
-    return c.json({ community: communityDataWithFollow, posts });
+    });
   })
   .post("/follow/:id", requireAuth, async (c) => {
-    const user = c.var.user;
-
-    if (!user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
+    const user = c.var.user!;
     const id = c.req.param("id");
 
     const communityExists = await db.query.community.findFirst({
@@ -175,10 +127,7 @@ export const communitiesRoute = new Hono<AppVariables>()
     return c.json(follow);
   })
   .delete("/follow/:id", requireAuth, async (c) => {
-    const user = c.var.user;
-    if (!user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
+    const user = c.var.user!;
     const id = c.req.param("id");
     const follow = await db.query.communityFollow.findFirst({
       where: and(

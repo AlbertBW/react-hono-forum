@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { randomGradient } from "@/lib/common-styles";
 import { getTimeAgo } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, ArrowLeft } from "lucide-react";
 import {
   insertCommentSchema,
   type CreateComment,
@@ -28,6 +28,12 @@ import { toast } from "sonner";
 import { createComment, getCommentsQueryOptions } from "@/api/comment.api";
 import { getCommunityQueryOptions } from "@/api/community.api";
 import { getThreadQueryOptions } from "@/api/thread.api";
+import { useSession } from "@/lib/auth-client";
+import {
+  createCommentVote,
+  deleteCommentVote,
+  updateCommentVote,
+} from "@/api/comment-vote.api";
 
 export const Route = createFileRoute("/c/$name/$id")({
   component: RouteComponent,
@@ -44,7 +50,7 @@ function RouteComponent() {
   const navigate = useNavigate();
 
   if (isPending) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   if (error) {
@@ -68,7 +74,7 @@ function RouteComponent() {
           </Button>
 
           {community && community.icon ? (
-            <Avatar className={`size-9`}>
+            <Avatar className={`size-10`}>
               <AvatarImage
                 src={community.icon}
                 alt={`${community.name} icon`}
@@ -281,7 +287,7 @@ function Comments({ threadId }: { threadId: string }) {
   } = useQuery(getCommentsQueryOptions(threadId));
 
   if (isPending) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   if (error) {
@@ -292,5 +298,175 @@ function Comments({ threadId }: { threadId: string }) {
     return <div>No comments</div>;
   }
 
-  return null;
+  return (
+    <section className="space-y-3">
+      {comments.map((comment) => (
+        <div key={comment.id} className="flex gap-4">
+          <div className="flex flex-col gap-0.5 w-full">
+            <div className="flex items-center gap-1.5 w-full">
+              <Avatar className={`size-8`}>
+                <AvatarFallback className={randomGradient()}></AvatarFallback>
+              </Avatar>
+              <Link
+                className="text-xs text-accent-foreground hover:text-blue-200 font-semibold"
+                to={"/user/$name"}
+                params={{ name: comment.username }}
+              >
+                {comment.username}
+              </Link>
+              <span className="text-xs font-semibold text-muted-foreground">
+                •
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground">
+                {getTimeAgo(comment.createdAt)}
+              </span>
+              {comment.createdAt !== comment.updatedAt && (
+                <>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    •
+                  </span>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Edited {getTimeAgo(comment.updatedAt)}
+                  </span>
+                </>
+              )}
+            </div>
+            <div className="flex gap-1.5 w-full pb-0.5">
+              <div className="w-8"></div>
+              <p className="text-accent-foreground/80 text-sm">
+                {comment.content}
+              </p>
+            </div>
+            <div className="flex gap-1.5 w-full">
+              <div className="w-6"></div>
+              <VoteComment
+                commentId={comment.id}
+                userVote={comment.userVote}
+                threadId={threadId}
+                upvotes={comment.upvotes}
+                downvotes={comment.downvotes}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function VoteComment({
+  threadId,
+  commentId,
+  userVote,
+  upvotes,
+  downvotes,
+}: {
+  threadId: string;
+  commentId: string;
+  userVote: number | null;
+  upvotes: number;
+  downvotes: number;
+}) {
+  const { isPending: isSessionLoading, data: sessionData } = useSession();
+  const queryClient = useQueryClient();
+  const commentsQueryOptions = getCommentsQueryOptions(threadId);
+
+  const handleVote = async (value: number) => {
+    if (!sessionData) {
+      toast.error("Error", { description: `You must be logged in to vote` });
+      return;
+    }
+    const existingCommentArray =
+      await queryClient.ensureQueryData(commentsQueryOptions);
+
+    if (userVote === value) {
+      // Delete vote
+      queryClient.setQueryData(
+        commentsQueryOptions.queryKey,
+        existingCommentArray.map((c) =>
+          c.id === commentId
+            ? {
+                ...c,
+                userVote: null,
+                upvotes: value === 1 ? c.upvotes - 1 : c.upvotes,
+                downvotes: value === -1 ? c.downvotes - 1 : c.downvotes,
+              }
+            : c
+        )
+      );
+
+      return await deleteCommentVote(commentId);
+    }
+
+    if (userVote && userVote !== value) {
+      // Update vote
+      queryClient.setQueryData(
+        commentsQueryOptions.queryKey,
+        existingCommentArray.map((c) =>
+          c.id === commentId
+            ? {
+                ...c,
+                userVote: value,
+                upvotes: value === 1 ? c.upvotes + 1 : c.upvotes - 1,
+                downvotes: value === -1 ? c.downvotes + 1 : c.downvotes - 1,
+              }
+            : c
+        )
+      );
+
+      return await updateCommentVote(commentId, value);
+    }
+
+    // Create vote
+    queryClient.setQueryData(
+      commentsQueryOptions.queryKey,
+      existingCommentArray.map((c) =>
+        c.id === commentId
+          ? {
+              ...c,
+              userVote: value,
+              upvotes: value === 1 ? c.upvotes + 1 : c.upvotes,
+              downvotes: value === -1 ? c.downvotes + 1 : c.downvotes,
+            }
+          : c
+      )
+    );
+
+    return await createCommentVote(commentId, value);
+  };
+
+  const mutation = useMutation({
+    mutationFn: handleVote,
+    onError: (error) => {
+      toast.error("Error", {
+        description: error instanceof Error ? error.message : `Failed to vote`,
+      });
+      // invalidate the query to refetch the data
+      queryClient.invalidateQueries(commentsQueryOptions);
+      // queryClient.invalidateQueries(getThread);
+    },
+  });
+  return (
+    <div className="flex gap-1.5 justify-center items-center text-accent-foreground/80">
+      <Button
+        className={`rounded-full size-8 hover:text-green-500 ${userVote === 1 ? "text-green-600" : ""}`}
+        variant={"ghost"}
+        size={"icon"}
+        onClick={() => mutation.mutate(1)}
+        disabled={mutation.isPending || isSessionLoading}
+      >
+        <ArrowBigUp className="size-6" />
+      </Button>
+      <span className="text-sm">{upvotes - downvotes}</span>
+      <Button
+        className={`rounded-full size-8 hover:text-red-500 ${userVote === -1 ? "text-red-600" : ""}`}
+        variant={"ghost"}
+        size={"icon"}
+        onClick={() => mutation.mutate(-1)}
+        disabled={mutation.isPending || isSessionLoading}
+      >
+        <ArrowBigDown className="size-6" />
+      </Button>
+    </div>
+  );
 }

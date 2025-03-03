@@ -10,6 +10,7 @@ import {
   threadIdSchema,
   threadVote,
   user,
+  voteSchema,
 } from "../db/schema";
 import { db } from "../db";
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
@@ -213,13 +214,7 @@ export const threadsRoute = new Hono<AppVariables>()
   .post(
     "/:id/vote/:value",
     requireAuth,
-    zValidator(
-      "param",
-      z.object({
-        id: z.string().uuid(),
-        value: z.coerce.number().min(-1).max(1),
-      })
-    ),
+    zValidator("param", voteSchema),
     async (c) => {
       const user = c.var.user!;
       const id = c.req.valid("param").id;
@@ -272,13 +267,7 @@ export const threadsRoute = new Hono<AppVariables>()
   .put(
     "/:id/vote/:value",
     requireAuth,
-    zValidator(
-      "param",
-      z.object({
-        id: z.string().uuid(),
-        value: z.coerce.number().min(-1).max(1),
-      })
-    ),
+    zValidator("param", voteSchema),
     async (c) => {
       const user = c.var.user!;
       const id = c.req.valid("param").id;

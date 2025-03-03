@@ -297,3 +297,12 @@ export const insertCommentSchema = createInsertSchema(comment, {
   updatedAt: true,
 });
 export type CreateComment = z.infer<typeof insertCommentSchema>;
+
+export type Comment = InferSelectModel<typeof comment>;
+export const commentIdSchema = z.object({ id: z.string().uuid() });
+export type CommentId = Comment["id"];
+
+export const voteSchema = z.object({
+  id: z.string().uuid(),
+  value: z.coerce.number().min(-1).max(1),
+});

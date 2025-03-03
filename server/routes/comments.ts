@@ -2,12 +2,20 @@ import { Hono } from "hono";
 import type { AppVariables } from "../app";
 import { requireAuth } from "./auth";
 import { zValidator } from "@hono/zod-validator";
-import { insertCommentSchema, comment, commentVote, user } from "../db/schema";
+import {
+  insertCommentSchema,
+  comment,
+  commentVote,
+  user,
+  commentIdSchema,
+  voteSchema,
+} from "../db/schema";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 export const commentsRoute = new Hono<AppVariables>()
   .get("/:threadId", async (c) => {
+    const currentUser = c.var.user!;
     const threadId = c.req.param("threadId");
 
     const comments = await db
@@ -15,22 +23,64 @@ export const commentsRoute = new Hono<AppVariables>()
         id: comment.id,
         content: comment.content,
         createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
         username: user.name,
         avatar: user.image,
+        upvotes:
+          sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} > 0)`.as(
+            "upvotes"
+          ),
+        downvotes:
+          sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} < 0)`.as(
+            "downvotes"
+          ),
       })
       .from(comment)
       .where(eq(comment.threadId, threadId))
       .leftJoin(commentVote, eq(commentVote.commentId, comment.id))
       .leftJoin(user, eq(user.id, comment.userId))
+      .orderBy(desc(comment.createdAt))
       .groupBy(
         comment.id,
         user.name,
         user.image,
         comment.content,
-        comment.createdAt
+        comment.createdAt,
+        comment.updatedAt
       );
 
-    return c.json(comments);
+    const commentIdArray = comments.map((c) => c.id);
+
+    let userVote: {
+      value: number;
+      commentId: string;
+    }[];
+
+    if (currentUser) {
+      const vote = await db.query.commentVote.findMany({
+        where: (vote, { and, eq }) =>
+          and(
+            inArray(vote.commentId, commentIdArray),
+            eq(vote.userId, currentUser.id)
+          ),
+        columns: {
+          commentId: true,
+          value: true,
+        },
+      });
+
+      userVote = vote;
+    }
+
+    const commentsWithUserVotes = comments.map((comment) => {
+      const vote = userVote.find((v) => v.commentId === comment.id);
+      return {
+        ...comment,
+        userVote: vote?.value ?? null,
+      };
+    });
+
+    return c.json(commentsWithUserVotes);
   })
   .post(
     "/",
@@ -55,5 +105,89 @@ export const commentsRoute = new Hono<AppVariables>()
         .returning();
 
       return c.json(newComment, 201);
+    }
+  )
+  .post(
+    "/:id/vote/:value",
+    requireAuth,
+    zValidator("param", voteSchema),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
+      const value = c.req.valid("param").value;
+
+      const voteExists = await db.query.commentVote.findFirst({
+        where: (vote, { and, eq }) =>
+          and(eq(vote.commentId, id), eq(vote.userId, user.id)),
+      });
+
+      if (voteExists) {
+        return c.json({ error: "Already voted" }, 400);
+      }
+
+      const [vote] = await db
+        .insert(commentVote)
+        .values({ commentId: id, userId: user.id, value })
+        .returning();
+
+      return c.json(vote, 201);
+    }
+  )
+  .delete(
+    "/:id/vote",
+    requireAuth,
+    zValidator("param", commentIdSchema),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
+
+      const existingVote = await db.query.commentVote.findFirst({
+        where: (commentVote, { and, eq }) =>
+          and(eq(commentVote.commentId, id), eq(commentVote.userId, user.id)),
+      });
+
+      if (!existingVote) {
+        return c.json({ error: "Not voted" }, 400);
+      }
+
+      const [vote] = await db
+        .delete(commentVote)
+        .where(
+          and(eq(commentVote.commentId, id), eq(commentVote.userId, user.id))
+        )
+        .returning();
+
+      c.status(200);
+      return c.json(vote);
+    }
+  )
+  .put(
+    "/:id/vote/:value",
+    requireAuth,
+    zValidator("param", voteSchema),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
+      const value = c.req.valid("param").value;
+
+      const voteExists = await db.query.commentVote.findFirst({
+        where: (vote, { and, eq }) =>
+          and(eq(vote.commentId, id), eq(vote.userId, user.id)),
+      });
+
+      if (!voteExists) {
+        return c.json({ error: "Not voted" }, 400);
+      }
+
+      const [vote] = await db
+        .update(commentVote)
+        .set({ value })
+        .where(
+          and(eq(commentVote.commentId, id), eq(commentVote.userId, user.id))
+        )
+        .returning();
+
+      c.status(200);
+      return c.json(vote);
     }
   );

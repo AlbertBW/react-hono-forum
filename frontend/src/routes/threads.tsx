@@ -96,21 +96,18 @@ function ThreadDeleteButton({ id }: { id: ThreadId }) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: deleteThread,
-    onError: () => {
-      toast.error("Error", { description: `Failed to delete thread: ${id}` });
+    onError: (error) => {
+      toast.error("Error", {
+        description:
+          error instanceof Error ? error.message : "Failed to delete thread",
+      });
     },
     onSuccess: () => {
       toast.success("Thread deleted", {
         description: `Successfully deleted thread: ${id}`,
       });
 
-      queryClient.setQueryData(
-        getAllThreadsQueryOptions.queryKey,
-        (existingThreads) => ({
-          ...existingThreads,
-          posts: existingThreads!.posts.filter((t) => t.id !== id),
-        })
-      );
+      queryClient.invalidateQueries(getAllThreadsQueryOptions);
     },
   });
   return (

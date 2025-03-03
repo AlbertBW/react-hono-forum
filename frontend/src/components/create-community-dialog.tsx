@@ -59,14 +59,21 @@ export default function CreateCommunityDialog() {
     },
     onSubmit: async ({ value }) => {
       try {
-        const newCommunity = await createCommunity({ value });
-
+        const { data, error } = await createCommunity({ value });
+        if (error) {
+          throw new Error(error.message);
+        }
         toast.success("Community created", {
-          description: `Successfully created community: ${newCommunity.name}`,
+          description: `Successfully created community: ${data.name}`,
         });
-        navigate({ to: `/c/${newCommunity.name}` });
+        navigate({ to: `/c/${data.name}` });
       } catch (error) {
-        console.error(error);
+        toast.error("Error", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to create new comment",
+        });
       }
     },
   });

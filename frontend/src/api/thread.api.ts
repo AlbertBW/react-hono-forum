@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { queryOptions } from "@tanstack/react-query";
 import { CreateThread, ThreadId } from "../../../server/db/schema";
+import { handleRateLimitError } from "./ratelimit-response";
 
 export async function getAllThreads() {
   const res = await api.threads.$get();
@@ -21,11 +22,13 @@ export const getAllThreadsQueryOptions = queryOptions({
 export async function createThread({ value }: { value: CreateThread }) {
   const res = await api.threads.$post({ json: value });
   if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { data: null, error: error };
     throw new Error("Failed to create thread");
   }
 
   const newThread = await res.json();
-  return newThread;
+  return { data: newThread, error: null };
 }
 
 export async function getThreadById(id: ThreadId) {
@@ -70,6 +73,8 @@ export const getThreadsQueryOptions = (communityName: string) =>
 export async function deleteThread(id: ThreadId) {
   const res = await api.threads[":id"].$delete({ param: { id } });
   if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
     throw new Error("Failed to delete thread");
   }
 }

@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { ThreadId } from "../../../server/db/schema";
 import { queryOptions } from "@tanstack/react-query";
+import { handleRateLimitError } from "./ratelimit-response";
 
 export async function createComment(
   threadId: ThreadId,
@@ -16,11 +17,13 @@ export async function createComment(
   });
 
   if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { data: null, error: error };
     throw new Error("Failed to create comment");
   }
 
   const data = await res.json();
-  return data;
+  return { data, error: null };
 }
 
 export async function getComments(threadId: ThreadId) {

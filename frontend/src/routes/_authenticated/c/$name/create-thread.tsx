@@ -38,19 +38,25 @@ function RouteComponent() {
         if (!community) {
           throw new Error("Community not found");
         }
-
-        const newThread = await createThread({ value });
-        if (community) {
-          navigate({ to: `/c/${community.name}/${newThread.id}` });
+        const { data, error } = await createThread({ value });
+        if (error) {
+          throw new Error(error.message);
         }
-
+        if (community) {
+          navigate({ to: `/c/${community.name}/${data.id}` });
+        }
         // invalidate the query so the new post shows up
         queryClient.invalidateQueries(communityQueryOption);
         toast.success("Post created", {
-          description: `Successfully created post: ${newThread.title}`,
+          description: `Successfully created post: ${data.title}`,
         });
-      } catch {
-        toast.error("Error", { description: "Failed to create new post" });
+      } catch (error) {
+        toast.error("Error", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to create new comment",
+        });
       }
     },
   });

@@ -157,15 +157,24 @@ function CreateComment({
     },
     onSubmit: async ({ value }) => {
       try {
-        await createComment(threadId, value.content, parentId);
+        const { error } = await createComment(
+          threadId,
+          value.content,
+          parentId
+        );
+        if (error) {
+          throw new Error(error.message);
+        }
         // queryClient.invalidateQueries(getCommentsQueryOptions(threadId));
-        toast.success("Comment created", {
-          description: `Successfully created comment`,
-        });
         form.reset();
         setFormOpen(false);
-      } catch {
-        toast.error("Error", { description: "Failed to create new comment" });
+      } catch (error: unknown) {
+        toast.error("Error", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to create new comment",
+        });
       }
     },
   });

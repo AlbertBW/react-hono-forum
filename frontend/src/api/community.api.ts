@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { queryOptions } from "@tanstack/react-query";
 import { CommunityId, CreateCommunity } from "../../../server/db/schema";
+import { handleRateLimitError } from "./ratelimit-response";
 
 export async function getAllCommunities() {
   const res = await api.communities.$get();
@@ -42,16 +43,20 @@ export const getCommunityQueryOptions = (name: string) => {
 export async function createCommunity({ value }: { value: CreateCommunity }) {
   const res = await api.communities.$post({ json: value });
   if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { data: null, error: error };
     throw new Error("Failed to create community");
   }
 
   const newCommunity = await res.json();
-  return newCommunity;
+  return { data: newCommunity, error: null };
 }
 
 export async function joinCommunity(id: CommunityId) {
   const res = await api.communities.follow[":id"].$post({ param: { id } });
   if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) throw new Error(error.message);
     throw new Error("Failed to join community");
   }
 }
@@ -59,6 +64,8 @@ export async function joinCommunity(id: CommunityId) {
 export async function leaveCommunity(id: CommunityId) {
   const res = await api.communities.follow[":id"].$delete({ param: { id } });
   if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) throw new Error(error.message);
     throw new Error("Failed to join community");
   }
 }

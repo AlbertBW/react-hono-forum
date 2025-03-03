@@ -21,12 +21,10 @@ const app = new Hono<AppVariables>();
 
 const ratelimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  maxRequests: 5,
+  maxRequests: 2,
 });
 
 app.use("*", logger());
-app.use("*", ratelimiter);
-
 app.use(
   "/api/*",
   cors({
@@ -38,7 +36,7 @@ app.use(
     credentials: true,
   })
 );
-
+app.use("*", ratelimiter);
 app.use("*", getUser);
 
 const apiRoutes = app

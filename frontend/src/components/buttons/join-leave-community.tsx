@@ -20,8 +20,11 @@ export function JoinButton({ id, name }: { id: CommunityId; name: string }) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: joinCommunity,
-    onError: () => {
-      toast.error("Error", { description: `Failed to join ${name}` });
+    onError: (error) => {
+      toast.error("Error", {
+        description:
+          error instanceof Error ? error.message : `Failed to join ${name}`,
+      });
     },
     onSuccess: async () => {
       toast.success(`Joined ${name}`, {
@@ -59,8 +62,11 @@ export function LeaveCommunity({
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: leaveCommunity,
-    onError: () => {
-      toast.error("Error", { description: `Failed to leave ${name}` });
+    onError: (error) => {
+      toast.error("Error", {
+        description:
+          error instanceof Error ? error.message : `Failed to leave ${name}`,
+      });
     },
     onSuccess: async () => {
       toast.success(`You've left ${name}`, {

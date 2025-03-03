@@ -32,15 +32,6 @@ export default function VoteButtons({
   const threadsQueryOptions = getThreadsQueryOptions(communityName);
   const getThread = getThreadQueryOptions(threadId);
 
-  console.log(
-    "userVote",
-    userVote,
-    threadId,
-    upvotes,
-    downvotes,
-    communityName
-  );
-
   const handleVote = async (value: number) => {
     if (!sessionData) {
       toast.error("Error", { description: `You must be logged in to vote` });
@@ -131,13 +122,14 @@ export default function VoteButtons({
 
   const mutation = useMutation({
     mutationFn: handleVote,
-    onError: () => {
-      toast.error("Error", { description: `Failed to vote` });
+    onError: (error) => {
+      toast.error("Error", {
+        description: error instanceof Error ? error.message : `Failed to vote`,
+      });
       // invalidate the query to refetch the data
       queryClient.invalidateQueries(threadsQueryOptions);
       queryClient.invalidateQueries(getThread);
     },
-    onSuccess: () => {},
   });
 
   return (

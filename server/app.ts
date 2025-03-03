@@ -8,6 +8,7 @@ import { usersRoute } from "./routes/users";
 import type { Session, User } from "better-auth";
 import { communitiesRoute } from "./routes/community";
 import { commentsRoute } from "./routes/comments";
+import { createRateLimiter } from "./ratelimit";
 
 export type AppVariables = {
   Variables: {
@@ -18,7 +19,13 @@ export type AppVariables = {
 
 const app = new Hono<AppVariables>();
 
+const ratelimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 5,
+});
+
 app.use("*", logger());
+app.use("*", ratelimiter);
 
 app.use(
   "/api/*",

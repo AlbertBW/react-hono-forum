@@ -15,6 +15,7 @@ import { Route as ThreadsImport } from './routes/threads'
 import { Route as SignInImport } from './routes/sign-in'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as UserUsernameImport } from './routes/user/$username'
 import { Route as CAllImport } from './routes/c/all'
 import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sign-out'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
@@ -45,6 +46,12 @@ const AuthenticatedRoute = AuthenticatedImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const UserUsernameRoute = UserUsernameImport.update({
+  id: '/user/$username',
+  path: '/user/$username',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -151,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CAllImport
       parentRoute: typeof rootRoute
     }
+    '/user/$username': {
+      id: '/user/$username'
+      path: '/user/$username'
+      fullPath: '/user/$username'
+      preLoaderRoute: typeof UserUsernameImport
+      parentRoute: typeof rootRoute
+    }
     '/c/$name/$id': {
       id: '/c/$name/$id'
       path: '/c/$name/$id'
@@ -204,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
+  '/user/$username': typeof UserUsernameRoute
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
@@ -218,6 +233,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
+  '/user/$username': typeof UserUsernameRoute
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
@@ -233,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
+  '/user/$username': typeof UserUsernameRoute
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/': typeof CNameIndexRoute
   '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
@@ -249,6 +266,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/sign-out'
     | '/c/all'
+    | '/user/$username'
     | '/c/$name/$id'
     | '/c/$name'
     | '/c/$name/create-thread'
@@ -262,6 +280,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/sign-out'
     | '/c/all'
+    | '/user/$username'
     | '/c/$name/$id'
     | '/c/$name'
     | '/c/$name/create-thread'
@@ -275,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/sign-out'
     | '/c/all'
+    | '/user/$username'
     | '/c/$name/$id'
     | '/c/$name/'
     | '/_authenticated/c/$name/create-thread'
@@ -287,6 +307,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   ThreadsRoute: typeof ThreadsRoute
   CAllRoute: typeof CAllRoute
+  UserUsernameRoute: typeof UserUsernameRoute
   CNameIdRoute: typeof CNameIdRoute
   CNameIndexRoute: typeof CNameIndexRoute
 }
@@ -297,6 +318,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   ThreadsRoute: ThreadsRoute,
   CAllRoute: CAllRoute,
+  UserUsernameRoute: UserUsernameRoute,
   CNameIdRoute: CNameIdRoute,
   CNameIndexRoute: CNameIndexRoute,
 }
@@ -316,6 +338,7 @@ export const routeTree = rootRoute
         "/sign-in",
         "/threads",
         "/c/all",
+        "/user/$username",
         "/c/$name/$id",
         "/c/$name/"
       ]
@@ -352,6 +375,9 @@ export const routeTree = rootRoute
     },
     "/c/all": {
       "filePath": "c/all.tsx"
+    },
+    "/user/$username": {
+      "filePath": "user/$username.tsx"
     },
     "/c/$name/$id": {
       "filePath": "c/$name/$id.tsx"

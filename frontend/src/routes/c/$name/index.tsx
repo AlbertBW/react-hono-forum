@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth-client";
 import { randomGradient } from "@/lib/common-styles";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
@@ -15,24 +15,41 @@ import {
   LeaveCommunity,
 } from "@/components/buttons/join-leave-community";
 import { getCommunityQueryOptions } from "@/api/community.api";
-import { getThreadsQueryOptions } from "@/api/thread.api";
+import { getThreadsInfiniteQueryOptions } from "@/api/thread.api";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
+import { THREADS_PER_PAGE } from "@/lib/constants";
 
 export const Route = createFileRoute("/c/$name/")({
   component: CommunityPage,
 });
 
 function CommunityPage() {
+  const navigate = useNavigate();
+  const { ref, inView } = useInView();
   const { name } = Route.useParams();
   const { data: userData, isPending: userPending } = useSession();
-  const communityQueryOption = getCommunityQueryOptions(name);
-  const threadsQueryOptions = getThreadsQueryOptions(name);
-  const { isPending, error, data: community } = useQuery(communityQueryOption);
   const {
-    isPending: threadPending,
-    error: threadError,
-    data: initialThreads,
-  } = useQuery(threadsQueryOptions);
-  const navigate = useNavigate();
+    isPending,
+    error,
+    data: community,
+  } = useQuery(getCommunityQueryOptions(name));
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status: threadStatus,
+  } = useInfiniteQuery(getThreadsInfiniteQueryOptions(name, THREADS_PER_PAGE));
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, inView, isFetchingNextPage]);
+
+  const threads = data?.pages.flatMap((page) => page) || [];
 
   if (error || (!isPending && !community)) {
     return (
@@ -121,24 +138,51 @@ function CommunityPage() {
 
       <div className="flex relative">
         <main className="w-full">
-          {threadPending ? (
+          {threadStatus === "pending" ? (
             <div className="flex flex-col justify-center items-center w-full gap-4 mt-4"></div>
-          ) : threadError ? (
+          ) : threadStatus === "error" ? (
             <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
               <h3 className="text-lg font-bold">Failed to Load threads</h3>
               <p className="text-sm text-muted-foreground">
                 An error occurred while trying to load threads.
               </p>
             </div>
-          ) : initialThreads && initialThreads.length > 0 ? (
+          ) : threads && threads.length > 0 ? (
             <>
               <Separator />
-              {initialThreads.map((thread) => (
+              {threads.map((thread) => (
                 <Fragment key={thread.id}>
                   <ThreadCard thread={thread} />
                   <Separator />
                 </Fragment>
               ))}
+
+              {/* Invisible element to trigger loading more */}
+              {hasNextPage ? (
+                <div
+                  ref={ref}
+                  className="h-10 flex items-center justify-center py-4"
+                >
+                  {isFetchingNextPage ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                      <span className="text-sm text-gray-400">
+                        Loading more...
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">
+                      Scroll for more
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="h-10 flex items-center justify-center py-4 gap-2">
+                  <span className="text-sm text-gray-500">
+                    All threads loaded
+                  </span>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex flex-col gap-4 mt-4">

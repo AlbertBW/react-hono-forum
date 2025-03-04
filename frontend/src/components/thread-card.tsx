@@ -44,9 +44,9 @@ export default function ThreadCard({ thread }: { thread: ThreadCard }) {
         </div>
 
         <div>
-          <Link to={"/"} className="text-base sm:text-lg font-semibold">
+          <span className="text-base sm:text-lg font-semibold">
             {thread.title}
-          </Link>
+          </span>
         </div>
 
         <div className="flex items-center gap-2">

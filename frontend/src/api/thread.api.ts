@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { CreateThread, ThreadId } from "../../../server/db/schema";
 import { handleRateLimitError } from "./ratelimit-response";
 
@@ -31,7 +31,7 @@ export async function createThread({ value }: { value: CreateThread }) {
   return { data: newThread, error: null };
 }
 
-export async function getThreadById(id: ThreadId) {
+export async function getSingleThreadById(id: ThreadId) {
   const res = await api.threads.single[":id"].$get({ param: { id } });
   if (!res.ok) {
     throw new Error("Failed to fetch thread");
@@ -40,10 +40,10 @@ export async function getThreadById(id: ThreadId) {
   return data;
 }
 
-export const getThreadQueryOptions = (id: ThreadId) =>
+export const getSingleThreadQueryOptions = (id: ThreadId) =>
   queryOptions({
     queryKey: ["get-thread", id],
-    queryFn: () => getThreadById(id),
+    queryFn: () => getSingleThreadById(id),
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
@@ -51,24 +51,32 @@ export const getThreadQueryOptions = (id: ThreadId) =>
 export type ThreadCard = Awaited<
   ReturnType<typeof getThreadsByCommunityName>
 >[number];
-export async function getThreadsByCommunityName(communityName: string) {
-  const res = await api.threads.community[":name"].$get({
-    param: { name: communityName },
-  });
-  if (!res.ok) {
-    throw new Error("Failed to fetch threads");
-  }
-  const data = await res.json();
-  return data;
-}
+// export async function getThreadsByCommunityName(
+//   communityName: string,
+//   limit?: number,
+//   cursor?: string
+// ) {
+//   const res = await api.threads.community[":name"].$get({
+//     param: { name: communityName },
+//   });
+//   if (!res.ok) {
+//     throw new Error("Failed to fetch threads");
+//   }
+//   const data = await res.json();
+//   return data;
+// }
 
-export const getThreadsQueryOptions = (communityName: string) =>
-  queryOptions({
-    queryKey: ["get-threads", communityName],
-    queryFn: () => getThreadsByCommunityName(communityName),
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-  });
+// export const getThreadsQueryOptions = (
+//   communityName: string,
+//   limit?: number,
+//   cursor?: string
+// ) =>
+//   queryOptions({
+//     queryKey: ["get-threads", communityName, limit, cursor],
+//     queryFn: () => getThreadsByCommunityName(communityName, limit, cursor),
+//     staleTime: 1000 * 60 * 5,
+//     retry: false,
+//   });
 
 export async function deleteThread(id: ThreadId) {
   const res = await api.threads[":id"].$delete({ param: { id } });
@@ -78,3 +86,47 @@ export async function deleteThread(id: ThreadId) {
     throw new Error("Failed to delete thread");
   }
 }
+
+export const getThreadsByCommunityName = async (
+  name: string,
+  limit?: number,
+  cursor?: string
+) => {
+  console.log("Limit", limit);
+  const res = await api.threads.community[":name"].$get({
+    param: { name },
+    query: {
+      limit: String(limit),
+      cursor,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch threads");
+  }
+
+  return res.json();
+};
+
+export const getThreadsInfiniteQueryOptions = (
+  name: string,
+  limit: number = 10
+) =>
+  infiniteQueryOptions({
+    queryKey: ["threads", "infinite", name],
+    queryFn: async ({ pageParam }) =>
+      await getThreadsByCommunityName(
+        name,
+        limit,
+        pageParam as string | undefined
+      ),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === 0) {
+        return undefined;
+      }
+      return lastPage[lastPage.length - 1].createdAt;
+    },
+    staleTime: 1000 * 60 * 5,
+    initialPageParam: undefined as string | undefined,
+    retry: false,
+  });

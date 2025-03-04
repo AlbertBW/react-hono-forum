@@ -10,9 +10,10 @@ import {
   createThreadVote,
 } from "@/api/thread-vote.api";
 import {
-  getThreadQueryOptions,
-  getThreadsQueryOptions,
+  getSingleThreadQueryOptions,
+  getThreadsInfiniteQueryOptions,
 } from "@/api/thread.api";
+import { THREADS_PER_PAGE } from "@/lib/constants";
 
 export default function VoteButtons({
   threadId,
@@ -29,8 +30,11 @@ export default function VoteButtons({
 }) {
   const { isPending: isSessionLoading, data: sessionData } = useSession();
   const queryClient = useQueryClient();
-  const threadsQueryOptions = getThreadsQueryOptions(communityName);
-  const getThread = getThreadQueryOptions(threadId);
+  const threadsQueryOptions = getThreadsInfiniteQueryOptions(
+    communityName,
+    THREADS_PER_PAGE
+  );
+  const singleThreadQueryOptions = getSingleThreadQueryOptions(threadId);
 
   const handleVote = async (value: number) => {
     if (!sessionData) {
@@ -39,27 +43,33 @@ export default function VoteButtons({
     }
 
     const existingThreadArray =
-      await queryClient.ensureQueryData(threadsQueryOptions);
-
-    const existingThread = await queryClient.ensureQueryData(getThread);
+      await queryClient.ensureInfiniteQueryData(threadsQueryOptions);
+    const existingThread = await queryClient.ensureQueryData(
+      singleThreadQueryOptions
+    );
 
     if (userVote === value) {
       // Delete vote
-      queryClient.setQueryData(
-        threadsQueryOptions.queryKey,
-        existingThreadArray.map((t) =>
-          t.id === threadId
+      const newArray = existingThreadArray?.pages.map((page) =>
+        page.map((thread) =>
+          thread.id === threadId
             ? {
-                ...t,
+                ...thread,
                 userVote: null,
-                upvotes: value === 1 ? t.upvotes - 1 : t.upvotes,
-                downvotes: value === -1 ? t.downvotes - 1 : t.downvotes,
+                upvotes: value === 1 ? thread.upvotes - 1 : thread.upvotes,
+                downvotes:
+                  value === -1 ? thread.downvotes - 1 : thread.downvotes,
               }
-            : t
+            : thread
         )
       );
 
-      queryClient.setQueryData(getThread.queryKey, {
+      queryClient.setQueryData(threadsQueryOptions.queryKey, () => ({
+        pages: newArray,
+        pageParams: existingThreadArray.pageParams,
+      }));
+
+      queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
         ...existingThread,
         userVote: null,
         upvotes: value === 1 ? upvotes - 1 : upvotes,
@@ -71,21 +81,26 @@ export default function VoteButtons({
 
     if (userVote && userVote !== value) {
       // Update vote
-      queryClient.setQueryData(
-        threadsQueryOptions.queryKey,
-        existingThreadArray.map((t) =>
-          t.id === threadId
+      const newArray = existingThreadArray?.pages.map((page) =>
+        page.map((thread) =>
+          thread.id === threadId
             ? {
-                ...t,
+                ...thread,
                 userVote: value,
-                upvotes: value === 1 ? t.upvotes + 1 : t.upvotes - 1,
-                downvotes: value === -1 ? t.downvotes + 1 : t.downvotes - 1,
+                upvotes: value === 1 ? thread.upvotes + 1 : thread.upvotes - 1,
+                downvotes:
+                  value === -1 ? thread.downvotes + 1 : thread.downvotes - 1,
               }
-            : t
+            : thread
         )
       );
 
-      queryClient.setQueryData(getThread.queryKey, {
+      queryClient.setQueryData(threadsQueryOptions.queryKey, () => ({
+        pages: newArray,
+        pageParams: existingThreadArray.pageParams,
+      }));
+
+      queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
         ...existingThread,
         userVote: value,
         upvotes: value === 1 ? upvotes + 1 : upvotes - 1,
@@ -96,21 +111,24 @@ export default function VoteButtons({
     }
 
     // Create vote
-    queryClient.setQueryData(
-      threadsQueryOptions.queryKey,
-      existingThreadArray.map((t) =>
-        t.id === threadId
+    const newArray = existingThreadArray?.pages.map((page) =>
+      page.map((thread) =>
+        thread.id === threadId
           ? {
-              ...t,
+              ...thread,
               userVote: value,
-              upvotes: value === 1 ? t.upvotes + 1 : t.upvotes,
-              downvotes: value === -1 ? t.downvotes + 1 : t.downvotes,
+              upvotes: value === 1 ? thread.upvotes + 1 : thread.upvotes,
+              downvotes: value === -1 ? thread.downvotes + 1 : thread.downvotes,
             }
-          : t
+          : thread
       )
     );
+    queryClient.setQueryData(threadsQueryOptions.queryKey, () => ({
+      pages: newArray,
+      pageParams: existingThreadArray.pageParams,
+    }));
 
-    queryClient.setQueryData(getThread.queryKey, {
+    queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
       ...existingThread,
       userVote: value,
       upvotes: value === 1 ? upvotes + 1 : upvotes,
@@ -128,7 +146,7 @@ export default function VoteButtons({
       });
       // invalidate the query to refetch the data
       queryClient.invalidateQueries(threadsQueryOptions);
-      queryClient.invalidateQueries(getThread);
+      queryClient.invalidateQueries(singleThreadQueryOptions);
     },
   });
 

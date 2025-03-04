@@ -21,7 +21,7 @@ const app = new Hono<AppVariables>();
 
 const ratelimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  maxRequests: 2,
+  maxRequests: 200,
 });
 
 app.use("*", logger());

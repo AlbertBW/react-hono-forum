@@ -11,77 +11,107 @@ import {
   voteSchema,
 } from "../db/schema";
 import { db } from "../db";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { z } from "zod";
 
 export const commentsRoute = new Hono<AppVariables>()
-  .get("/:threadId", async (c) => {
-    const currentUser = c.var.user!;
-    const threadId = c.req.param("threadId");
-
-    const comments = await db
-      .select({
-        id: comment.id,
-        content: comment.content,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-        username: user.name,
-        avatar: user.image,
-        upvotes:
-          sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} > 0)`.as(
-            "upvotes"
-          ),
-        downvotes:
-          sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} < 0)`.as(
-            "downvotes"
-          ),
+  .get(
+    "/:threadId",
+    zValidator("param", z.object({ threadId: z.string().uuid() })),
+    zValidator(
+      "query",
+      z.object({
+        parentId: z.string().uuid().optional(),
+        cursor: z.coerce.date().optional(),
+        limit: z.coerce.number().int().positive().default(30),
       })
-      .from(comment)
-      .where(eq(comment.threadId, threadId))
-      .leftJoin(commentVote, eq(commentVote.commentId, comment.id))
-      .leftJoin(user, eq(user.id, comment.userId))
-      .orderBy(desc(comment.createdAt))
-      .groupBy(
-        comment.id,
-        user.name,
-        user.image,
-        comment.content,
-        comment.createdAt,
-        comment.updatedAt
-      );
+    ),
+    async (c) => {
+      const currentUser = c.var.user!;
+      const threadId = c.req.valid("param").threadId;
+      const parentId = c.req.valid("query").parentId;
+      const cursor = c.req.valid("query").cursor;
+      const limit = c.req.valid("query").limit;
 
-    const commentIdArray = comments.map((c) => c.id);
-
-    let userVote: {
-      value: number;
-      commentId: string;
-    }[];
-
-    if (currentUser) {
-      const vote = await db.query.commentVote.findMany({
-        where: (vote, { and, eq }) =>
+      const comments = await db
+        .select({
+          id: comment.id,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          username: user.name,
+          avatar: user.image,
+          upvotes:
+            sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} > 0)`.as(
+              "upvotes"
+            ),
+          downvotes:
+            sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} < 0)`.as(
+              "downvotes"
+            ),
+          parentId: comment.parentId,
+          childrenCount:
+            sql<number>`(SELECT COUNT(*) FROM ${comment} c WHERE c.parent_id = ${comment.id})`.as(
+              "childrenCount"
+            ),
+        })
+        .from(comment)
+        .where(
           and(
-            inArray(vote.commentId, commentIdArray),
-            eq(vote.userId, currentUser.id)
-          ),
-        columns: {
-          commentId: true,
-          value: true,
-        },
+            eq(comment.threadId, threadId),
+            parentId
+              ? eq(comment.parentId, parentId)
+              : isNull(comment.parentId),
+            cursor ? lt(comment.createdAt, cursor) : undefined
+          )
+        )
+        .leftJoin(commentVote, eq(commentVote.commentId, comment.id))
+        .leftJoin(user, eq(user.id, comment.userId))
+        .orderBy(desc(comment.createdAt))
+        .limit(limit)
+        .groupBy(
+          comment.id,
+          user.name,
+          user.image,
+          comment.content,
+          comment.createdAt,
+          comment.updatedAt
+        );
+      console.log(comments);
+      const commentIdArray = comments.map((c) => c.id);
+
+      let userVote: {
+        value: number;
+        commentId: string;
+      }[] = [];
+
+      if (currentUser) {
+        const vote = await db.query.commentVote.findMany({
+          where: (vote, { and, eq }) =>
+            and(
+              inArray(vote.commentId, commentIdArray),
+              eq(vote.userId, currentUser.id)
+            ),
+          columns: {
+            commentId: true,
+            value: true,
+          },
+        });
+
+        userVote = vote;
+      }
+
+      const commentsWithUserVotes = comments.map((comment) => {
+        const vote = userVote.find((v) => v.commentId === comment.id);
+        return {
+          ...comment,
+          userVote: vote?.value ?? null,
+        };
       });
 
-      userVote = vote;
+      return c.json(commentsWithUserVotes);
     }
-
-    const commentsWithUserVotes = comments.map((comment) => {
-      const vote = userVote.find((v) => v.commentId === comment.id);
-      return {
-        ...comment,
-        userVote: vote?.value ?? null,
-      };
-    });
-
-    return c.json(commentsWithUserVotes);
-  })
+  )
   .post(
     "/",
     requireAuth,

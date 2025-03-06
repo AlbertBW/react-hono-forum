@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
-import { ThreadId } from "../../../server/db/schema";
-import { infiniteQueryOptions } from "@tanstack/react-query";
+import { CreateComment, ThreadId } from "../../../server/db/schema";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { handleRateLimitError } from "./ratelimit-response";
 
 export async function createComment(
@@ -8,6 +8,7 @@ export async function createComment(
   content: string,
   parentId?: string
 ) {
+  await new Promise((r) => setTimeout(r, 5000));
   const res = await api.comments.$post({
     json: {
       threadId,
@@ -71,3 +72,13 @@ export const getCommentsInfiniteQueryOptions = (
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
+
+export const loadingCreateCommentQueryOptions = queryOptions<{
+  comment?: CreateComment;
+}>({
+  queryKey: ["loading-create-comment"],
+  queryFn: async () => {
+    return {};
+  },
+  staleTime: Infinity,
+});

@@ -40,7 +40,7 @@ export default function VoteComment({
       toast.error("Error", { description: `You must be logged in to vote` });
       return;
     }
-    console.log(parentId);
+
     const existingCommentArray =
       await queryClient.ensureInfiniteQueryData(commentsQueryOptions);
 

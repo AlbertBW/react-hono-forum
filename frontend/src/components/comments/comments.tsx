@@ -1,8 +1,11 @@
-import { getCommentsInfiniteQueryOptions } from "@/api/comment.api";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  getCommentsInfiniteQueryOptions,
+  loadingCreateCommentQueryOptions,
+} from "@/api/comment.api";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { ChevronDown } from "lucide-react";
-import CommentCard from "./comment-card";
+import CommentCard, { CommentSkeleton } from "./comment-card";
 import { LoadingSpinner } from "../ui/spinner";
 import { COMMENTS_PER_PAGE, REPLIES_PER_COMMENT } from "@/lib/constants";
 
@@ -23,11 +26,20 @@ export default function Comments({
   } = useInfiniteQuery(
     getCommentsInfiniteQueryOptions(threadId, limit, parentId)
   );
+  const { data: loadingNewComment } = useQuery(
+    loadingCreateCommentQueryOptions
+  );
 
   const comments = data?.pages.flatMap((page) => page) || [];
 
   return (
     <>
+      {!parentId &&
+        loadingNewComment?.comment &&
+        loadingNewComment.comment.parentId === undefined && (
+          <CommentSkeleton comment={loadingNewComment.comment} />
+        )}
+
       {threadStatus === "pending" ? (
         <div className="flex items-center mx-4 w-full">
           <LoadingSpinner />
@@ -44,12 +56,14 @@ export default function Comments({
           <CommentCard key={comment.id} comment={comment} threadId={threadId} />
         ))
       ) : (
-        <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
-          <h3 className="text-lg font-bold">No comments</h3>
-          <p className="text-sm text-muted-foreground">
-            Be the first to comment on this thread
-          </p>
-        </div>
+        !loadingNewComment && (
+          <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
+            <h3 className="text-lg font-bold">No comments</h3>
+            <p className="text-sm text-muted-foreground">
+              Be the first to comment on this thread
+            </p>
+          </div>
+        )
       )}
 
       {comments.length > 0 &&

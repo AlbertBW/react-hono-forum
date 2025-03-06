@@ -17,22 +17,27 @@ import { toast } from "sonner";
 import {
   createComment,
   getCommentsInfiniteQueryOptions,
+  loadingCreateCommentQueryOptions,
 } from "@/api/comment.api";
 import { insertCommentSchema } from "../../../../server/db/schema";
 import { COMMENTS_PER_PAGE, REPLIES_PER_COMMENT } from "@/lib/constants";
+import { useSession } from "@/lib/auth-client";
 
 export default function CreateComment({
   threadId,
   parentId,
   close,
+  openReplies,
 }: {
   threadId: string;
   parentId?: string;
   close?: () => void;
+  openReplies?: () => void;
 }) {
   const [formOpen, setFormOpen] = useState(parentId ? true : false);
   const queryClient = useQueryClient();
   const dialogRef = useRef<HTMLButtonElement>(null);
+  const { data: userData } = useSession();
 
   const form = useForm({
     validators: {
@@ -43,8 +48,55 @@ export default function CreateComment({
       content: "",
     },
     onSubmit: async ({ value }) => {
+      const limit = parentId ? REPLIES_PER_COMMENT : COMMENTS_PER_PAGE;
+      const commentsQueryOptions = getCommentsInfiniteQueryOptions(
+        threadId,
+        limit,
+        parentId ? parentId : undefined
+      );
+      const existingCommentArray =
+        await queryClient.ensureInfiniteQueryData(commentsQueryOptions);
+      const parentsCommentsQueryOptions = getCommentsInfiniteQueryOptions(
+        threadId,
+        COMMENTS_PER_PAGE
+      );
+      const existingParentCommentArray =
+        await queryClient.ensureInfiniteQueryData(parentsCommentsQueryOptions);
+
+      if (parentId) {
+        queryClient.setQueryData(parentsCommentsQueryOptions.queryKey, () => ({
+          pages: existingParentCommentArray.pages.map((page) =>
+            page.map((comment) =>
+              comment.id === parentId
+                ? {
+                    ...comment,
+                    childrenCount: Number(comment.childrenCount) + 1,
+                  }
+                : comment
+            )
+          ),
+          pageParams: existingParentCommentArray.pageParams,
+        }));
+      }
+
+      if (openReplies) {
+        openReplies();
+      }
+      if (close) {
+        close();
+      }
+      setFormOpen(false);
+      form.reset();
       try {
-        const { error } = await createComment(
+        if (!userData || !userData.user) {
+          throw new Error("You must be logged in to comment");
+        }
+
+        queryClient.setQueryData(loadingCreateCommentQueryOptions.queryKey, {
+          comment: { ...value, parentId },
+        });
+
+        const { data, error } = await createComment(
           threadId,
           value.content,
           parentId
@@ -52,22 +104,45 @@ export default function CreateComment({
         if (error) {
           throw new Error(error.message);
         }
-        const limit = parentId ? REPLIES_PER_COMMENT : COMMENTS_PER_PAGE;
-        queryClient.invalidateQueries(
-          getCommentsInfiniteQueryOptions(threadId, limit, parentId)
-        );
-        form.reset();
-        setFormOpen(false);
-        if (close) {
-          close();
-        }
+
+        const newArray = existingCommentArray?.pages.map((page, pageIndex) => {
+          if (pageIndex === 0) {
+            return [
+              {
+                ...data,
+                userVote: 1,
+                username: userData.user.name,
+                avatar: userData.user.image || null,
+                upvotes: 1,
+                downvotes: 0,
+                childrenCount: 0,
+              },
+              ...page,
+            ];
+          }
+          return page;
+        });
+
+        queryClient.setQueryData(commentsQueryOptions.queryKey, () => ({
+          pages: newArray,
+          pageParams: existingCommentArray.pageParams,
+        }));
       } catch (error: unknown) {
+        queryClient.invalidateQueries(
+          getCommentsInfiniteQueryOptions(
+            threadId,
+            parentId ? REPLIES_PER_COMMENT : COMMENTS_PER_PAGE,
+            parentId
+          )
+        );
         toast.error("Error", {
           description:
             error instanceof Error
               ? error.message
               : "Failed to create new comment",
         });
+      } finally {
+        queryClient.setQueryData(loadingCreateCommentQueryOptions.queryKey, {});
       }
     },
   });

@@ -1,14 +1,22 @@
 import { randomGradient } from "@/lib/common-styles";
 import { getTimeAgo } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import CreateComment from "./create-comment";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import type { Comment } from "@/api/comment.api";
+import {
+  loadingCreateCommentQueryOptions,
+  type Comment,
+} from "@/api/comment.api";
 import VoteComment from "./comment-vote";
 import { Link } from "@tanstack/react-router";
 import Comments from "./comments";
+import { type CreateComment as CreateCommentType } from "../../../../server/db/schema";
+import { Skeleton } from "../ui/skeleton";
+import { useSession } from "@/lib/auth-client";
+import { LoadingSpinner } from "../ui/spinner";
+import { useQuery } from "@tanstack/react-query";
 
 export default function CommentCard({
   comment,
@@ -19,6 +27,14 @@ export default function CommentCard({
 }) {
   const [createCommentOpen, setCreateCommentOpen] = useState(false);
   const [repliesOpen, setRepliesOpen] = useState(false);
+  const { data: loadingNewComment } = useQuery(
+    loadingCreateCommentQueryOptions
+  );
+
+  const openReplies = () => {
+    setRepliesOpen(true);
+  };
+
   return (
     <div className="flex flex-col w-full">
       <div className="flex items-center gap-1.5 w-full">
@@ -68,7 +84,7 @@ export default function CommentCard({
         {!comment.parentId && (
           <Button
             variant={"ghost"}
-            className="text-muted-foreground hover:text-foreground rounded-full"
+            className="text-muted-foreground hover:text-foreground rounded-full "
             onClick={() => setCreateCommentOpen(true)}
           >
             Reply
@@ -83,6 +99,7 @@ export default function CommentCard({
               threadId={threadId}
               parentId={comment.id}
               close={() => setCreateCommentOpen(false)}
+              openReplies={openReplies}
             />
           </div>
         </div>
@@ -105,12 +122,71 @@ export default function CommentCard({
             <div className="flex gap-1.5 w-full">
               <div className="w-8"></div>
               <div className="w-full">
+                {loadingNewComment?.comment?.parentId === comment.id && (
+                  <CommentSkeleton comment={loadingNewComment.comment} />
+                )}
                 <Comments threadId={threadId} parentId={comment.id} />
               </div>
             </div>
           )}
         </>
       )}
+    </div>
+  );
+}
+
+export function CommentSkeleton({ comment }: { comment?: CreateCommentType }) {
+  const { data } = useSession();
+  return (
+    <div className="flex flex-col w-full">
+      <div className="flex items-center gap-1.5 w-full">
+        <Avatar className={`size-8`}>
+          <AvatarFallback className={randomGradient()}>
+            <LoadingSpinner />
+          </AvatarFallback>
+        </Avatar>
+        <span className="text-xs text-accent-foreground hover:text-blue-200 font-semibold">
+          {data?.user.name}
+        </span>
+        <span className="text-xs font-semibold text-muted-foreground">•</span>
+        <span className="text-xs font-semibold text-muted-foreground">0m</span>
+        <Skeleton />
+      </div>
+      <div className="flex gap-1.5 w-full pb-0.5">
+        <div className="w-8"></div>
+        <p className="text-accent-foreground/80 text-sm">{comment?.content}</p>
+      </div>
+      <div className="flex gap-1.5 w-full">
+        <div className="w-6"></div>
+        <div className="flex gap-1.5 justify-center items-center text-accent-foreground/80">
+          <Button
+            className={`rounded-full size-8 hover:text-green-500`}
+            variant={"ghost"}
+            size={"icon"}
+            disabled={true}
+          >
+            <ArrowBigUp className="size-6" />
+          </Button>
+          <span className="text-sm">1</span>
+          <Button
+            className={`rounded-full size-8 hover:text-red-500`}
+            variant={"ghost"}
+            size={"icon"}
+            disabled={true}
+          >
+            <ArrowBigDown className="size-6" />
+          </Button>
+        </div>
+        {!comment?.parentId && (
+          <Button
+            variant={"ghost"}
+            className="text-muted-foreground hover:text-foreground rounded-full "
+            disabled={true}
+          >
+            Reply
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

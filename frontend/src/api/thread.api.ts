@@ -3,21 +3,21 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { CreateThread, ThreadId } from "../../../server/db/schema";
 import { handleRateLimitError } from "./ratelimit-response";
 
-export async function getAllThreads() {
-  const res = await api.threads.$get();
+// export async function getAllThreads() {
+//   const res = await api.threads.$get();
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch threads");
-  }
-  const data = await res.json();
-  return data;
-}
+//   if (!res.ok) {
+//     throw new Error("Failed to fetch threads");
+//   }
+//   const data = await res.json();
+//   return data;
+// }
 
-export const getAllThreadsQueryOptions = queryOptions({
-  queryKey: ["get-all-threads"],
-  queryFn: getAllThreads,
-  staleTime: 1000 * 60 * 5,
-});
+// export const getAllThreadsQueryOptions = queryOptions({
+//   queryKey: ["get-all-threads"],
+//   queryFn: getAllThreads,
+//   staleTime: 1000 * 60 * 5,
+// });
 
 export async function createThread({ value }: { value: CreateThread }) {
   const res = await api.threads.$post({ json: value });
@@ -48,9 +48,6 @@ export const getSingleThreadQueryOptions = (id: ThreadId) =>
     retry: false,
   });
 
-export type ThreadCard = Awaited<
-  ReturnType<typeof getThreadsByCommunityName>
->[number];
 // export async function getThreadsByCommunityName(
 //   communityName: string,
 //   limit?: number,
@@ -87,12 +84,14 @@ export async function deleteThread(id: ThreadId) {
   }
 }
 
+export type ThreadCardType = Awaited<
+  ReturnType<typeof getThreadsByCommunityName>
+>[number];
 export const getThreadsByCommunityName = async (
   name: string,
   limit?: number,
   cursor?: string
 ) => {
-  console.log("Limit", limit);
   const res = await api.threads.community[":name"].$get({
     param: { name },
     query: {
@@ -120,6 +119,40 @@ export const getThreadsInfiniteQueryOptions = (
         limit,
         pageParam as string | undefined
       ),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === 0) {
+        return undefined;
+      }
+      return lastPage[lastPage.length - 1].createdAt;
+    },
+    staleTime: 1000 * 60 * 5,
+    initialPageParam: undefined as string | undefined,
+    retry: false,
+  });
+
+export type ThreadCardWithCommunityImage = Awaited<
+  ReturnType<typeof getAllThreads>
+>[number];
+export const getAllThreads = async (limit?: number, cursor?: string) => {
+  const res = await api.threads.$get({
+    query: {
+      limit: String(limit),
+      cursor,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch threads");
+  }
+
+  return res.json();
+};
+
+export const getAllThreadsInfiniteQueryOptions = (limit: number = 10) =>
+  infiniteQueryOptions({
+    queryKey: ["all-threads", "infinite", limit],
+    queryFn: async ({ pageParam }) =>
+      await getAllThreads(limit, pageParam as string | undefined),
     getNextPageParam: (lastPage) => {
       if (lastPage.length === 0) {
         return undefined;

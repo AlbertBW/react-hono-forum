@@ -1,12 +1,21 @@
 import { Link } from "@tanstack/react-router";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Skeleton } from "./ui/skeleton";
 import { getTimeAgo } from "@/lib/utils";
 import { Button } from "./ui/button";
 import VoteButtons from "./buttons/vote-buttons";
-import type { ThreadCard } from "@/api/thread.api";
+import type { ThreadCardType } from "@/api/thread.api";
+import { JoinButton } from "./buttons/join-leave-community";
 
-export default function ThreadCard({ thread }: { thread: ThreadCard }) {
+type ThreadViewContext = "all" | "community";
+
+export default function ThreadCard({
+  thread,
+  viewContext = "community",
+}: {
+  thread: ThreadCardType;
+  viewContext?: ThreadViewContext;
+}) {
   if (!thread.communityName) {
     throw new Error("Community name is required");
   }
@@ -22,18 +31,43 @@ export default function ThreadCard({ thread }: { thread: ThreadCard }) {
           <Avatar
             className={`flex justify-center items-center size-5 bg-black`}
           >
+            {thread.userAvatar ? (
+              <AvatarImage
+                src={thread.userAvatar}
+                alt={`${thread.username} avatar`}
+              />
+            ) : (
+              thread.communityIcon && (
+                <AvatarImage
+                  src={thread.communityIcon}
+                  alt={`${thread.communityName} icon`}
+                />
+              )
+            )}
             <AvatarFallback>
               <Skeleton />
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-row gap-1">
+          <div className="flex flex-row items-center gap-1">
             <Link
-              to={"/profile"}
+              to={viewContext === "community" ? "/profile" : "/c/$name"}
+              params={{ name: thread.communityName }}
               className="text-xs font-semibold text-muted-foreground hover:underline"
             >
-              {thread.username || "Anonymous"}
+              {viewContext === "community"
+                ? thread.username || "Anonymous"
+                : `c/${thread.communityName}`}
             </Link>
+            {viewContext === "all" && !thread.userFollow && (
+              <div>
+                <JoinButton
+                  id={thread.communityId}
+                  name={thread.communityName}
+                  className="text-xs p-0 m-0 h-6 w-10 rounded-full bg-blue-600 text-white hover:bg-blue-500"
+                />
+              </div>
+            )}
             <span className="text-xs font-semibold text-muted-foreground">
               •
             </span>
@@ -51,7 +85,7 @@ export default function ThreadCard({ thread }: { thread: ThreadCard }) {
 
         <div className="flex items-center gap-2">
           <VoteButtons
-            communityName={thread.communityName!}
+            communityName={thread.communityName}
             downvotes={thread.downvotes}
             threadId={thread.id}
             upvotes={thread.upvotes}

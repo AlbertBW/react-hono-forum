@@ -16,7 +16,15 @@ import {
   leaveCommunity,
 } from "@/api/community.api";
 
-export function JoinButton({ id, name }: { id: CommunityId; name: string }) {
+export function JoinButton({
+  id,
+  name,
+  className,
+}: {
+  id: CommunityId;
+  name: string;
+  className?: string;
+}) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: joinCommunity,
@@ -43,7 +51,7 @@ export function JoinButton({ id, name }: { id: CommunityId; name: string }) {
   });
   return (
     <Button
-      className="w-18"
+      className={className ? className : "w-18"}
       disabled={mutation.isPending || !id}
       onClick={() => mutation.mutate(id)}
     >

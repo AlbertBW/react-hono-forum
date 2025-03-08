@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import VoteButtons from "./buttons/vote-buttons";
 import type { ThreadCardType } from "@/api/thread.api";
 import { JoinButton } from "./buttons/join-leave-community";
+import { useSession } from "@/lib/auth-client";
 
 type ThreadViewContext = "all" | "community";
 
@@ -16,6 +17,7 @@ export default function ThreadCard({
   thread: ThreadCardType;
   viewContext?: ThreadViewContext;
 }) {
+  const { data: userSession } = useSession();
   if (!thread.communityName) {
     throw new Error("Community name is required");
   }
@@ -59,8 +61,13 @@ export default function ThreadCard({
                 ? thread.username || "Anonymous"
                 : `c/${thread.communityName}`}
             </Link>
-            {viewContext === "all" && !thread.userFollow && (
-              <div>
+            {userSession && viewContext === "all" && !thread.userFollow && (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+              >
                 <JoinButton
                   id={thread.communityId}
                   name={thread.communityName}

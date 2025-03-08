@@ -47,7 +47,9 @@ const items = [
 
 export function AppSidebar() {
   const location = useLocation();
-  const { isPending, error, data } = useQuery(getAllCommunitiesQueryOptions);
+  const { isPending, error, data } = useQuery(
+    getAllCommunitiesQueryOptions(30)
+  );
   const dialogTriggerRef = useRef<HTMLButtonElement>(null);
 
   const { open } = useSidebar();

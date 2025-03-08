@@ -22,6 +22,7 @@ import {
 import { insertCommentSchema } from "../../../../server/db/schema";
 import { COMMENTS_PER_PAGE, REPLIES_PER_COMMENT } from "@/lib/constants";
 import { useSession } from "@/lib/auth-client";
+import { getThreadsInfiniteQueryOptions } from "@/api/thread.api";
 
 export default function CreateComment({
   threadId,
@@ -143,6 +144,7 @@ export default function CreateComment({
         });
       } finally {
         queryClient.setQueryData(loadingCreateCommentQueryOptions.queryKey, {});
+        queryClient.invalidateQueries(getThreadsInfiniteQueryOptions("all"));
       }
     },
   });

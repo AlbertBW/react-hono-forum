@@ -68,7 +68,7 @@ function CommunityPage() {
   }
   const banner = randomGradient();
   const background = randomGradient();
-
+  console.log(community?.isFollowing, name);
   return (
     <div className="sm:p-4 max-w-7xl mx-auto">
       <div
@@ -129,7 +129,11 @@ function CommunityPage() {
               (community.isFollowing ? (
                 <LeaveCommunity id={community.id} name={community.name} />
               ) : (
-                <JoinButton id={community.id} name={community.name} />
+                <JoinButton
+                  id={community.id}
+                  name={community.name}
+                  className="bg-blue-600 hover:bg-blue-500 text-accent-foreground w-18"
+                />
               ))
             )}
           </div>

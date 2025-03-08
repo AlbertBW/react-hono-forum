@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as ThreadsImport } from './routes/threads'
 import { Route as SignInImport } from './routes/sign-in'
+import { Route as CommunitiesImport } from './routes/communities'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
 import { Route as UserUsernameImport } from './routes/user/$username'
@@ -35,6 +36,12 @@ const ThreadsRoute = ThreadsImport.update({
 const SignInRoute = SignInImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CommunitiesRoute = CommunitiesImport.update({
+  id: '/communities',
+  path: '/communities',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -114,6 +121,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof AuthenticatedImport
+      parentRoute: typeof rootRoute
+    }
+    '/communities': {
+      id: '/communities'
+      path: '/communities'
+      fullPath: '/communities'
+      preLoaderRoute: typeof CommunitiesImport
       parentRoute: typeof rootRoute
     }
     '/sign-in': {
@@ -212,6 +226,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/communities': typeof CommunitiesRoute
   '/sign-in': typeof SignInRoute
   '/threads': typeof ThreadsRoute
   '/create-thread': typeof AuthenticatedCreateThreadRoute
@@ -227,6 +242,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
+  '/communities': typeof CommunitiesRoute
   '/sign-in': typeof SignInRoute
   '/threads': typeof ThreadsRoute
   '/create-thread': typeof AuthenticatedCreateThreadRoute
@@ -243,6 +259,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/communities': typeof CommunitiesRoute
   '/sign-in': typeof SignInRoute
   '/threads': typeof ThreadsRoute
   '/_authenticated/create-thread': typeof AuthenticatedCreateThreadRoute
@@ -260,6 +277,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | ''
+    | '/communities'
     | '/sign-in'
     | '/threads'
     | '/create-thread'
@@ -274,6 +292,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | ''
+    | '/communities'
     | '/sign-in'
     | '/threads'
     | '/create-thread'
@@ -288,6 +307,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/communities'
     | '/sign-in'
     | '/threads'
     | '/_authenticated/create-thread'
@@ -304,6 +324,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  CommunitiesRoute: typeof CommunitiesRoute
   SignInRoute: typeof SignInRoute
   ThreadsRoute: typeof ThreadsRoute
   CAllRoute: typeof CAllRoute
@@ -315,6 +336,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  CommunitiesRoute: CommunitiesRoute,
   SignInRoute: SignInRoute,
   ThreadsRoute: ThreadsRoute,
   CAllRoute: CAllRoute,
@@ -335,6 +357,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/_authenticated",
+        "/communities",
         "/sign-in",
         "/threads",
         "/c/all",
@@ -354,6 +377,9 @@ export const routeTree = rootRoute
         "/_authenticated/sign-out",
         "/_authenticated/c/$name/create-thread"
       ]
+    },
+    "/communities": {
+      "filePath": "communities.tsx"
     },
     "/sign-in": {
       "filePath": "sign-in.tsx"

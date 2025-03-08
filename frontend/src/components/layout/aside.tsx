@@ -34,7 +34,11 @@ export default function Aside({
                   (community.isFollowing ? (
                     <LeaveCommunity id={community.id} name={community.name} />
                   ) : (
-                    <JoinButton id={community.id} name={community.name} />
+                    <JoinButton
+                      id={community.id}
+                      name={community.name}
+                      className="bg-blue-600 hover:bg-blue-500 text-accent-foreground w-18"
+                    />
                   ))}
               </div>
             )}

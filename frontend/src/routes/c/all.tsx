@@ -30,8 +30,7 @@ function AllThreadsPage() {
   }, [fetchNextPage, hasNextPage, inView, isFetchingNextPage]);
 
   const threads = data?.pages.flatMap((page) => page) || [];
-  console.log(threads);
-
+  console.log(data);
   return (
     <div className="flex relative p-4">
       <main className="w-full">

@@ -9,7 +9,12 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
-import { COMMENTS_PER_PAGE, REPLIES_PER_COMMENT } from "@/lib/constants";
+import {
+  COMMENTS_PER_PAGE,
+  REPLIES_PER_COMMENT,
+  THREADS_PER_PAGE,
+} from "@/lib/constants";
+import { getThreadsInfiniteQueryOptions } from "@/api/thread.api";
 
 export default function VoteComment({
   threadId,
@@ -40,67 +45,49 @@ export default function VoteComment({
       toast.error("Error", { description: `You must be logged in to vote` });
       return;
     }
-
     const existingCommentArray =
       await queryClient.ensureInfiniteQueryData(commentsQueryOptions);
 
+    let action: () => Promise<unknown>;
+    let newUserVote: number | null;
+    let upvotesDelta = 0;
+    let downvotesDelta = 0;
+
     if (userVote === value) {
       // Delete vote
-      const newArray = existingCommentArray?.pages.map((page) =>
-        page.map((comment) =>
-          comment.id === commentId
-            ? {
-                ...comment,
-                userVote: null,
-                upvotes: value === 1 ? comment.upvotes - 1 : comment.upvotes,
-                downvotes:
-                  value === -1 ? comment.downvotes - 1 : comment.downvotes,
-              }
-            : comment
-        )
-      );
-      queryClient.setQueryData(commentsQueryOptions.queryKey, () => ({
-        pages: newArray,
-        pageParams: existingCommentArray.pageParams,
-      }));
+      action = () => deleteCommentVote(commentId);
+      newUserVote = null;
 
-      return await deleteCommentVote(commentId);
-    }
-
-    if (userVote && userVote !== value) {
+      if (value === 1) upvotesDelta = -1;
+      else if (value === -1) downvotesDelta = -1;
+    } else if (userVote && userVote !== value) {
       // Update vote
-      const newArray = existingCommentArray?.pages.map((page) =>
-        page.map((comment) =>
-          comment.id === commentId
-            ? {
-                ...comment,
-                userVote: value,
-                upvotes:
-                  value === 1 ? comment.upvotes + 1 : comment.upvotes - 1,
-                downvotes:
-                  value === -1 ? comment.downvotes + 1 : comment.downvotes - 1,
-              }
-            : comment
-        )
-      );
-      queryClient.setQueryData(commentsQueryOptions.queryKey, () => ({
-        pages: newArray,
-        pageParams: existingCommentArray.pageParams,
-      }));
+      action = () => updateCommentVote(commentId, value);
+      newUserVote = value;
 
-      return await updateCommentVote(commentId, value);
+      if (value === 1) {
+        upvotesDelta = 1;
+        downvotesDelta = -1;
+      } else {
+        upvotesDelta = -1;
+        downvotesDelta = 1;
+      }
+    } else {
+      // Create vote
+      action = () => createCommentVote(commentId, value);
+      newUserVote = value;
+
+      if (value === 1) upvotesDelta = 1;
+      else if (value === -1) downvotesDelta = 1;
     }
-
-    // Create vote
     const newArray = existingCommentArray?.pages.map((page) =>
       page.map((comment) =>
         comment.id === commentId
           ? {
               ...comment,
-              userVote: value,
-              upvotes: value === 1 ? comment.upvotes + 1 : comment.upvotes,
-              downvotes:
-                value === -1 ? comment.downvotes + 1 : comment.downvotes,
+              userVote: newUserVote,
+              upvotes: comment.upvotes + upvotesDelta,
+              downvotes: comment.downvotes + downvotesDelta,
             }
           : comment
       )
@@ -110,7 +97,7 @@ export default function VoteComment({
       pageParams: existingCommentArray.pageParams,
     }));
 
-    return await createCommentVote(commentId, value);
+    return await action();
   };
 
   const mutation = useMutation({
@@ -122,6 +109,11 @@ export default function VoteComment({
       // invalidate the query to refetch the data
       queryClient.invalidateQueries(commentsQueryOptions);
       // queryClient.invalidateQueries(getThread);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        getThreadsInfiniteQueryOptions("all", THREADS_PER_PAGE)
+      );
     },
   });
   return (

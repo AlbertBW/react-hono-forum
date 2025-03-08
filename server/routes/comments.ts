@@ -42,11 +42,11 @@ export const commentsRoute = new Hono<AppVariables>()
           username: user.name,
           avatar: user.image,
           upvotes:
-            sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} > 0)`.as(
+            sql<number>`CAST((SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} > 0) AS INTEGER)`.as(
               "upvotes"
             ),
           downvotes:
-            sql<number>`(SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} < 0)`.as(
+            sql<number>`CAST((SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} < 0) AS INTEGER)`.as(
               "downvotes"
             ),
           parentId: comment.parentId,

@@ -18,108 +18,6 @@ import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
 
 export const threadsRoute = new Hono<AppVariables>()
-  .get(
-    "/",
-    zValidator(
-      "query",
-      z.object({
-        limit: z.coerce.number().int().positive().default(30),
-        cursor: z.coerce.date().optional(),
-      })
-    ),
-    async (c) => {
-      const currentUser = c.var.user;
-      const cursor = c.req.valid("query").cursor;
-      const limit = c.req.valid("query").limit;
-
-      const threads = await db
-        .select({
-          id: thread.id,
-          title: thread.title,
-          createdAt: thread.createdAt,
-          communityIcon: community.icon,
-          communityName: community.name,
-          communityId: thread.communityId,
-          communityPrivate: community.isPrivate,
-          upvotes:
-            sql<number>`(SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0)`.as(
-              "upvotes"
-            ),
-          downvotes:
-            sql<number>`(SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0)`.as(
-              "downvotes"
-            ),
-          commentsCount: count(comment.id),
-        })
-        .from(thread)
-        .innerJoin(community, eq(thread.communityId, community.id))
-        .where(
-          and(
-            cursor ? lt(thread.createdAt, cursor) : undefined,
-            eq(community.isPrivate, false)
-          )
-        )
-        .leftJoin(threadVote, eq(threadVote.threadId, thread.id))
-        .leftJoin(comment, eq(comment.threadId, thread.id))
-        .orderBy(desc(thread.createdAt))
-        .limit(limit)
-        .groupBy(
-          thread.id,
-          thread.title,
-          thread.createdAt,
-          community.icon,
-          community.name,
-          community.isPrivate,
-          threadVote.value
-        );
-
-      if (threads.length === 0) {
-        return c.json([], 200);
-      }
-
-      let userFollowing = null as boolean | null;
-
-      if (currentUser) {
-        const following = await db.query.communityFollow.findFirst({
-          where: (follow, { and, eq }) =>
-            and(
-              eq(follow.userId, currentUser.id),
-              eq(follow.communityId, threads[0].communityId)
-            ),
-        });
-
-        userFollowing = following ? true : false;
-      }
-
-      if (threads[0].communityPrivate && !userFollowing) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-
-      let threadsWithUserVotes = threads.map((thread) => {
-        return { ...thread, userVote: null as number | null };
-      });
-
-      if (currentUser) {
-        const threadsIds = threads.map((thread) => thread.id);
-        const userVotes = await db.query.threadVote.findMany({
-          where: (vote, { and, inArray }) =>
-            and(
-              inArray(vote.threadId, threadsIds),
-              eq(vote.userId, currentUser.id)
-            ),
-        });
-
-        threadsWithUserVotes = threads.map((thread) => {
-          const userVote = userVotes.find(
-            (vote) => vote.threadId === thread.id
-          );
-          return { ...thread, userVote: userVote?.value ?? null };
-        });
-      }
-
-      return c.json(threadsWithUserVotes, 200);
-    }
-  )
   .post("/", requireAuth, zValidator("json", insertThreadSchema), async (c) => {
     const userThread = c.req.valid("json");
     const user = c.var.user;
@@ -154,7 +52,7 @@ export const threadsRoute = new Hono<AppVariables>()
     ),
     async (c) => {
       const currentUser = c.var.user;
-      const communityName = c.req.param("name");
+      const communityName = c.req.valid("param").name;
       const cursor = c.req.valid("query").cursor;
       const limit = c.req.valid("query").limit;
 
@@ -183,11 +81,11 @@ export const threadsRoute = new Hono<AppVariables>()
           communityId: thread.communityId,
           communityPrivate: community.isPrivate,
           upvotes:
-            sql<number>`(SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0)`.as(
+            sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0) AS INTEGER)`.as(
               "upvotes"
             ),
           downvotes:
-            sql<number>`(SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0)`.as(
+            sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0) AS INTEGER)`.as(
               "downvotes"
             ),
           commentsCount: count(comment.id),
@@ -270,11 +168,11 @@ export const threadsRoute = new Hono<AppVariables>()
         username: user.name,
         communityName: community.name,
         upvotes:
-          sql<number>`(SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0)`.as(
+          sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0) AS INTEGER)`.as(
             "upvotes"
           ),
         downvotes:
-          sql<number>`(SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0)`.as(
+          sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0) AS INTEGER)`.as(
             "downvotes"
           ),
         commentsCount: count(comment.id),

@@ -42,100 +42,103 @@ export default function VoteButtons({
       return;
     }
 
-    const existingThreadArray =
-      await queryClient.ensureInfiniteQueryData(threadsQueryOptions);
-    const existingThread = await queryClient.ensureQueryData(
-      singleThreadQueryOptions
-    );
+    // Determine vote action type and prepare data updates
+    let action: () => Promise<unknown>;
+    let newUserVote: number | null;
+    let upvotesDelta = 0;
+    let downvotesDelta = 0;
 
     if (userVote === value) {
-      // Delete vote
-      const newArray = existingThreadArray?.pages.map((page) =>
-        page.map((thread) =>
-          thread.id === threadId
-            ? {
-                ...thread,
-                userVote: null,
-                upvotes: value === 1 ? thread.upvotes - 1 : thread.upvotes,
-                downvotes:
-                  value === -1 ? thread.downvotes - 1 : thread.downvotes,
-              }
-            : thread
-        )
-      );
+      // Cancel vote
+      action = () => deleteThreadVote(threadId);
+      newUserVote = null;
 
-      queryClient.setQueryData(threadsQueryOptions.queryKey, () => ({
-        pages: newArray,
-        pageParams: existingThreadArray.pageParams,
-      }));
+      // Update counts
+      if (value === 1) upvotesDelta = -1;
+      else if (value === -1) downvotesDelta = -1;
+    } else if (userVote !== null) {
+      // Change vote
+      action = () => updateThreadVote(threadId, value);
+      newUserVote = value;
 
-      queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
-        ...existingThread,
-        userVote: null,
-        upvotes: value === 1 ? upvotes - 1 : upvotes,
-        downvotes: value === -1 ? downvotes - 1 : downvotes,
-      });
+      // Update both counts
+      if (value === 1) {
+        upvotesDelta = 1;
+        downvotesDelta = -1;
+      } else {
+        upvotesDelta = -1;
+        downvotesDelta = 1;
+      }
+    } else {
+      // New vote
+      action = () => createThreadVote(threadId, value);
+      newUserVote = value;
 
-      return await deleteThreadVote(threadId);
+      // Update one count
+      if (value === 1) upvotesDelta = 1;
+      else if (value === -1) downvotesDelta = 1;
     }
 
-    if (userVote && userVote !== value) {
-      // Update vote
-      const newArray = existingThreadArray?.pages.map((page) =>
-        page.map((thread) =>
-          thread.id === threadId
-            ? {
-                ...thread,
-                userVote: value,
-                upvotes: value === 1 ? thread.upvotes + 1 : thread.upvotes - 1,
-                downvotes:
-                  value === -1 ? thread.downvotes + 1 : thread.downvotes - 1,
-              }
-            : thread
-        )
-      );
-
-      queryClient.setQueryData(threadsQueryOptions.queryKey, () => ({
-        pages: newArray,
-        pageParams: existingThreadArray.pageParams,
-      }));
-
-      queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
-        ...existingThread,
-        userVote: value,
-        upvotes: value === 1 ? upvotes + 1 : upvotes - 1,
-        downvotes: value === -1 ? downvotes + 1 : downvotes - 1,
-      });
-
-      return await updateThreadVote(threadId, value);
-    }
-
-    // Create vote
+    // Update thread list data
+    const existingThreadArray =
+      await queryClient.ensureInfiniteQueryData(threadsQueryOptions);
     const newArray = existingThreadArray?.pages.map((page) =>
       page.map((thread) =>
         thread.id === threadId
           ? {
               ...thread,
-              userVote: value,
-              upvotes: value === 1 ? thread.upvotes + 1 : thread.upvotes,
-              downvotes: value === -1 ? thread.downvotes + 1 : thread.downvotes,
+              userVote: newUserVote,
+              upvotes: thread.upvotes + upvotesDelta,
+              downvotes: thread.downvotes + downvotesDelta,
             }
           : thread
       )
     );
-    queryClient.setQueryData(threadsQueryOptions.queryKey, () => ({
+
+    queryClient.setQueryData(threadsQueryOptions.queryKey, {
       pages: newArray,
       pageParams: existingThreadArray.pageParams,
-    }));
-
-    queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
-      ...existingThread,
-      userVote: value,
-      upvotes: value === 1 ? upvotes + 1 : upvotes,
-      downvotes: value === -1 ? downvotes + 1 : downvotes,
     });
 
-    return await createThreadVote(threadId, value);
+    // Update single thread data
+    const existingThread = await queryClient.ensureQueryData(
+      singleThreadQueryOptions
+    );
+    queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
+      ...existingThread,
+      userVote: newUserVote,
+      upvotes: upvotes + upvotesDelta,
+      downvotes: downvotes + downvotesDelta,
+    });
+
+    // Update "all" page threads data
+    const allThreadsQueryOptions = getThreadsInfiniteQueryOptions(
+      "all",
+      THREADS_PER_PAGE
+    );
+    const allThreads = await queryClient.ensureInfiniteQueryData(
+      allThreadsQueryOptions
+    );
+    const allNewArray = allThreads?.pages.map((page) =>
+      page.map((thread) =>
+        thread.id === threadId
+          ? {
+              ...thread,
+              userVote: newUserVote,
+              upvotes: thread.upvotes + upvotesDelta,
+              downvotes: thread.downvotes + downvotesDelta,
+            }
+          : thread
+      )
+    );
+
+    queryClient.setQueryData(allThreadsQueryOptions.queryKey, {
+      pages: allNewArray,
+      pageParams: allThreads.pageParams,
+    });
+
+    // Execute the action
+    return await action();
   };
 
   const mutation = useMutation({

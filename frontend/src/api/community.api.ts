@@ -1,10 +1,23 @@
 import { api } from "@/lib/api";
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { CommunityId, CreateCommunity } from "../../../server/db/schema";
 import { handleRateLimitError } from "./ratelimit-response";
 
-export async function getAllCommunities() {
-  const res = await api.communities.$get();
+export type CommunityCardType = Awaited<
+  ReturnType<typeof getAllCommunities>
+>[number];
+export async function getAllCommunities(
+  limit?: number,
+  search?: string,
+  cursor?: string
+) {
+  const res = await api.communities.$get({
+    query: {
+      limit: String(limit),
+      search,
+      cursor,
+    },
+  });
 
   if (!res.ok) {
     throw new Error("Failed to fetch communities");
@@ -13,11 +26,32 @@ export async function getAllCommunities() {
   return data;
 }
 
-export const getAllCommunitiesQueryOptions = queryOptions({
-  queryKey: ["get-all-communities"],
-  queryFn: getAllCommunities,
-  staleTime: 1000 * 60 * 5,
-});
+export const getAllCommunitiesQueryOptions = (limit: number = 10) =>
+  queryOptions({
+    queryKey: ["get-all-communities"],
+    queryFn: () => getAllCommunities(limit),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+
+export const getAllCommunitiesInfiniteQueryOptions = (
+  limit = 10,
+  search: string
+) =>
+  infiniteQueryOptions({
+    queryKey: ["get-infinite-communities"],
+    queryFn: async ({ pageParam }) =>
+      await getAllCommunities(limit, search, pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === 0 || lastPage.length < limit) {
+        return undefined;
+      }
+      return lastPage[lastPage.length - 1].createdAt;
+    },
+    staleTime: 1000 * 60 * 5,
+    initialPageParam: undefined as string | undefined,
+    retry: false,
+  });
 
 export type Community = Awaited<ReturnType<typeof getCommunityByName>>;
 export async function getCommunityByName(name: string) {

@@ -69,7 +69,9 @@ export default function CommentCard({
       </div>
       <div className="flex gap-1.5 w-full pb-0.5">
         <div className="w-8"></div>
-        <p className="text-accent-foreground/80 text-sm">{comment.content}</p>
+        <p className="text-accent-foreground/80 text-sm whitespace-pre">
+          {comment.content}
+        </p>
       </div>
       <div className="flex gap-1.5 w-full">
         <div className="w-6"></div>
@@ -154,7 +156,9 @@ export function CommentSkeleton({ comment }: { comment?: CreateCommentType }) {
       </div>
       <div className="flex gap-1.5 w-full pb-0.5">
         <div className="w-8"></div>
-        <p className="text-accent-foreground/80 text-sm">{comment?.content}</p>
+        <p className="text-accent-foreground/80 text-sm whitespace-pre">
+          {comment?.content}
+        </p>
       </div>
       <div className="flex gap-1.5 w-full">
         <div className="w-6"></div>

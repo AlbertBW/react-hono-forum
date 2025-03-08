@@ -1,20 +1,27 @@
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
-} from "@radix-ui/react-dialog";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CommunityId } from "../../../../server/db/schema";
 import { Button } from "../ui/button";
-import { DialogHeader, DialogFooter } from "../ui/dialog";
+import {
+  DialogHeader,
+  DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
 import { LoadingSpinner } from "../ui/spinner";
 import {
   joinCommunity,
   getCommunityQueryOptions,
   leaveCommunity,
 } from "@/api/community.api";
+import { THREADS_PER_PAGE } from "@/lib/constants";
+import {
+  getSingleThreadQueryOptions,
+  getThreadsInfiniteQueryOptions,
+} from "@/api/thread.api";
+import { useSession } from "@/lib/auth-client";
 
 export function JoinButton({
   id,
@@ -25,9 +32,17 @@ export function JoinButton({
   name: string;
   className?: string;
 }) {
+  const { data: sessionData } = useSession();
   const queryClient = useQueryClient();
+
+  const handleMutation = async (id: CommunityId) => {
+    if (!sessionData) {
+      throw new Error("You need to be logged in to join a community");
+    }
+    await joinCommunity(id);
+  };
   const mutation = useMutation({
-    mutationFn: joinCommunity,
+    mutationFn: handleMutation,
     onError: (error) => {
       toast.error("Error", {
         description:
@@ -39,14 +54,14 @@ export function JoinButton({
         description: `Successfully joined ${name}!`,
       });
 
-      const existingData = await queryClient.ensureQueryData(
-        getCommunityQueryOptions(name)
+      queryClient.invalidateQueries(getCommunityQueryOptions(name));
+      queryClient.invalidateQueries(
+        getThreadsInfiniteQueryOptions(name, THREADS_PER_PAGE)
       );
-
-      queryClient.setQueryData(getCommunityQueryOptions(name).queryKey, {
-        ...existingData,
-        isFollowing: true,
+      queryClient.invalidateQueries({
+        queryKey: getThreadsInfiniteQueryOptions("all").queryKey,
       });
+      queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
     },
   });
   return (
@@ -63,9 +78,11 @@ export function JoinButton({
 export function LeaveCommunity({
   id,
   name,
+  className,
 }: {
   id: CommunityId;
   name: string;
+  className?: string;
 }) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
@@ -81,20 +98,20 @@ export function LeaveCommunity({
         description: `Successfully left ${name}!`,
       });
 
-      const existingData = await queryClient.ensureQueryData(
-        getCommunityQueryOptions(name)
+      queryClient.invalidateQueries(getCommunityQueryOptions(name));
+      queryClient.invalidateQueries(
+        getThreadsInfiniteQueryOptions(name, THREADS_PER_PAGE)
       );
-
-      queryClient.setQueryData(getCommunityQueryOptions(name).queryKey, {
-        ...existingData,
-        isFollowing: false,
-      });
+      queryClient.invalidateQueries(
+        getThreadsInfiniteQueryOptions("all", THREADS_PER_PAGE)
+      );
+      queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
     },
   });
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="w-18" variant={"outline"}>
+        <Button className={className ? className : "w-18"} variant={"outline"}>
           Joined
         </Button>
       </DialogTrigger>

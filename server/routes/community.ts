@@ -7,37 +7,78 @@ import {
   communityFollow,
   insertCommunitySchema,
   thread,
-  threadVote,
-  user,
 } from "../db/schema";
 import { db } from "../db";
-import { and, countDistinct, desc, eq, sql } from "drizzle-orm";
+import { lt, and, countDistinct, desc, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 
 export const communitiesRoute = new Hono<AppVariables>()
-  .get("/", async (c) => {
-    const communities = await db
-      .select({
-        id: community.id,
-        name: community.name,
-        description: community.description,
-        icon: community.icon,
-        isPrivate: community.isPrivate,
-        threadCount: countDistinct(thread.id),
-        userCount: countDistinct(communityFollow.userId),
+  .get(
+    "/",
+    zValidator(
+      "query",
+      z.object({
+        limit: z.coerce.number().int().positive().default(30),
+        search: z.coerce.string().optional(),
+        cursor: z.coerce.date().optional(),
       })
-      .from(community)
-      .leftJoin(thread, eq(thread.communityId, community.id))
-      .leftJoin(communityFollow, eq(communityFollow.communityId, community.id))
-      .groupBy(
-        community.id,
-        community.name,
-        community.description,
-        community.icon,
-        community.isPrivate
-      );
+    ),
+    async (c) => {
+      const user = c.var.user;
+      const limit = c.req.valid("query").limit;
+      const search = c.req.valid("query").search;
+      const cursor = c.req.valid("query").cursor;
 
-    return c.json(communities);
-  })
+      const communities = await db
+        .select({
+          id: community.id,
+          name: community.name,
+          userFollow: user
+            ? sql<boolean>`
+              EXISTS (
+                SELECT 1 FROM ${communityFollow} 
+                WHERE ${communityFollow.userId} = ${user.id} 
+                AND ${communityFollow.communityId} = ${community.id}
+              )
+            `.as("userFollow")
+            : sql<boolean>`FALSE`.as("userFollow"),
+          description: community.description,
+          icon: community.icon,
+          threadCount: countDistinct(thread.id),
+          userCount: countDistinct(communityFollow.userId),
+          createdAt: community.createdAt,
+        })
+        .from(community)
+        .leftJoin(thread, eq(thread.communityId, community.id))
+        .leftJoin(
+          communityFollow,
+          eq(communityFollow.communityId, community.id)
+        )
+        .where(
+          and(
+            cursor ? lt(community.createdAt, cursor) : undefined,
+            eq(community.isPrivate, false)
+          )
+        )
+        .orderBy(
+          search === "new"
+            ? desc(community.createdAt)
+            : search === "popular"
+            ? desc(countDistinct(thread.id))
+            : desc(community.createdAt)
+        )
+        .limit(limit)
+        .groupBy(
+          community.id,
+          community.name,
+          community.description,
+          community.icon,
+          community.isPrivate
+        );
+
+      return c.json(communities);
+    }
+  )
   .post(
     "/",
     requireAuth,
@@ -90,7 +131,10 @@ export const communitiesRoute = new Hono<AppVariables>()
 
     const follow = session
       ? await db.query.communityFollow.findFirst({
-          where: eq(communityFollow.userId, session.userId),
+          where: and(
+            eq(communityFollow.userId, session.userId),
+            eq(communityFollow.communityId, communityData.id)
+          ),
         })
       : undefined;
 

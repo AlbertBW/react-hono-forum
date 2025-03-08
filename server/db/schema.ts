@@ -31,6 +31,7 @@ export const userRelations = relations(user, ({ many }) => ({
   votes: many(threadVote),
   sessions: many(session),
   accounts: many(account),
+  moderator: many(moderator),
 }));
 
 export const session = pgTable("session", {
@@ -149,6 +150,8 @@ export const community = pgTable(
 export const communityRelations = relations(community, ({ many }) => ({
   threads: many(thread),
   followers: many(communityFollow),
+  moderators: many(moderator),
+  comments: many(comment),
 }));
 
 export const communityFollow = pgTable(
@@ -242,6 +245,35 @@ export const commentVoteRelations = relations(commentVote, ({ one }) => ({
   comment: one(comment, {
     fields: [commentVote.commentId],
     references: [comment.id],
+  }),
+}));
+
+export const moderator = pgTable(
+  "moderator",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    communityId: text("community_id")
+      .notNull()
+      .references(() => community.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.communityId],
+    }),
+  ]
+);
+
+export const moderatorRelations = relations(moderator, ({ one }) => ({
+  user: one(user, {
+    fields: [moderator.userId],
+    references: [user.id],
+  }),
+  community: one(community, {
+    fields: [moderator.communityId],
+    references: [community.id],
   }),
 }));
 

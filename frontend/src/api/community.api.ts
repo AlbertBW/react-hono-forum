@@ -3,12 +3,14 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { CommunityId, CreateCommunity } from "../../../server/db/schema";
 import { handleRateLimitError } from "./ratelimit-response";
 
+export type Search = "new" | "popular" | "following";
+
 export type CommunityCardType = Awaited<
   ReturnType<typeof getAllCommunities>
 >[number];
 export async function getAllCommunities(
   limit?: number,
-  search?: string,
+  search?: Search,
   cursor?: string
 ) {
   const res = await api.communities.$get({
@@ -36,10 +38,10 @@ export const getAllCommunitiesQueryOptions = (limit: number = 10) =>
 
 export const getAllCommunitiesInfiniteQueryOptions = (
   limit = 10,
-  search: string
+  search: Search
 ) =>
   infiniteQueryOptions({
-    queryKey: ["get-infinite-communities"],
+    queryKey: ["get-infinite-communities", search, limit],
     queryFn: async ({ pageParam }) =>
       await getAllCommunities(limit, search, pageParam),
     getNextPageParam: (lastPage) => {

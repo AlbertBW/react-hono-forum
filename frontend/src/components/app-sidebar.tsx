@@ -1,5 +1,11 @@
-import { List, Home, Orbit, Plus, ChevronRight } from "lucide-react";
-
+import {
+  List,
+  Home,
+  Orbit,
+  Plus,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,12 +25,12 @@ import {
 import { Link, useLocation } from "@tanstack/react-router";
 import { Dialog, DialogTrigger } from "./ui/dialog";
 import CreateCommunityDialog from "./create-community-dialog";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useRef } from "react";
 import { randomGradient } from "@/lib/common-styles";
-import { getAllCommunitiesQueryOptions } from "@/api/community.api";
+import { getAllCommunitiesInfiniteQueryOptions } from "@/api/community.api";
 
 // Menu items.
 const items = [
@@ -47,9 +53,12 @@ const items = [
 
 export function AppSidebar() {
   const location = useLocation();
-  const { isPending, error, data } = useQuery(
-    getAllCommunitiesQueryOptions(30)
-  );
+  const queryOptions = getAllCommunitiesInfiniteQueryOptions(10, "following");
+  const { data, fetchNextPage, hasNextPage, status } =
+    useInfiniteQuery(queryOptions);
+
+  const pages = data?.pages.flatMap((page) => page);
+
   const dialogTriggerRef = useRef<HTMLButtonElement>(null);
 
   const { open } = useSidebar();
@@ -109,7 +118,7 @@ export function AppSidebar() {
                         </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                    {isPending ? (
+                    {status === "pending" ? (
                       Array(3)
                         .fill(0)
                         .map((_, i) => (
@@ -122,7 +131,7 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                           </SidebarMenuItem>
                         ))
-                    ) : error ? (
+                    ) : status === "error" ? (
                       <SidebarMenuItem>
                         <SidebarMenuButton
                           asChild
@@ -131,8 +140,28 @@ export function AppSidebar() {
                           <span>Error</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
+                    ) : !pages ? (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          className="text-base font-normal h-10"
+                        >
+                          <span>No communities</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ) : pages.length === 0 ? (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          className="text-base font-normal h-10"
+                        >
+                          <Link to={`/communities`}>
+                            <span>Find communities</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     ) : (
-                      data.map((community) => (
+                      pages.map((community) => (
                         <SidebarMenuItem key={community.id}>
                           <SidebarMenuButton
                             asChild
@@ -170,6 +199,21 @@ export function AppSidebar() {
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       ))
+                    )}
+                    {hasNextPage && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={false}
+                          className="text-base font-normal h-10"
+                          onClick={() => fetchNextPage()}
+                        >
+                          <button type="button" className="">
+                            <ChevronDown />
+                            <span>Show more</span>
+                          </button>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
                     )}
                   </SidebarMenu>
                 </SidebarGroupContent>

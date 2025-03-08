@@ -1,6 +1,7 @@
 import {
   CommunityCardType,
   getAllCommunitiesInfiniteQueryOptions,
+  Search,
 } from "@/api/community.api";
 import {
   JoinButton,
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/communities")({
 });
 
 function CommunitiesPage() {
-  const [search, setSearch] = useState("new");
+  const [search, setSearch] = useState<Search>("new");
   const queryOptions = getAllCommunitiesInfiniteQueryOptions(12, search);
   const {
     data,
@@ -36,7 +37,7 @@ function CommunitiesPage() {
     hasNextPage,
     isFetchingNextPage,
     isFetching,
-    status: threadStatus,
+    status,
     refetch,
   } = useInfiniteQuery(queryOptions);
 
@@ -52,7 +53,10 @@ function CommunitiesPage() {
         <h2 className="text-2xl md:text-3xl font-semibold pb-4">
           Find Communities
         </h2>
-        <Select onValueChange={(value) => setSearch(value)} defaultValue="new">
+        <Select
+          onValueChange={(value) => setSearch(value as Search)}
+          defaultValue="new"
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Order by" />
           </SelectTrigger>
@@ -64,11 +68,11 @@ function CommunitiesPage() {
       </div>
 
       <Separator />
-      {threadStatus === "pending" || isFetching ? (
+      {status === "pending" || isFetching ? (
         <div className="flex w-full justify-center items-center pt-4">
           <LoadingSpinner />
         </div>
-      ) : threadStatus === "error" ? (
+      ) : status === "error" ? (
         <div>Error</div>
       ) : (
         pages && (

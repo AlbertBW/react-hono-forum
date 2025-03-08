@@ -6,10 +6,11 @@ import {
   community,
   communityFollow,
   insertCommunitySchema,
+  moderator,
   thread,
 } from "../db/schema";
 import { db } from "../db";
-import { lt, and, countDistinct, desc, eq, sql } from "drizzle-orm";
+import { lt, and, countDistinct, desc, eq, sql, exists } from "drizzle-orm";
 import { z } from "zod";
 
 export const communitiesRoute = new Hono<AppVariables>()
@@ -57,7 +58,10 @@ export const communitiesRoute = new Hono<AppVariables>()
         .where(
           and(
             cursor ? lt(community.createdAt, cursor) : undefined,
-            eq(community.isPrivate, false)
+            search !== "following" ? eq(community.isPrivate, false) : undefined,
+            user && search === "following"
+              ? eq(communityFollow.userId, user.id)
+              : undefined
           )
         )
         .orderBy(
@@ -91,6 +95,14 @@ export const communitiesRoute = new Hono<AppVariables>()
         .insert(community)
         .values({
           ...communityThread,
+        })
+        .returning();
+
+      const [mod] = await db
+        .insert(moderator)
+        .values({
+          userId: user.id,
+          communityId: newCommunity.id,
         })
         .returning();
 

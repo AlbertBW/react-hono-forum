@@ -62,6 +62,7 @@ export const threadsRoute = new Hono<AppVariables>()
           title: thread.title,
           createdAt: thread.createdAt,
           username: user.name,
+          userId: user.id,
           userFollow: currentUser
             ? sql<boolean>`
       EXISTS (
@@ -111,6 +112,7 @@ export const threadsRoute = new Hono<AppVariables>()
           thread.title,
           thread.createdAt,
           user.name,
+          user.id,
           user.image,
           community.name,
           community.icon,
@@ -166,6 +168,7 @@ export const threadsRoute = new Hono<AppVariables>()
         content: thread.content,
         createdAt: thread.createdAt,
         username: user.name,
+        userId: user.id,
         communityName: community.name,
         upvotes:
           sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0) AS INTEGER)`.as(
@@ -188,6 +191,7 @@ export const threadsRoute = new Hono<AppVariables>()
         thread.content,
         thread.createdAt,
         user.name,
+        user.id,
         community.name
       )
       .limit(1);

@@ -8,10 +8,17 @@ import {
   insertCommunitySchema,
   moderator,
   thread,
+  user,
 } from "../db/schema";
 import { db } from "../db";
 import { lt, and, countDistinct, desc, eq, sql, exists } from "drizzle-orm";
 import { z } from "zod";
+
+type CommunityMod = {
+  userId: string;
+  username: string;
+  avatar: string;
+};
 
 export const communitiesRoute = new Hono<AppVariables>()
   .get(
@@ -91,20 +98,34 @@ export const communitiesRoute = new Hono<AppVariables>()
       const communityThread = c.req.valid("json");
       const user = c.var.user!;
 
-      const [newCommunity] = await db
-        .insert(community)
-        .values({
-          ...communityThread,
-        })
-        .returning();
+      const result = await db.transaction(async (tx) => {
+        const [newCommunity] = await tx
+          .insert(community)
+          .values({
+            ...communityThread,
+          })
+          .returning();
 
-      const [mod] = await db
-        .insert(moderator)
-        .values({
-          userId: user.id,
-          communityId: newCommunity.id,
-        })
-        .returning();
+        const [mod] = await tx
+          .insert(moderator)
+          .values({
+            userId: user.id,
+            communityId: newCommunity.id,
+          })
+          .returning();
+
+        const [follow] = await tx
+          .insert(communityFollow)
+          .values({
+            userId: user.id,
+            communityId: newCommunity.id,
+          })
+          .returning();
+
+        return { newCommunity, mod, follow };
+      });
+
+      const newCommunity = result.newCommunity;
 
       c.status(201);
       return c.json(newCommunity);
@@ -124,11 +145,23 @@ export const communitiesRoute = new Hono<AppVariables>()
         createdAt: community.createdAt,
         threadCount: countDistinct(thread.id),
         userCount: countDistinct(communityFollow.userId),
+        moderators: sql<CommunityMod[]>`COALESCE(
+          json_agg(
+            json_build_object(
+              'userId', ${user.id}, 
+              'username', ${user.name}, 
+              'avatar', ${user.image}
+            )
+          ) FILTER (WHERE ${user.id} IS NOT NULL),
+          '[]'
+        )`,
       })
       .from(community)
       .where(sql`lower(${community.name}) = lower(${name})`)
       .leftJoin(thread, eq(thread.communityId, community.id))
       .leftJoin(communityFollow, eq(communityFollow.communityId, community.id))
+      .leftJoin(moderator, eq(moderator.communityId, community.id))
+      .leftJoin(user, eq(user.id, moderator.userId))
       .groupBy(
         community.id,
         community.name,

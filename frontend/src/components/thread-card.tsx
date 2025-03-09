@@ -12,9 +12,11 @@ type ThreadViewContext = "all" | "community";
 
 export default function ThreadCard({
   thread,
+  isMod,
   viewContext = "community",
 }: {
   thread: ThreadCardType;
+  isMod: boolean;
   viewContext?: ThreadViewContext;
 }) {
   const { data: userSession } = useSession();
@@ -61,6 +63,7 @@ export default function ThreadCard({
                 ? thread.username || "Anonymous"
                 : `c/${thread.communityName}`}
             </Link>
+            {isMod && <span className="text-green-600 text-xs">MOD</span>}
             {userSession && viewContext === "all" && !thread.userFollow && (
               <div
                 onClick={(e) => {

@@ -28,14 +28,6 @@ export async function getAllCommunities(
   return data;
 }
 
-export const getAllCommunitiesQueryOptions = (limit: number = 10) =>
-  queryOptions({
-    queryKey: ["get-all-communities"],
-    queryFn: () => getAllCommunities(limit),
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-  });
-
 export const getAllCommunitiesInfiniteQueryOptions = (
   limit = 10,
   search: Search

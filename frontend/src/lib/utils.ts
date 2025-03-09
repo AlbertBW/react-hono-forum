@@ -1,49 +1,77 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { BANNER_URL_ARRAY, ICON_URL_ARRAY } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export async function convertImageToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+type ImageCategory = "avatar" | "banner";
+export async function compressImage(
+  file: File,
+  category: ImageCategory
+): Promise<File> {
+  const targetSize = category === "avatar" ? 5 * 1024 : 15 * 1024;
+  const imageBitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  let width = imageBitmap.width;
+  let height = imageBitmap.height;
+  let quality = 0.7;
+  const MAX_ATTEMPTS = 10;
+  let attempts = 0;
 
-export async function resizeBase64Image(base64: string) {
-  return new Promise<string>((resolve) => {
-    const maxSizeInMB = 0.02;
-    const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+  async function attemptCompression(): Promise<File> {
+    attempts++;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Could not get 2d context");
+    }
+    ctx.drawImage(imageBitmap, 0, 0, width, height);
 
-    const img = new Image();
-    img.src = base64;
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        throw new Error("Could not get 2d context");
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, file.type, quality)
+    );
+
+    if (!blob) {
+      throw new Error("Failed to compress image");
+    }
+
+    const currentSize = blob.size;
+
+    if (
+      Math.abs(currentSize - targetSize) / targetSize < 0.1 ||
+      attempts >= MAX_ATTEMPTS
+    ) {
+      console.log(
+        `Compressed ${category} image to ${currentSize} bytes (target: ${targetSize}) with quality ${quality.toFixed(2)}`
+      );
+      return new File([blob], file.name, { type: blob.type });
+    }
+
+    if (currentSize > targetSize) {
+      if (quality > 0.2) {
+        quality = Math.max(0.1, quality - 0.1);
+      } else {
+        const scaleFactor = Math.sqrt(targetSize / currentSize);
+        width = Math.max(50, Math.floor(width * scaleFactor));
+        height = Math.max(50, Math.floor(height * scaleFactor));
       }
-      const width = img.width;
-      const height = img.height;
-      const aspectRatio = width / height;
+    } else {
+      if (quality < 0.9) {
+        quality = Math.min(0.9, quality + 0.05);
+      } else {
+        const scaleFactor = Math.sqrt(targetSize / currentSize);
+        width = Math.floor(width * scaleFactor);
+        height = Math.floor(height * scaleFactor);
+      }
+    }
 
-      const newWidth = Math.sqrt(maxSizeInBytes * aspectRatio);
-      const newHeight = Math.sqrt(maxSizeInBytes / aspectRatio);
+    return attemptCompression();
+  }
 
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-      const quality = 0.8;
-      const dataURL = canvas.toDataURL("image/jpeg", quality);
-
-      resolve(dataURL);
-    };
-  });
+  return attemptCompression();
 }
 
 export function getTimeAgo(createdAt: string) {
@@ -61,4 +89,12 @@ export function getTimeAgo(createdAt: string) {
     return `${diffInHours}h`;
   }
   return `${diffInMinutes}m`;
+}
+
+export function getRandomIcon() {
+  return ICON_URL_ARRAY[Math.floor(Math.random() * ICON_URL_ARRAY.length)];
+}
+
+export function getRandomBanner() {
+  return BANNER_URL_ARRAY[Math.floor(Math.random() * BANNER_URL_ARRAY.length)];
 }

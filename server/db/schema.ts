@@ -277,6 +277,7 @@ export const moderatorRelations = relations(moderator, ({ one }) => ({
   }),
 }));
 
+// Types, Zod schemas, and other utilities
 export type Thread = InferSelectModel<typeof thread>;
 export const insertThreadSchema = createInsertSchema(thread, {
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
@@ -292,7 +293,6 @@ export const insertThreadSchema = createInsertSchema(thread, {
   updatedAt: true,
 });
 export type CreateThread = z.infer<typeof insertThreadSchema>;
-
 export const threadIdSchema = z.object({ id: z.string().uuid() });
 export type ThreadId = Thread["id"];
 
@@ -317,6 +317,18 @@ export const insertCommunitySchema = createInsertSchema(community, {
 }).omit({ id: true, createdAt: true, updatedAt: true });
 export type CreateCommunity = z.infer<typeof insertCommunitySchema>;
 export type CommunityId = Community["id"];
+const fileSizeLimit = 5 * 1024 * 1024; // 5MB
+export type Image = z.infer<typeof imageSchema>;
+export const imageSchema = z
+  .instanceof(File)
+  .refine(
+    (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file.type),
+    { message: "Invalid image file type" }
+  )
+  .refine((file) => file.size <= fileSizeLimit, {
+    message: "File size should not exceed 5MB",
+  })
+  .nullable();
 
 export const insertCommentSchema = createInsertSchema(comment, {
   content: z.string().min(3, "Content must be at least 3 characters").max(1000),
@@ -329,7 +341,6 @@ export const insertCommentSchema = createInsertSchema(comment, {
   updatedAt: true,
 });
 export type CreateComment = z.infer<typeof insertCommentSchema>;
-
 export type Comment = InferSelectModel<typeof comment>;
 export const commentIdSchema = z.object({ id: z.string().uuid() });
 export type CommentId = Comment["id"];

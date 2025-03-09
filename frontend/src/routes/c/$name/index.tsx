@@ -68,7 +68,7 @@ function CommunityPage() {
   }
   const banner = randomGradient();
   const background = randomGradient();
-  console.log(community?.isFollowing, name);
+
   return (
     <div className="sm:p-4 max-w-7xl mx-auto">
       <div
@@ -84,10 +84,13 @@ function CommunityPage() {
                 </AvatarFallback>
               </Avatar>
             ) : community && community.icon ? (
-              <Avatar className={`size-14 md:size-20 lg:size-26`}>
+              <Avatar
+                className={`size-14 md:size-20 lg:size-26 flex justify-center items-center`}
+              >
                 <AvatarImage
                   src={community.icon}
                   alt={`${community.name} icon`}
+                  className="object-fill"
                 />
               </Avatar>
             ) : (
@@ -156,7 +159,14 @@ function CommunityPage() {
               <Separator />
               {threads.map((thread) => (
                 <Fragment key={thread.id}>
-                  <ThreadCard thread={thread} />
+                  <ThreadCard
+                    thread={thread}
+                    isMod={
+                      community?.moderators.some(
+                        (mod) => mod.userId === thread.userId
+                      ) || false
+                    }
+                  />
                   <Separator />
                 </Fragment>
               ))}

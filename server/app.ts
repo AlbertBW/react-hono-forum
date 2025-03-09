@@ -9,6 +9,7 @@ import type { Session, User } from "better-auth";
 import { communitiesRoute } from "./routes/community";
 import { commentsRoute } from "./routes/comments";
 import { createRateLimiter } from "./ratelimit";
+import { imageRoute } from "./routes/image";
 
 export type AppVariables = {
   Variables: {
@@ -45,7 +46,8 @@ const apiRoutes = app
   .route("/threads", threadsRoute)
   .route("/users", usersRoute)
   .route("/communities", communitiesRoute)
-  .route("/comments", commentsRoute);
+  .route("/comments", commentsRoute)
+  .route("/image", imageRoute);
 
 app.get("*", serveStatic({ root: "./frontend/dist" }));
 app.get("*", serveStatic({ path: "./frontend/dist/index.html" }));

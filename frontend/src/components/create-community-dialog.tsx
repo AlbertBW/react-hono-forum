@@ -14,7 +14,7 @@ import { Input } from "./ui/input";
 import FieldInfo from "./field-info";
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
-import { convertImageToBase64, resizeBase64Image } from "@/lib/utils";
+import { compressImage, getRandomIcon } from "@/lib/utils";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { LoadingSpinner } from "./ui/spinner";
@@ -25,8 +25,14 @@ import { toast } from "sonner";
 import SignInForm from "./auth/sign-in-form";
 import { useSession } from "@/lib/auth-client";
 import { useSidebar } from "./ui/sidebar";
-import { insertCommunitySchema } from "../../../server/db/schema";
+import {
+  Image,
+  imageSchema,
+  insertCommunitySchema,
+} from "../../../server/db/schema";
 import { createCommunity } from "@/api/community.api";
+import { useQueryClient } from "@tanstack/react-query";
+import { uploadImage } from "@/api/image-upload.api";
 
 export default function CreateCommunityDialog() {
   const { data: session, isPending: sessionPending } = useSession();
@@ -35,36 +41,62 @@ export default function CreateCommunityDialog() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { setOpenMobile } = useSidebar();
+  const queryClient = useQueryClient();
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const base64 = await convertImageToBase64(file);
-      const resized = await resizeBase64Image(base64);
-      setImagePreview(resized);
-      return resized;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const form = useForm({
     validators: {
-      onMount: insertCommunitySchema,
-      onChange: insertCommunitySchema,
+      onMount: insertCommunitySchema
+        .omit({ icon: true })
+        .extend({ image: imageSchema }),
+      onChange: insertCommunitySchema
+        .omit({ icon: true })
+        .extend({ image: imageSchema }),
     },
     defaultValues: {
       name: "",
       description: "",
-      icon: "",
       isPrivate: false,
+      image: null as Image,
     },
     onSubmit: async ({ value }) => {
       try {
-        const { data, error } = await createCommunity({ value });
+        if (value.image && !value.image.type.startsWith("image")) {
+          throw new Error("Please ensure the file is an image");
+        }
+
+        let iconData: { url: string } = { url: getRandomIcon() };
+        if (value.image) {
+          const image = await compressImage(value.image, "avatar");
+
+          iconData = await uploadImage(image);
+        }
+
+        const { data, error } = await createCommunity({
+          value: { ...value, icon: iconData.url },
+        });
+
         if (error) {
           throw new Error(error.message);
         }
         toast.success("Community created", {
           description: `Successfully created community: ${data.name}`,
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-infinite-communities"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-community"],
         });
         navigate({ to: `/c/${data.name}` });
       } catch (error) {
@@ -153,7 +185,7 @@ export default function CreateCommunityDialog() {
           )}
         />
         <form.Field
-          name="icon"
+          name="image"
           children={(field) => (
             <div className="py-2">
               <Label htmlFor={field.name}>Community Icon (optional)</Label>
@@ -176,13 +208,9 @@ export default function CreateCommunityDialog() {
                     type="file"
                     ref={fileInputRef}
                     accept="image/*"
-                    onChange={async (e) => {
-                      const base64 = await handleImageChange(e);
-                      if (base64) field.handleChange(base64);
-                      else {
-                        e.target.value = "";
-                        field.handleChange("");
-                      }
+                    onChange={(e) => {
+                      handleImageChange(e);
+                      field.handleChange(e.target.files?.[0] || null);
                     }}
                     className="hidden"
                   />
@@ -202,7 +230,7 @@ export default function CreateCommunityDialog() {
                     <Button
                       onClick={() => {
                         setImagePreview(null);
-                        field.handleChange("");
+                        field.handleChange(null);
                         if (fileInputRef.current) {
                           fileInputRef.current.value = "";
                         }

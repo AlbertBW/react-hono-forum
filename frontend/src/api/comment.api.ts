@@ -8,7 +8,6 @@ export async function createComment(
   content: string,
   parentId?: string
 ) {
-  await new Promise((r) => setTimeout(r, 5000));
   const res = await api.comments.$post({
     json: {
       threadId,

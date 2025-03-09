@@ -10,6 +10,10 @@ import { Lock } from "lucide-react";
 import { JoinButton, LeaveCommunity } from "../buttons/join-leave-community";
 import { useSession } from "@/lib/auth-client";
 import { Community } from "@/api/community.api";
+import { Separator } from "../ui/separator";
+import { Avatar } from "../ui/avatar";
+import { AvatarImage } from "@radix-ui/react-avatar";
+import { Link } from "@tanstack/react-router";
 
 export default function Aside({
   community,
@@ -88,6 +92,26 @@ export default function Aside({
               </span>
             </div>
           </div>
+          {community.moderators.length > 0 && (
+            <>
+              <Separator className="mt-4 mb-2" />
+              <span className="text-sm text-muted-foreground">Moderators</span>
+              {community.moderators.map((mod) => (
+                <div key={mod.userId} className="flex items-center gap-2 mt-2">
+                  <Avatar className="size-8">
+                    <AvatarImage src={mod.avatar} />
+                  </Avatar>
+                  <Link
+                    to={`/user/$username`}
+                    params={{ username: mod.username }}
+                    className="text-accent-foreground/60 text-sm hover:underline"
+                  >
+                    {mod.username}
+                  </Link>
+                </div>
+              ))}
+            </>
+          )}
         </CardContent>
       </Card>
     </aside>

@@ -38,6 +38,10 @@ function ThreadPage() {
     return <div>Thread not found</div>;
   }
 
+  const postedByMod = community.moderators.some(
+    (mod) => mod.userId === thread.userId
+  );
+
   return (
     <div className="flex p-1 pt-4 sm:p-4 max-w-6xl mx-auto">
       <main className="w-full sm:px-4">
@@ -81,13 +85,20 @@ function ThreadPage() {
                 {getTimeAgo(thread.createdAt)}
               </span>
             </div>
-            <Link
-              className="text-xs text-accent-foreground/70 hover:text-blue-200"
-              to={"/c/$name"}
-              params={{ name }}
-            >
-              {thread.username}
-            </Link>
+            {thread.username ? (
+              <Link
+                className="text-xs text-accent-foreground/70 hover:text-blue-200"
+                to={"/user/$username"}
+                params={{ username: thread.username }}
+              >
+                {thread.username}{" "}
+                {postedByMod && <span className="text-green-600">MOD</span>}
+              </Link>
+            ) : (
+              <span className="text-xs text-accent-foreground/70">
+                [DELETED]
+              </span>
+            )}
           </div>
         </div>
         <div className="flex flex-col gap-4 pt-1">

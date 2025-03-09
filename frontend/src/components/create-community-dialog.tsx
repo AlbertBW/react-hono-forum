@@ -14,7 +14,7 @@ import { Input } from "./ui/input";
 import FieldInfo from "./field-info";
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
-import { compressImage, getRandomIcon } from "@/lib/utils";
+import { compressImage, getRandomBanner, getRandomIcon } from "@/lib/utils";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { LoadingSpinner } from "./ui/spinner";
@@ -36,54 +36,77 @@ import { uploadImage } from "@/api/image-upload.api";
 
 export default function CreateCommunityDialog() {
   const { data: session, isPending: sessionPending } = useSession();
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [name, setName] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [iconImagePreview, setIconImagePreview] = useState<string | null>(null);
+  const [bannerImagePreview, setBannerImagePreview] = useState<string | null>(
+    null
+  );
+  const iconFileInputRef = useRef<HTMLInputElement>(null);
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { setOpenMobile } = useSidebar();
   const queryClient = useQueryClient();
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIconImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setIconImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleBannerImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const form = useForm({
     validators: {
       onMount: insertCommunitySchema
-        .omit({ icon: true })
-        .extend({ image: imageSchema }),
+        .omit({ icon: true, banner: true })
+        .extend({ iconImage: imageSchema, bannerImage: imageSchema }),
       onChange: insertCommunitySchema
-        .omit({ icon: true })
-        .extend({ image: imageSchema }),
+        .omit({ icon: true, banner: true })
+        .extend({ iconImage: imageSchema, bannerImage: imageSchema }),
     },
     defaultValues: {
       name: "",
       description: "",
       isPrivate: false,
-      image: null as Image,
+      iconImage: null as Image,
+      bannerImage: null as Image,
     },
     onSubmit: async ({ value }) => {
       try {
-        if (value.image && !value.image.type.startsWith("image")) {
+        if (value.iconImage && !value.iconImage.type.startsWith("image")) {
+          throw new Error("Please ensure the file is an image");
+        }
+        if (value.bannerImage && !value.bannerImage.type.startsWith("image")) {
           throw new Error("Please ensure the file is an image");
         }
 
         let iconData: { url: string } = { url: getRandomIcon() };
-        if (value.image) {
-          const image = await compressImage(value.image, "avatar");
+        let bannerData: { url: string } = { url: getRandomBanner() };
+        if (value.iconImage) {
+          const image = await compressImage(value.iconImage, "avatar");
 
           iconData = await uploadImage(image);
         }
+        if (value.bannerImage) {
+          const image = await compressImage(value.bannerImage, "banner");
+
+          bannerData = await uploadImage(image);
+        }
 
         const { data, error } = await createCommunity({
-          value: { ...value, icon: iconData.url },
+          value: { ...value, icon: iconData.url, banner: bannerData.url },
         });
 
         if (error) {
@@ -146,7 +169,6 @@ export default function CreateCommunityDialog() {
                 type="text"
                 onBlur={field.handleBlur}
                 onChange={(e) => {
-                  setName(e.target.value);
                   field.handleChange(e.target.value);
                 }}
                 className={`${
@@ -185,42 +207,45 @@ export default function CreateCommunityDialog() {
           )}
         />
         <form.Field
-          name="image"
+          name="iconImage"
           children={(field) => (
-            <div className="py-2">
+            <div className="pt-2">
               <Label htmlFor={field.name}>Community Icon (optional)</Label>
               <div className="flex flex-col  mt-2">
                 <div className="flex items-center gap-2 w-full">
-                  {imagePreview ? (
+                  {iconImagePreview ? (
                     <Avatar className="size-12">
-                      <AvatarImage src={imagePreview} alt="Community icon" />
+                      <AvatarImage
+                        src={iconImagePreview}
+                        alt="Community icon"
+                      />
                     </Avatar>
                   ) : (
                     <Avatar className="bg-zinc-800 flex justify-center items-center size-12">
                       <AvatarFallback>
-                        {name ? name.substring(0, 3).toUpperCase() : ""}
+                        <ImagePlus />
                       </AvatarFallback>
                     </Avatar>
                   )}
                   {/* Hidden file input */}
                   <Input
-                    id="image"
+                    id="iconImage"
                     type="file"
-                    ref={fileInputRef}
+                    ref={iconFileInputRef}
                     accept="image/*"
                     onChange={(e) => {
-                      handleImageChange(e);
+                      handleIconImageChange(e);
                       field.handleChange(e.target.files?.[0] || null);
                     }}
                     className="hidden"
                   />
 
                   {/* Custom file input button */}
-                  {!imagePreview ? (
+                  {!iconImagePreview ? (
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => iconFileInputRef.current?.click()}
                       className="flex items-center gap-2"
                     >
                       <ImagePlus />
@@ -229,10 +254,73 @@ export default function CreateCommunityDialog() {
                   ) : (
                     <Button
                       onClick={() => {
-                        setImagePreview(null);
+                        setIconImagePreview(null);
                         field.handleChange(null);
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
+                        if (iconFileInputRef.current) {
+                          iconFileInputRef.current.value = "";
+                        }
+                      }}
+                      variant={"ghost"}
+                    >
+                      <X />
+                    </Button>
+                  )}
+                </div>
+                <FieldInfo field={field} />
+              </div>
+            </div>
+          )}
+        />
+
+        <form.Field
+          name="bannerImage"
+          children={(field) => (
+            <div className="py-2">
+              <Label htmlFor={field.name}>Community Banner (optional)</Label>
+              <div className="flex flex-col  mt-2">
+                <div className="flex items-center gap-2 w-full">
+                  {bannerImagePreview ? (
+                    <img
+                      src={bannerImagePreview}
+                      alt="Community banner"
+                      className="aspect-5/1 rounded-lg object-cover max-w-80"
+                    />
+                  ) : (
+                    <div className="bg-zinc-800 size-12 rounded-lg flex justify-center items-center">
+                      <ImagePlus />
+                    </div>
+                  )}
+                  {/* Hidden file input */}
+                  <Input
+                    id="bannerImage"
+                    type="file"
+                    ref={bannerFileInputRef}
+                    accept="image/*"
+                    onChange={(e) => {
+                      handleBannerImageChange(e);
+                      field.handleChange(e.target.files?.[0] || null);
+                    }}
+                    className="hidden"
+                  />
+
+                  {/* Custom file input button */}
+                  {!bannerImagePreview ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => bannerFileInputRef.current?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <ImagePlus />
+                      Upload Banner
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        setBannerImagePreview(null);
+                        field.handleChange(null);
+                        if (bannerFileInputRef.current) {
+                          bannerFileInputRef.current.value = "";
                         }
                       }}
                       variant={"ghost"}

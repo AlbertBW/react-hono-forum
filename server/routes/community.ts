@@ -141,6 +141,7 @@ export const communitiesRoute = new Hono<AppVariables>()
         name: community.name,
         description: community.description,
         icon: community.icon,
+        banner: community.banner,
         isPrivate: community.isPrivate,
         createdAt: community.createdAt,
         threadCount: countDistinct(thread.id),
@@ -167,6 +168,7 @@ export const communitiesRoute = new Hono<AppVariables>()
         community.name,
         community.description,
         community.icon,
+        community.banner,
         community.isPrivate
       );
 

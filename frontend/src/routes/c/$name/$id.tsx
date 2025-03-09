@@ -11,12 +11,15 @@ import { getCommunityQueryOptions } from "@/api/community.api";
 import { getSingleThreadQueryOptions } from "@/api/thread.api";
 import CreateComment from "@/components/comments/create-comment";
 import Comments from "@/components/comments/comments";
+import { useSession } from "@/lib/auth-client";
+import DeleteThread from "@/components/buttons/delete-thread";
 
 export const Route = createFileRoute("/c/$name/$id")({
   component: ThreadPage,
 });
 
 function ThreadPage() {
+  const { data: session } = useSession();
   const { name, id } = Route.useParams();
   const communityQueryOption = getCommunityQueryOptions(name);
   const { data: community } = useQuery(communityQueryOption);
@@ -46,60 +49,71 @@ function ThreadPage() {
     <div className="flex p-1 pt-4 sm:p-4 max-w-6xl mx-auto">
       <main className="w-full sm:px-4">
         <div className="w-full gap-2 flex">
-          <Button
-            variant={"outline"}
-            className="flex items-center gap-2 rounded-full size-10"
-            onClick={() => navigate({ to: "/c/$name", params: { name } })}
-          >
-            <ArrowLeft />
-          </Button>
-
-          {community && community.icon ? (
-            <Avatar className={`size-10`}>
-              <AvatarImage
-                src={community.icon}
-                alt={`${community.name} icon`}
-              />
-            </Avatar>
-          ) : (
-            <Avatar
-              className={`flex justify-center size-9 items-center bg-black`}
+          <div className="w-full gap-2 flex">
+            <Button
+              variant={"outline"}
+              className="flex items-center gap-2 rounded-full size-10"
+              onClick={() => navigate({ to: "/c/$name", params: { name } })}
             >
-              <AvatarFallback className={randomGradient()}></AvatarFallback>
-            </Avatar>
-          )}
+              <ArrowLeft />
+            </Button>
 
-          <div className="flex flex-col justify-evenly">
-            <div className="flex items-center gap-1">
-              <Link
-                className="text-xs font-semibold text-accent-foreground/80 hover:text-blue-200"
-                to={"/c/$name"}
-                params={{ name }}
-              >
-                {community.name}
-              </Link>
-              <span className="text-xs font-semibold text-muted-foreground">
-                •
-              </span>
-              <span className="text-xs font-semibold text-muted-foreground">
-                {getTimeAgo(thread.createdAt)}
-              </span>
-            </div>
-            {thread.username ? (
-              <Link
-                className="text-xs text-accent-foreground/70 hover:text-blue-200"
-                to={"/user/$username"}
-                params={{ username: thread.username }}
-              >
-                {thread.username}{" "}
-                {postedByMod && <span className="text-green-600">MOD</span>}
-              </Link>
+            {community && community.icon ? (
+              <Avatar className={`size-10`}>
+                <AvatarImage
+                  src={community.icon}
+                  alt={`${community.name} icon`}
+                />
+              </Avatar>
             ) : (
-              <span className="text-xs text-accent-foreground/70">
-                [DELETED]
-              </span>
+              <Avatar
+                className={`flex justify-center size-9 items-center bg-black`}
+              >
+                <AvatarFallback className={randomGradient()}></AvatarFallback>
+              </Avatar>
             )}
+
+            <div className="flex flex-col justify-evenly">
+              <div className="flex items-center gap-1">
+                <Link
+                  className="text-xs font-semibold text-accent-foreground/80 hover:text-blue-200"
+                  to={"/c/$name"}
+                  params={{ name }}
+                >
+                  {community.name}
+                </Link>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  •
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {getTimeAgo(thread.createdAt)}
+                </span>
+              </div>
+              {thread.username ? (
+                <Link
+                  className="text-xs text-accent-foreground/70 hover:text-blue-200"
+                  to={"/user/$username"}
+                  params={{ username: thread.username }}
+                >
+                  {thread.username}{" "}
+                  {postedByMod && <span className="text-green-600">MOD</span>}
+                </Link>
+              ) : (
+                <span className="text-xs text-accent-foreground/70">
+                  [DELETED]
+                </span>
+              )}
+            </div>
           </div>
+          {session &&
+            (community.moderators.some(
+              (mod) => mod.userId === session.user.id
+            ) ||
+              thread.userId === session.user.id) && (
+              <div>
+                <DeleteThread id={thread.id} communityName={community.name} />
+              </div>
+            )}
         </div>
         <div className="flex flex-col gap-4 pt-1">
           <h2 className="text-3xl font-semibold">{thread.title}</h2>

@@ -222,20 +222,30 @@ export const threadsRoute = new Hono<AppVariables>()
       const id = z.string().uuid().parse(c.req.param("id"));
 
       const userThread = await db.query.thread.findFirst({
-        where: (thread, { and, eq }) =>
-          and(eq(thread.id, id), eq(thread.userId, user.id)),
+        where: (thread, { and, eq }) => eq(thread.id, id),
+        with: { community: { with: { moderators: true } } },
       });
 
-      if (!userThread) {
-        return c.json({ error: "not found" }, 404);
+      if (userThread) {
+        // User is a mod or the thread owner
+        const authorisedUser =
+          userThread?.community.moderators.some(
+            (mod) => mod.userId === user.id
+          ) || userThread?.userId === user.id;
+
+        if (!authorisedUser) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const [deletedThread] = await db
+          .delete(thread)
+          .where(eq(thread.id, id))
+          .returning();
+
+        return c.json(deletedThread, 200);
+      } else {
+        return c.json({ error: "Not found" }, 404);
       }
-
-      const [deletedThread] = await db
-        .delete(thread)
-        .where(eq(thread.id, id))
-        .returning();
-
-      return c.json({ thread: deletedThread });
     }
   )
   .post(

@@ -42,6 +42,7 @@ export default function CreateCommunityDialog() {
   );
   const iconFileInputRef = useRef<HTMLInputElement>(null);
   const bannerFileInputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const { setOpenMobile } = useSidebar();
   const queryClient = useQueryClient();
@@ -66,6 +67,12 @@ export default function CreateCommunityDialog() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleResetForm = () => {
+    setIconImagePreview(null);
+    setBannerImagePreview(null);
+    form.reset();
   };
   const form = useForm({
     validators: {
@@ -121,6 +128,7 @@ export default function CreateCommunityDialog() {
         queryClient.invalidateQueries({
           queryKey: ["get-community"],
         });
+        triggerRef.current?.click();
         navigate({ to: `/c/${data.name}` });
       } catch (error) {
         toast.error("Error", {
@@ -385,27 +393,27 @@ export default function CreateCommunityDialog() {
           )}
         />
         <DialogFooter>
-          <DialogTrigger>
-            <Button variant={"outline"}>Cancel</Button>
+          <DialogTrigger ref={triggerRef}>
+            <Button onClick={handleResetForm} variant={"outline"}>
+              Cancel
+            </Button>
           </DialogTrigger>
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
             children={([canSubmit, isSubmitting]) => (
-              <DialogTrigger disabled={!canSubmit}>
-                <Button
-                  type="submit"
-                  disabled={!canSubmit}
-                  onClick={() => setOpenMobile(false)}
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <LoadingSpinner /> Loading
-                    </div>
-                  ) : (
-                    `Create Community`
-                  )}
-                </Button>
-              </DialogTrigger>
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                onClick={() => setOpenMobile(false)}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <LoadingSpinner /> Loading
+                  </div>
+                ) : (
+                  `Create Community`
+                )}
+              </Button>
             )}
           />
         </DialogFooter>

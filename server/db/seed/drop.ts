@@ -27,7 +27,6 @@ async function drop() {
   await db.execute(sql`DROP TABLE IF EXISTS ${comment} CASCADE`);
   await db.execute(sql`DROP TABLE IF EXISTS ${commentVote} CASCADE`);
   console.log("Tables dropped");
-  process.exit(0);
 }
 
 drop();

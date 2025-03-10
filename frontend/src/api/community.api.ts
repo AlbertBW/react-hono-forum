@@ -148,3 +148,22 @@ export async function updateCommunityDescription(
     throw new Error("Failed to update community icon");
   }
 }
+
+export async function deleteModerator({
+  modId,
+  communityId,
+}: {
+  modId: string;
+  communityId: string;
+}) {
+  const res = await api.moderators.community[":communityId"][":userId"].$delete(
+    {
+      param: { communityId, userId: modId },
+    }
+  );
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to delete moderator");
+  }
+}

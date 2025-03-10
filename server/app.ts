@@ -10,6 +10,7 @@ import { communitiesRoute } from "./routes/community";
 import { commentsRoute } from "./routes/comments";
 import { createRateLimiter } from "./ratelimit";
 import { imageRoute } from "./routes/image";
+import { moderatorsRoute } from "./routes/moderators";
 
 export type AppVariables = {
   Variables: {
@@ -47,7 +48,8 @@ const apiRoutes = app
   .route("/users", usersRoute)
   .route("/communities", communitiesRoute)
   .route("/comments", commentsRoute)
-  .route("/image", imageRoute);
+  .route("/image", imageRoute)
+  .route("/moderators", moderatorsRoute);
 
 app.get("*", serveStatic({ root: "./frontend/dist" }));
 app.get("*", serveStatic({ path: "./frontend/dist/index.html" }));

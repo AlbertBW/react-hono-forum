@@ -26,6 +26,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { descriptionSchema } from "../../../../../server/db/schema";
+import RemoveMod from "@/components/buttons/remove-mod";
 
 export const Route = createFileRoute("/c/$name/settings")({
   component: RouteComponent,
@@ -40,18 +41,20 @@ function RouteComponent() {
     data: community,
   } = useQuery(getCommunityQueryOptions(name));
 
-  if (
-    error ||
-    (!isPending && !community) ||
-    userPending ||
-    !userData ||
-    !community
-  ) {
+  if (isPending || userPending) {
+    return (
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if ((!isPending && !community) || error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] p-4">
-        <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
+        <h1 className="text-3xl font-bold mb-4">Community Not Found</h1>
         <p className="text-lg text-muted-foreground mb-8">
-          You don't have permission to manage this community.
+          The community you're looking for doesn't exist.
         </p>
         <div className="flex gap-4">
           <Button variant="outline" asChild>
@@ -63,7 +66,7 @@ function RouteComponent() {
   }
 
   const isModerator = community.moderators.some(
-    (mod) => mod.userId === userData.user.id
+    (mod) => mod.userId === userData?.user.id
   );
 
   if (!isModerator) {
@@ -114,7 +117,28 @@ function RouteComponent() {
               <CardTitle>Moderator Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Moderator management coming soon</p>
+              <div className="space-y-4">
+                {community.moderators.map((mod) => (
+                  <div
+                    key={mod.userId}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={mod.avatar} alt={mod.username} />
+                      </Avatar>
+                      <div>
+                        <h3 className="text-lg font-medium">{mod.username}</h3>
+                      </div>
+                    </div>
+                    <RemoveMod
+                      modId={mod.userId}
+                      communityId={community.id}
+                      name={mod.username}
+                    />
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

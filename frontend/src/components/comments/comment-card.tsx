@@ -73,7 +73,7 @@ export default function CommentCard({
             {comment.username}
           </Link>
         ) : (
-          <span className="text-xs text-accent-foreground hover:text-blue-200 font-semibold">
+          <span className="text-xs text-accent-foreground font-semibold">
             [DELETED]
           </span>
         )}

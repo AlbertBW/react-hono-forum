@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { descriptionSchema } from "../../../../../server/db/schema";
 import RemoveMod from "@/components/buttons/remove-mod";
+import AddMod from "@/components/buttons/add-mod";
 
 export const Route = createFileRoute("/c/$name/settings")({
   component: RouteComponent,
@@ -113,8 +114,9 @@ function RouteComponent() {
 
         <TabsContent value="moderators">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Moderator Management</CardTitle>
+              <AddMod communityId={community.id} />
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

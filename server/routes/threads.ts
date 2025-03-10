@@ -13,7 +13,7 @@ import {
   voteSchema,
 } from "../db/schema";
 import { db } from "../db";
-import { and, count, desc, eq, exists, inArray, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, lt, sql } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
 

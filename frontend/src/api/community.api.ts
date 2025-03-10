@@ -167,3 +167,20 @@ export async function deleteModerator({
     throw new Error("Failed to delete moderator");
   }
 }
+
+export async function createModerator({
+  communityId,
+  userId,
+}: {
+  communityId: string;
+  userId: string;
+}) {
+  const res = await api.moderators.community[":communityId"][":userId"].$post({
+    param: { communityId, userId },
+  });
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to create moderator");
+  }
+}

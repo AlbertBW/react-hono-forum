@@ -47,7 +47,7 @@ function ThreadPage() {
 
   return (
     <div className="flex p-1 pt-4 sm:p-4 max-w-6xl mx-auto">
-      <main className="w-full sm:px-4">
+      <main className="w-full px-2 sm:px-4">
         <div className="w-full gap-2 flex">
           <div className="w-full gap-2 flex">
             <Button

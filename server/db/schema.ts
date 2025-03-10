@@ -307,7 +307,7 @@ export const insertCommunitySchema = createInsertSchema(community, {
   name: z
     .string()
     .min(3, "Name must be at least 3 characters")
-    .max(30, "Name must be no more than 30 characters")
+    .max(15, "Name must be no more than 15 characters")
     .refine((name) => !name.includes(" "), {
       message: "Name cannot contain spaces",
     })

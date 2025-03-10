@@ -184,3 +184,21 @@ export async function createModerator({
     throw new Error("Failed to create moderator");
   }
 }
+
+export async function updateCommunityPrivacy({
+  communityId,
+  newValue,
+}: {
+  communityId: string;
+  newValue: boolean;
+}) {
+  const res = await api.communities.privacy[":id"].$put({
+    param: { id: communityId },
+    json: { isPrivate: newValue },
+  });
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to update community privacy");
+  }
+}

@@ -16,7 +16,7 @@ export default function ThreadCard({
   viewContext = "community",
 }: {
   thread: ThreadCardType;
-  isMod: boolean;
+  isMod?: boolean;
   viewContext?: ThreadViewContext;
 }) {
   const { data: userSession } = useSession();

@@ -4,6 +4,7 @@ import {
   updateCommunityBanner,
   updateCommunityDescription,
   updateCommunityIcon,
+  updateCommunityPrivacy,
 } from "@/api/community.api";
 import { uploadImage } from "@/api/image-upload.api";
 import DeleteCommunity from "@/components/buttons/delete-community";
@@ -107,6 +108,7 @@ function RouteComponent() {
                 <NewIconImage community={community} />
                 <NewBannerImage community={community} />
                 <NewDescription community={community} />
+                <PrivacySettings community={community} />
               </div>
             </CardContent>
           </Card>
@@ -539,6 +541,61 @@ function NewDescription({ community }: { community: Community }) {
           </div>
         </form>
       )}
+    </div>
+  );
+}
+
+function PrivacySettings({ community }: { community: Community }) {
+  const queryClient = useQueryClient();
+  const [isPrivate, setIsPrivate] = useState(community.isPrivate);
+
+  const mutation = useMutation({
+    mutationFn: updateCommunityPrivacy,
+    onSuccess: () => {
+      setIsPrivate(!isPrivate);
+      toast.success("Community privacy setting updated");
+      queryClient.invalidateQueries({
+        queryKey: ["get-community", community.name],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["get-infinite-communities"],
+      });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "An error occurred");
+    },
+  });
+
+  return (
+    <div className="pt-6 border-t">
+      <h3 className="text-lg font-medium mb-4">Community Privacy</h3>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-medium">
+            {isPrivate ? "Private" : "Public"} Community
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {isPrivate
+              ? "Only approved users can see and participate in this community"
+              : "Anyone can view and participate in this community"}
+          </p>
+        </div>
+        <Button
+          variant={isPrivate ? "default" : "outline"}
+          onClick={() =>
+            mutation.mutate({ communityId: community.id, newValue: !isPrivate })
+          }
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? (
+            <LoadingSpinner />
+          ) : isPrivate ? (
+            "Make Public"
+          ) : (
+            "Make Private"
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

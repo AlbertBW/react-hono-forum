@@ -132,22 +132,25 @@ export const communitiesRoute = new Hono<AppVariables>()
       return c.json(newCommunity);
     }
   )
-  .get("/:name", async (c) => {
-    const name = c.req.param("name");
-    const session = c.var.session;
+  .get(
+    "/:name",
+    zValidator("param", z.object({ name: z.string() })),
+    async (c) => {
+      const name = c.req.valid("param").name;
+      const session = c.var.session;
 
-    const [communityData] = await db
-      .select({
-        id: community.id,
-        name: community.name,
-        description: community.description,
-        icon: community.icon,
-        banner: community.banner,
-        isPrivate: community.isPrivate,
-        createdAt: community.createdAt,
-        threadCount: countDistinct(thread.id),
-        userCount: countDistinct(communityFollow.userId),
-        moderators: sql<CommunityMod[]>`COALESCE(
+      const [communityData] = await db
+        .select({
+          id: community.id,
+          name: community.name,
+          description: community.description,
+          icon: community.icon,
+          banner: community.banner,
+          isPrivate: community.isPrivate,
+          createdAt: community.createdAt,
+          threadCount: countDistinct(thread.id),
+          userCount: countDistinct(communityFollow.userId),
+          moderators: sql<CommunityMod[]>`COALESCE(
           json_agg(
             json_build_object(
               'userId', ${user.id}, 
@@ -157,45 +160,49 @@ export const communitiesRoute = new Hono<AppVariables>()
           ) FILTER (WHERE ${user.id} IS NOT NULL),
           '[]'
         )`,
-      })
-      .from(community)
-      .where(sql`lower(${community.name}) = lower(${name})`)
-      .leftJoin(thread, eq(thread.communityId, community.id))
-      .leftJoin(communityFollow, eq(communityFollow.communityId, community.id))
-      .leftJoin(moderator, eq(moderator.communityId, community.id))
-      .leftJoin(user, eq(user.id, moderator.userId))
-      .groupBy(
-        community.id,
-        community.name,
-        community.description,
-        community.icon,
-        community.banner,
-        community.isPrivate
-      );
-
-    if (!communityData) {
-      return c.json({ error: "not found" }, 404);
-    }
-
-    const follow = session
-      ? await db.query.communityFollow.findFirst({
-          where: and(
-            eq(communityFollow.userId, session.userId),
-            eq(communityFollow.communityId, communityData.id)
-          ),
         })
-      : undefined;
+        .from(community)
+        .where(sql`lower(${community.name}) = lower(${name})`)
+        .leftJoin(thread, eq(thread.communityId, community.id))
+        .leftJoin(
+          communityFollow,
+          eq(communityFollow.communityId, community.id)
+        )
+        .leftJoin(moderator, eq(moderator.communityId, community.id))
+        .leftJoin(user, eq(user.id, moderator.userId))
+        .groupBy(
+          community.id,
+          community.name,
+          community.description,
+          community.icon,
+          community.banner,
+          community.isPrivate
+        );
 
-    let isFollowing = null as boolean | null;
-    if (follow) {
-      isFollowing = follow.communityId === communityData.id;
+      if (!communityData) {
+        return c.json({ error: "not found" }, 404);
+      }
+
+      const follow = session
+        ? await db.query.communityFollow.findFirst({
+            where: and(
+              eq(communityFollow.userId, session.userId),
+              eq(communityFollow.communityId, communityData.id)
+            ),
+          })
+        : undefined;
+
+      let isFollowing = null as boolean | null;
+      if (follow) {
+        isFollowing = follow.communityId === communityData.id;
+      }
+
+      return c.json({
+        ...communityData,
+        isFollowing,
+      });
     }
-
-    return c.json({
-      ...communityData,
-      isFollowing,
-    });
-  })
+  )
   .delete(
     "/delete/:id",
     requireAuth,
@@ -217,58 +224,69 @@ export const communitiesRoute = new Hono<AppVariables>()
       return c.json({ success: true });
     }
   )
-  .post("/follow/:id", requireAuth, async (c) => {
-    const user = c.var.user!;
-    const id = c.req.param("id");
-
-    const communityExists = await db.query.community.findFirst({
-      where: eq(community.id, id),
-    });
-
-    if (!communityExists) {
-      return c.json({ error: "Community not found" }, 404);
-    }
-
-    const [follow] = await db
-      .insert(communityFollow)
-      .values({
-        userId: user.id,
-        communityId: id,
-      })
-      .returning();
-
-    return c.json(follow);
-  })
-  .delete("/follow/:id", requireAuth, async (c) => {
-    const user = c.var.user!;
-    const id = c.req.param("id");
-    const follow = await db.query.communityFollow.findFirst({
-      where: and(
-        eq(communityFollow.userId, user.id),
-        eq(communityFollow.communityId, id)
-      ),
-    });
-    if (!follow) {
-      return c.json({ error: "Not following community" }, 404);
-    }
-    const [deleted] = await db
-      .delete(communityFollow)
-      .where(
-        and(
-          eq(communityFollow.userId, user.id),
-          eq(communityFollow.communityId, id)
-        )
-      )
-      .returning();
-    return c.json(deleted);
-  })
-  .put(
-    "/icon/:id",
+  .post(
+    "/follow/:id",
     requireAuth,
-    zValidator("json", z.object({ iconUrl: z.string().url() })),
+    zValidator("param", z.object({ id: z.string().uuid() })),
     async (c) => {
       const user = c.var.user!;
       const id = c.req.param("id");
+
+      const communityExists = await db.query.community.findFirst({
+        where: eq(community.id, id),
+      });
+
+      if (!communityExists) {
+        return c.json({ error: "Community not found" }, 404);
+      }
+
+      const [follow] = await db
+        .insert(communityFollow)
+        .values({
+          userId: user.id,
+          communityId: id,
+        })
+        .returning();
+
+      return c.json(follow);
+    }
+  )
+  .delete(
+    "/follow/:id",
+    requireAuth,
+    zValidator("param", z.object({ id: z.string().uuid() })),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
+      const follow = await db.query.communityFollow.findFirst({
+        where: and(
+          eq(communityFollow.userId, user.id),
+          eq(communityFollow.communityId, id)
+        ),
+      });
+      if (!follow) {
+        return c.json({ error: "Not following community" }, 404);
+      }
+      const [deleted] = await db
+        .delete(communityFollow)
+        .where(
+          and(
+            eq(communityFollow.userId, user.id),
+            eq(communityFollow.communityId, id)
+          )
+        )
+        .returning();
+      return c.json(deleted);
+    }
+  )
+  .put(
+    "/icon/:id",
+    requireAuth,
+    zValidator("param", z.object({ id: z.string().uuid() })),
+    zValidator("json", z.object({ iconUrl: z.string().url() })),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
       const icon = c.req.valid("json").iconUrl;
 
       const communityExists = await db.query.community.findFirst({
@@ -302,10 +320,11 @@ export const communitiesRoute = new Hono<AppVariables>()
   .put(
     "/banner/:id",
     requireAuth,
+    zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("json", z.object({ bannerUrl: z.string().url() })),
     async (c) => {
       const user = c.var.user!;
-      const id = c.req.param("id");
+      const id = c.req.valid("param").id;
       const banner = c.req.valid("json").bannerUrl;
 
       const communityExists = await db.query.community.findFirst({
@@ -339,10 +358,11 @@ export const communitiesRoute = new Hono<AppVariables>()
   .put(
     "/description/:id",
     requireAuth,
+    zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator("json", z.object({ description: descriptionSchema })),
     async (c) => {
       const user = c.var.user!;
-      const id = c.req.param("id");
+      const id = c.req.valid("param").id;
       const description = c.req.valid("json").description;
 
       const communityExists = await db.query.community.findFirst({
@@ -364,6 +384,42 @@ export const communitiesRoute = new Hono<AppVariables>()
           .set({
             description,
           })
+          .where(eq(community.id, id))
+          .returning();
+
+        return c.json(updated, 200);
+      } else {
+        return c.json({ error: "Community not found" }, 404);
+      }
+    }
+  )
+  .put(
+    "/privacy/:id",
+    requireAuth,
+    zValidator("param", z.object({ id: z.string().uuid() })),
+    zValidator("json", z.object({ isPrivate: z.boolean() })),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
+      const { isPrivate } = c.req.valid("json");
+
+      const communityExists = await db.query.community.findFirst({
+        where: eq(community.id, id),
+        with: { moderators: true },
+      });
+
+      if (communityExists) {
+        const authorisedUser = communityExists.moderators.some(
+          (mod) => mod.userId === user.id
+        );
+
+        if (!authorisedUser) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const [updated] = await db
+          .update(community)
+          .set({ isPrivate })
           .where(eq(community.id, id))
           .returning();
 

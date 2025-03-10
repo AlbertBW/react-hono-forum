@@ -97,3 +97,39 @@ export async function leaveCommunity(id: CommunityId) {
     throw new Error("Failed to join community");
   }
 }
+
+export async function deleteCommunity(id: CommunityId) {
+  const res = await api.communities.delete[":id"].$delete({ param: { id } });
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to delete community");
+  }
+}
+
+export async function updateCommunityIcon(id: CommunityId, iconUrl: string) {
+  const res = await api.communities.icon[":id"].$put({
+    param: { id },
+    json: { iconUrl: iconUrl },
+  });
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to update community icon");
+  }
+}
+
+export async function updateCommunityBanner(
+  id: CommunityId,
+  bannerUrl: string
+) {
+  const res = await api.communities.banner[":id"].$put({
+    param: { id },
+    json: { bannerUrl },
+  });
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to update community icon");
+  }
+}

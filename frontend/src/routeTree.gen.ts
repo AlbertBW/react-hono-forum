@@ -22,6 +22,7 @@ import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sig
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCreateThreadImport } from './routes/_authenticated/create-thread'
 import { Route as CNameIndexImport } from './routes/c/$name/index'
+import { Route as CNameSettingsImport } from './routes/c/$name/settings'
 import { Route as CNameIdImport } from './routes/c/$name/$id'
 import { Route as AuthenticatedCNameCreateThreadImport } from './routes/_authenticated/c/$name/create-thread'
 
@@ -89,6 +90,12 @@ const AuthenticatedCreateThreadRoute = AuthenticatedCreateThreadImport.update({
 const CNameIndexRoute = CNameIndexImport.update({
   id: '/c/$name/',
   path: '/c/$name/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CNameSettingsRoute = CNameSettingsImport.update({
+  id: '/c/$name/settings',
+  path: '/c/$name/settings',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -186,6 +193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CNameIdImport
       parentRoute: typeof rootRoute
     }
+    '/c/$name/settings': {
+      id: '/c/$name/settings'
+      path: '/c/$name/settings'
+      fullPath: '/c/$name/settings'
+      preLoaderRoute: typeof CNameSettingsImport
+      parentRoute: typeof rootRoute
+    }
     '/c/$name/': {
       id: '/c/$name/'
       path: '/c/$name'
@@ -235,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/c/all': typeof CAllRoute
   '/user/$username': typeof UserUsernameRoute
   '/c/$name/$id': typeof CNameIdRoute
+  '/c/$name/settings': typeof CNameSettingsRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -251,6 +266,7 @@ export interface FileRoutesByTo {
   '/c/all': typeof CAllRoute
   '/user/$username': typeof UserUsernameRoute
   '/c/$name/$id': typeof CNameIdRoute
+  '/c/$name/settings': typeof CNameSettingsRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -268,6 +284,7 @@ export interface FileRoutesById {
   '/c/all': typeof CAllRoute
   '/user/$username': typeof UserUsernameRoute
   '/c/$name/$id': typeof CNameIdRoute
+  '/c/$name/settings': typeof CNameSettingsRoute
   '/c/$name/': typeof CNameIndexRoute
   '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -286,6 +303,7 @@ export interface FileRouteTypes {
     | '/c/all'
     | '/user/$username'
     | '/c/$name/$id'
+    | '/c/$name/settings'
     | '/c/$name'
     | '/c/$name/create-thread'
   fileRoutesByTo: FileRoutesByTo
@@ -301,6 +319,7 @@ export interface FileRouteTypes {
     | '/c/all'
     | '/user/$username'
     | '/c/$name/$id'
+    | '/c/$name/settings'
     | '/c/$name'
     | '/c/$name/create-thread'
   id:
@@ -316,6 +335,7 @@ export interface FileRouteTypes {
     | '/c/all'
     | '/user/$username'
     | '/c/$name/$id'
+    | '/c/$name/settings'
     | '/c/$name/'
     | '/_authenticated/c/$name/create-thread'
   fileRoutesById: FileRoutesById
@@ -330,6 +350,7 @@ export interface RootRouteChildren {
   CAllRoute: typeof CAllRoute
   UserUsernameRoute: typeof UserUsernameRoute
   CNameIdRoute: typeof CNameIdRoute
+  CNameSettingsRoute: typeof CNameSettingsRoute
   CNameIndexRoute: typeof CNameIndexRoute
 }
 
@@ -342,6 +363,7 @@ const rootRouteChildren: RootRouteChildren = {
   CAllRoute: CAllRoute,
   UserUsernameRoute: UserUsernameRoute,
   CNameIdRoute: CNameIdRoute,
+  CNameSettingsRoute: CNameSettingsRoute,
   CNameIndexRoute: CNameIndexRoute,
 }
 
@@ -363,6 +385,7 @@ export const routeTree = rootRoute
         "/c/all",
         "/user/$username",
         "/c/$name/$id",
+        "/c/$name/settings",
         "/c/$name/"
       ]
     },
@@ -407,6 +430,9 @@ export const routeTree = rootRoute
     },
     "/c/$name/$id": {
       "filePath": "c/$name/$id.tsx"
+    },
+    "/c/$name/settings": {
+      "filePath": "c/$name/settings.tsx"
     },
     "/c/$name/": {
       "filePath": "c/$name/index.tsx"

@@ -195,6 +195,27 @@ export const communitiesRoute = new Hono<AppVariables>()
       isFollowing,
     });
   })
+  .delete(
+    "/delete/:id",
+    requireAuth,
+    zValidator("param", z.object({ id: z.string().uuid() })),
+    async (c) => {
+      const id = c.req.valid("param").id;
+
+      const communityExists = await db.query.community.findFirst({
+        where: eq(community.id, id),
+        with: { moderators: true },
+      });
+
+      if (!communityExists) {
+        return c.json({ error: "Community not found" }, 404);
+      }
+
+      await db.delete(community).where(eq(community.id, id)).execute();
+
+      return c.json({ success: true });
+    }
+  )
   .post("/follow/:id", requireAuth, async (c) => {
     const user = c.var.user!;
     const id = c.req.param("id");
@@ -239,4 +260,78 @@ export const communitiesRoute = new Hono<AppVariables>()
       )
       .returning();
     return c.json(deleted);
-  });
+  })
+  .put(
+    "/icon/:id",
+    requireAuth,
+    zValidator("json", z.object({ iconUrl: z.string().url() })),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.param("id");
+      const icon = c.req.valid("json").iconUrl;
+
+      const communityExists = await db.query.community.findFirst({
+        where: eq(community.id, id),
+        with: { moderators: true },
+      });
+
+      if (communityExists) {
+        const authorisedUser = communityExists?.moderators.some(
+          (mod) => mod.userId === user.id
+        );
+
+        if (!authorisedUser) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const [updated] = await db
+          .update(community)
+          .set({
+            icon,
+          })
+          .where(eq(community.id, id))
+          .returning();
+
+        return c.json(updated, 200);
+      } else {
+        return c.json({ error: "Community not found" }, 404);
+      }
+    }
+  )
+  .put(
+    "/banner/:id",
+    requireAuth,
+    zValidator("json", z.object({ bannerUrl: z.string().url() })),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.param("id");
+      const banner = c.req.valid("json").bannerUrl;
+
+      const communityExists = await db.query.community.findFirst({
+        where: eq(community.id, id),
+        with: { moderators: true },
+      });
+
+      if (communityExists) {
+        const authorisedUser = communityExists?.moderators.some(
+          (mod) => mod.userId === user.id
+        );
+
+        if (!authorisedUser) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const [updated] = await db
+          .update(community)
+          .set({
+            banner,
+          })
+          .where(eq(community.id, id))
+          .returning();
+
+        return c.json(updated, 200);
+      } else {
+        return c.json({ error: "Community not found" }, 404);
+      }
+    }
+  );

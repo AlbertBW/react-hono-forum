@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth-client";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
 import Aside from "@/components/layout/aside";
 import {
@@ -33,7 +33,6 @@ function CommunityPage() {
     error,
     data: community,
   } = useQuery(getCommunityQueryOptions(name));
-
   const {
     data,
     fetchNextPage,
@@ -65,6 +64,10 @@ function CommunityPage() {
       </div>
     );
   }
+
+  const currentUserIsMod = community?.moderators.some(
+    (mod) => mod.userId === userData?.user.id
+  );
 
   return (
     <>
@@ -128,7 +131,7 @@ function CommunityPage() {
                   variant={"outline"}
                 >
                   <Plus />
-                  Create Thread
+                  <span className="hidden lg:block">Create Thread</span>
                 </Button>
 
                 {isPending ? (
@@ -144,6 +147,17 @@ function CommunityPage() {
                       className="bg-blue-600 hover:bg-blue-500 text-accent-foreground w-18"
                     />
                   ))
+                )}
+                {currentUserIsMod && (
+                  <Button size={"icon"} variant={"outline"}>
+                    <Link
+                      to={"/c/$name/settings"}
+                      params={{ name: community.name }}
+                      className="w-full h-full flex justify-center items-center"
+                    >
+                      <Settings />
+                    </Link>
+                  </Button>
                 )}
               </div>
             )}

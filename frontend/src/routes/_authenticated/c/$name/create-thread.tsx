@@ -74,7 +74,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="flex flex-col justify-center items-start pt-4 gap-6 max-w-3xl m-auto">
+    <div className="flex flex-col justify-center items-start p-4 gap-6 max-w-3xl m-auto">
       <h2 className="font-bold text-2xl text-muted-foreground">
         Create Thread
       </h2>

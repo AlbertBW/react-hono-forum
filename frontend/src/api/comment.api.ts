@@ -81,3 +81,13 @@ export const loadingCreateCommentQueryOptions = queryOptions<{
   },
   staleTime: Infinity,
 });
+
+export async function deleteComment(commentId: string) {
+  const res = await api.comments.delete[":id"].$delete({
+    param: { id: commentId },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete comment");
+  }
+}

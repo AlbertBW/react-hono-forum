@@ -23,6 +23,7 @@ export default function VoteComment({
   upvotes,
   downvotes,
   parentId,
+  disabled = false,
 }: {
   threadId: string;
   commentId: string;
@@ -30,6 +31,7 @@ export default function VoteComment({
   upvotes: number;
   downvotes: number;
   parentId: string | null;
+  disabled?: boolean;
 }) {
   const { isPending: isSessionLoading, data: sessionData } = useSession();
   const queryClient = useQueryClient();
@@ -123,7 +125,7 @@ export default function VoteComment({
         variant={"ghost"}
         size={"icon"}
         onClick={() => mutation.mutate(1)}
-        disabled={mutation.isPending || isSessionLoading}
+        disabled={mutation.isPending || isSessionLoading || disabled}
       >
         <ArrowBigUp className="size-6" />
       </Button>
@@ -133,7 +135,7 @@ export default function VoteComment({
         variant={"ghost"}
         size={"icon"}
         onClick={() => mutation.mutate(-1)}
-        disabled={mutation.isPending || isSessionLoading}
+        disabled={mutation.isPending || isSessionLoading || disabled}
       >
         <ArrowBigDown className="size-6" />
       </Button>

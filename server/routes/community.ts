@@ -345,8 +345,6 @@ export const communitiesRoute = new Hono<AppVariables>()
       const id = c.req.param("id");
       const description = c.req.valid("json").description;
 
-      console.log(description);
-
       const communityExists = await db.query.community.findFirst({
         where: eq(community.id, id),
         with: { moderators: true },

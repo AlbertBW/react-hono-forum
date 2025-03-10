@@ -139,7 +139,7 @@ function ThreadPage() {
 
         <CreateComment threadId={thread.id} />
         <section className="space-y-3 pt-6">
-          <Comments threadId={thread.id} />
+          <Comments threadId={thread.id} communityName={name} />
         </section>
       </main>
       <Aside community={community} header button />

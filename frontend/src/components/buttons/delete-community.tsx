@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { deleteCommunity } from "@/api/community.api";
 export default function DeleteThread({ id }: { id: string }) {
   const navigate = useNavigate();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: deleteCommunity,
@@ -34,6 +35,8 @@ export default function DeleteThread({ id }: { id: string }) {
       toast.success(`Community deleted`, {
         description: `Successfully deleted community!`,
       });
+      queryClient.invalidateQueries({ queryKey: ["get-infinite-communities"] });
+      queryClient.invalidateQueries({ queryKey: ["get-community"] });
     },
   });
 
@@ -44,10 +47,12 @@ export default function DeleteThread({ id }: { id: string }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete this thread?</DialogTitle>
+          <DialogTitle>
+            Are you sure you want to delete this community?
+          </DialogTitle>
           <DialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
+            This action cannot be undone. This will permanently delete this
+            community and remove all data from our servers.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

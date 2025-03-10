@@ -1,11 +1,19 @@
 import { randomGradient } from "@/lib/common-styles";
 import { getTimeAgo } from "@/lib/utils";
-import { ArrowBigDown, ArrowBigUp, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowBigDown,
+  ArrowBigUp,
+  ChevronDown,
+  ChevronUp,
+  Trash,
+  Undo2,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import CreateComment from "./create-comment";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
+  deleteComment,
   loadingCreateCommentQueryOptions,
   type Comment,
 } from "@/api/comment.api";
@@ -16,24 +24,35 @@ import { type CreateComment as CreateCommentType } from "../../../../server/db/s
 import { Skeleton } from "../ui/skeleton";
 import { useSession } from "@/lib/auth-client";
 import { LoadingSpinner } from "../ui/spinner";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getCommunityQueryOptions } from "@/api/community.api";
+import { toast } from "sonner";
 
 export default function CommentCard({
   comment,
   threadId,
+  communityName,
 }: {
   comment: Comment;
   threadId: string;
+  communityName: string;
 }) {
+  const { data: session } = useSession();
   const [createCommentOpen, setCreateCommentOpen] = useState(false);
   const [repliesOpen, setRepliesOpen] = useState(false);
   const { data: loadingNewComment } = useQuery(
     loadingCreateCommentQueryOptions
   );
-
+  const { data: community } = useQuery(getCommunityQueryOptions(communityName));
+  console.log(community);
   const openReplies = () => {
     setRepliesOpen(true);
   };
+
+  const userIsModOrCommenter =
+    community?.moderators.some((mod) => mod.userId === session?.user.id) ||
+    comment.userId === session?.user.id ||
+    false;
 
   return (
     <div className="flex flex-col w-full">
@@ -42,16 +61,25 @@ export default function CommentCard({
           {comment.avatar ? (
             <AvatarImage src={comment.avatar} alt={`${comment.username}`} />
           ) : (
-            <AvatarFallback className={randomGradient()}></AvatarFallback>
+            <AvatarFallback></AvatarFallback>
           )}
         </Avatar>
-        <Link
-          className="text-xs text-accent-foreground hover:text-blue-200 font-semibold"
-          to={"/user/$username"}
-          params={{ username: comment.username! }}
-        >
-          {comment.username}
-        </Link>
+        {comment.username ? (
+          <Link
+            className="text-xs text-accent-foreground hover:text-blue-200 font-semibold"
+            to={"/user/$username"}
+            params={{ username: comment.username }}
+          >
+            {comment.username}
+          </Link>
+        ) : (
+          <span className="text-xs text-accent-foreground hover:text-blue-200 font-semibold">
+            [DELETED]
+          </span>
+        )}
+        {comment.isModerator && (
+          <span className="text-green-600 text-xs">MOD</span>
+        )}
         <span className="text-xs font-semibold text-muted-foreground">•</span>
         <span className="text-xs font-semibold text-muted-foreground">
           {getTimeAgo(comment.createdAt)}
@@ -67,6 +95,7 @@ export default function CommentCard({
           </>
         )}
       </div>
+
       <div className="flex gap-1.5 w-full pb-0.5">
         <div className="w-8"></div>
         <p className="text-accent-foreground/80 text-sm whitespace-pre">
@@ -82,16 +111,22 @@ export default function CommentCard({
           upvotes={comment.upvotes}
           downvotes={comment.downvotes}
           parentId={comment.parentId}
+          disabled={!comment.userId}
         />
-        {!comment.parentId && (
-          <Button
-            variant={"ghost"}
-            className="text-muted-foreground hover:text-foreground rounded-full "
-            onClick={() => setCreateCommentOpen(true)}
-          >
-            Reply
-          </Button>
-        )}
+        <div className="flex gap-1.5 items-center text-accent-foreground/80">
+          {!comment.parentId && (
+            <Button
+              variant={"ghost"}
+              className="text-muted-foreground hover:text-foreground rounded-full "
+              onClick={() => setCreateCommentOpen(true)}
+            >
+              Reply
+            </Button>
+          )}
+          {userIsModOrCommenter && comment.userId !== null && (
+            <DeleteComment id={comment.id} />
+          )}
+        </div>
       </div>
       {!comment.parentId && createCommentOpen && (
         <div className="flex">
@@ -127,7 +162,11 @@ export default function CommentCard({
                 {loadingNewComment?.comment?.parentId === comment.id && (
                   <CommentSkeleton comment={loadingNewComment.comment} />
                 )}
-                <Comments threadId={threadId} parentId={comment.id} />
+                <Comments
+                  threadId={threadId}
+                  parentId={comment.id}
+                  communityName={communityName}
+                />
               </div>
             </div>
           )}
@@ -192,5 +231,53 @@ export function CommentSkeleton({ comment }: { comment?: CreateCommentType }) {
         )}
       </div>
     </div>
+  );
+}
+
+function DeleteComment({ id }: { id: string }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const mutation = useMutation({
+    mutationFn: deleteComment,
+    onError: () => {
+      toast.error("Failed to delete comment");
+    },
+    onSuccess: () => {
+      toast.success("Comment deleted");
+      setConfirmDelete(false);
+    },
+  });
+  return (
+    <>
+      {confirmDelete ? (
+        <>
+          <Button
+            variant={"outline"}
+            size={"icon"}
+            className="size-8"
+            onClick={() => setConfirmDelete(false)}
+          >
+            <Undo2 />
+          </Button>
+          <Button
+            variant={"outline"}
+            size={"icon"}
+            className="text-red-500 hover:text-red-400 size-8 border-red-500"
+            onClick={() => {
+              mutation.mutate(id);
+            }}
+          >
+            <Trash />
+          </Button>
+        </>
+      ) : (
+        <Button
+          variant={"link"}
+          className="text-red-500 hover:text-red-400 rounded-full"
+          onClick={() => setConfirmDelete(true)}
+        >
+          Delete
+        </Button>
+      )}
+    </>
   );
 }

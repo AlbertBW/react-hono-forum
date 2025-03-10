@@ -12,9 +12,11 @@ import { COMMENTS_PER_PAGE, REPLIES_PER_COMMENT } from "@/lib/constants";
 export default function Comments({
   threadId,
   parentId,
+  communityName,
 }: {
   threadId: string;
   parentId?: string;
+  communityName: string;
 }) {
   const limit = parentId ? REPLIES_PER_COMMENT : COMMENTS_PER_PAGE;
   const {
@@ -53,10 +55,15 @@ export default function Comments({
         </div>
       ) : comments.length > 0 ? (
         comments.map((comment) => (
-          <CommentCard key={comment.id} comment={comment} threadId={threadId} />
+          <CommentCard
+            key={comment.id}
+            comment={comment}
+            threadId={threadId}
+            communityName={communityName}
+          />
         ))
       ) : (
-        !loadingNewComment && (
+        !loadingNewComment?.comment && (
           <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
             <h3 className="text-lg font-bold">No comments</h3>
             <p className="text-sm text-muted-foreground">

@@ -9,6 +9,8 @@ import {
   user,
   commentIdSchema,
   voteSchema,
+  thread,
+  moderator,
 } from "../db/schema";
 import { db } from "../db";
 import { and, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
@@ -33,6 +35,17 @@ export const commentsRoute = new Hono<AppVariables>()
       const cursor = c.req.valid("query").cursor;
       const limit = c.req.valid("query").limit;
 
+      const threadData = await db.query.thread.findFirst({
+        where: eq(thread.id, threadId),
+        columns: { communityId: true },
+      });
+
+      if (!threadData) {
+        return c.json({ error: "Thread not found" }, 404);
+      }
+
+      const communityId = threadData.communityId;
+
       const comments = await db
         .select({
           id: comment.id,
@@ -40,6 +53,7 @@ export const commentsRoute = new Hono<AppVariables>()
           createdAt: comment.createdAt,
           updatedAt: comment.updatedAt,
           username: user.name,
+          userId: comment.userId,
           avatar: user.image,
           upvotes:
             sql<number>`CAST((SELECT COUNT(*) FROM ${commentVote} WHERE ${commentVote.commentId} = ${comment.id} AND ${commentVote.value} > 0) AS INTEGER)`.as(
@@ -54,6 +68,13 @@ export const commentsRoute = new Hono<AppVariables>()
             sql<number>`(SELECT COUNT(*) FROM ${comment} c WHERE c.parent_id = ${comment.id})`.as(
               "childrenCount"
             ),
+          isModerator: sql<boolean>`
+            EXISTS (
+              SELECT 1 
+              FROM ${moderator} 
+              WHERE ${moderator.communityId} = ${communityId}
+              AND ${moderator.userId} = ${comment.userId})
+      `.as("is_moderator"),
         })
         .from(comment)
         .where(
@@ -77,7 +98,7 @@ export const commentsRoute = new Hono<AppVariables>()
           comment.createdAt,
           comment.updatedAt
         );
-      console.log(comments);
+
       const commentIdArray = comments.map((c) => c.id);
 
       let userVote: {
@@ -138,7 +159,7 @@ export const commentsRoute = new Hono<AppVariables>()
     }
   )
   .post(
-    "/:id/vote/:value",
+    "/vote/:id/:value",
     requireAuth,
     zValidator("param", voteSchema),
     async (c) => {
@@ -164,7 +185,7 @@ export const commentsRoute = new Hono<AppVariables>()
     }
   )
   .delete(
-    "/:id/vote",
+    "/vote/:id",
     requireAuth,
     zValidator("param", commentIdSchema),
     async (c) => {
@@ -192,7 +213,7 @@ export const commentsRoute = new Hono<AppVariables>()
     }
   )
   .put(
-    "/:id/vote/:value",
+    "/vote/:id/:value",
     requireAuth,
     zValidator("param", voteSchema),
     async (c) => {
@@ -219,5 +240,56 @@ export const commentsRoute = new Hono<AppVariables>()
 
       c.status(200);
       return c.json(vote);
+    }
+  )
+  .delete(
+    "/delete/:id",
+    requireAuth,
+    zValidator("param", commentIdSchema),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.valid("param").id;
+
+      const commentData = await db.query.comment.findFirst({
+        where: eq(comment.id, id),
+        with: {
+          thread: { with: { community: { with: { moderators: true } } } },
+        },
+        columns: { userId: true },
+      });
+
+      if (commentData) {
+        const isAuthorised =
+          commentData.thread?.community.moderators.some(
+            (mod) => mod.userId === user.id
+          ) || commentData.userId === user.id;
+
+        if (!isAuthorised) {
+          return c.json({ error: "Not authorised" }, 403);
+        }
+
+        const hasChildren = await db.query.comment.findFirst({
+          where: eq(comment.parentId, id),
+        });
+
+        if (hasChildren) {
+          const [anonymised] = await db
+            .update(comment)
+            .set({ content: "[DELETED]", userId: null, updatedAt: new Date() })
+            .where(eq(comment.id, id))
+            .returning();
+
+          return c.json(anonymised, 200);
+        } else {
+          const [deleted] = await db
+            .delete(comment)
+            .where(eq(comment.id, id))
+            .returning();
+
+          return c.json(deleted, 200);
+        }
+      } else {
+        return c.json({ error: "Comment not found" }, 404);
+      }
     }
   );

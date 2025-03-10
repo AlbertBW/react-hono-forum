@@ -99,7 +99,6 @@ function RouteComponent() {
               <CardTitle>General Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Add community edit form here */}
               <div className="space-y-6">
                 <NewIconImage community={community} />
                 <NewBannerImage community={community} />
@@ -115,7 +114,6 @@ function RouteComponent() {
               <CardTitle>Moderator Management</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Add moderator management here */}
               <p>Moderator management coming soon</p>
             </CardContent>
           </Card>
@@ -405,7 +403,6 @@ function NewDescription({ community }: { community: Community }) {
       description: community.description,
     },
     onSubmit: async ({ value }) => {
-      console.log("value", value);
       try {
         if (value.description === community.description) {
           setEditing(false);
@@ -416,7 +413,6 @@ function NewDescription({ community }: { community: Community }) {
           community.id,
           value.description
         );
-        console.log(result);
         if (result?.error) {
           throw new Error(result.error.message);
         }

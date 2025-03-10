@@ -138,7 +138,7 @@ export const community = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull().unique(),
-    description: text("description"),
+    description: text("description").notNull(),
     icon: text("icon").notNull(),
     banner: text("banner").notNull(),
     isPrivate: boolean("is_private").default(false).notNull(),
@@ -298,6 +298,11 @@ export const threadIdSchema = z.object({ id: z.string().uuid() });
 export type ThreadId = Thread["id"];
 
 export type Community = InferSelectModel<typeof community>;
+export const descriptionSchema = z
+  .string()
+  .min(10, "Description must be at least 10 characters")
+  .max(1000);
+
 export const insertCommunitySchema = createInsertSchema(community, {
   name: z
     .string()
@@ -309,10 +314,7 @@ export const insertCommunitySchema = createInsertSchema(community, {
     .refine((name) => /^[a-zA-Z0-9]+$/.test(name), {
       message: "Name can only contain letters and numbers",
     }),
-  description: z
-    .string()
-    .min(10, "Description must be at least 10 characters")
-    .max(1000),
+  description: descriptionSchema,
   icon: z.string(),
   isPrivate: z.boolean(),
 }).omit({ id: true, createdAt: true, updatedAt: true });

@@ -5,6 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import {
   community,
   communityFollow,
+  descriptionSchema,
   insertCommunitySchema,
   moderator,
   thread,
@@ -325,6 +326,45 @@ export const communitiesRoute = new Hono<AppVariables>()
           .update(community)
           .set({
             banner,
+          })
+          .where(eq(community.id, id))
+          .returning();
+
+        return c.json(updated, 200);
+      } else {
+        return c.json({ error: "Community not found" }, 404);
+      }
+    }
+  )
+  .put(
+    "/description/:id",
+    requireAuth,
+    zValidator("json", z.object({ description: descriptionSchema })),
+    async (c) => {
+      const user = c.var.user!;
+      const id = c.req.param("id");
+      const description = c.req.valid("json").description;
+
+      console.log(description);
+
+      const communityExists = await db.query.community.findFirst({
+        where: eq(community.id, id),
+        with: { moderators: true },
+      });
+
+      if (communityExists) {
+        const authorisedUser = communityExists?.moderators.some(
+          (mod) => mod.userId === user.id
+        );
+
+        if (!authorisedUser) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const [updated] = await db
+          .update(community)
+          .set({
+            description,
           })
           .where(eq(community.id, id))
           .returning();

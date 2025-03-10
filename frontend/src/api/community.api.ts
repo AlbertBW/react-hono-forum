@@ -133,3 +133,18 @@ export async function updateCommunityBanner(
     throw new Error("Failed to update community icon");
   }
 }
+
+export async function updateCommunityDescription(
+  id: CommunityId,
+  description: string
+) {
+  const res = await api.communities.description[":id"].$put({
+    param: { id },
+    json: { description },
+  });
+  if (!res.ok) {
+    const error = handleRateLimitError(res);
+    if (error) return { error: error };
+    throw new Error("Failed to update community icon");
+  }
+}

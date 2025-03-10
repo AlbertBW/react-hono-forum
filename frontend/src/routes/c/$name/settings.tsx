@@ -2,22 +2,30 @@ import {
   Community,
   getCommunityQueryOptions,
   updateCommunityBanner,
+  updateCommunityDescription,
   updateCommunityIcon,
 } from "@/api/community.api";
 import { uploadImage } from "@/api/image-upload.api";
 import DeleteCommunity from "@/components/buttons/delete-community";
+import FieldInfo from "@/components/field-info";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/lib/auth-client";
 import { compressImage } from "@/lib/utils";
+import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ImagePlus, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { descriptionSchema } from "../../../../../server/db/schema";
 
 export const Route = createFileRoute("/c/$name/settings")({
   component: RouteComponent,
@@ -95,6 +103,7 @@ function RouteComponent() {
               <div className="space-y-6">
                 <NewIconImage community={community} />
                 <NewBannerImage community={community} />
+                <NewDescription community={community} />
               </div>
             </CardContent>
           </Card>
@@ -243,6 +252,7 @@ function NewIconImage({ community }: { community: Community }) {
             onClick={() => {
               mutation.mutate();
             }}
+            disabled={mutation.isPending}
           >
             Save Icon
           </Button>
@@ -314,7 +324,7 @@ function NewBannerImage({ community }: { community: Community }) {
 
   return (
     <div>
-      <h3 className="text-lg font-medium mb-2">Community Icon</h3>
+      <h3 className="text-lg font-medium mb-2">Community Banner</h3>
       <div className="space-y-4">
         {!bannerImagePreview ? (
           <img
@@ -371,11 +381,142 @@ function NewBannerImage({ community }: { community: Community }) {
             onClick={() => {
               mutation.mutate();
             }}
+            disabled={mutation.isPending}
           >
             Save Banner
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+function NewDescription({ community }: { community: Community }) {
+  const [editing, setEditing] = useState(false);
+  const queryClient = useQueryClient();
+
+  const form = useForm({
+    validators: {
+      onChange: z.object({
+        description: descriptionSchema,
+      }),
+    },
+    defaultValues: {
+      description: community.description,
+    },
+    onSubmit: async ({ value }) => {
+      console.log("value", value);
+      try {
+        if (value.description === community.description) {
+          setEditing(false);
+          throw new Error("No changes made");
+        }
+
+        const result = await updateCommunityDescription(
+          community.id,
+          value.description
+        );
+        console.log(result);
+        if (result?.error) {
+          throw new Error(result.error.message);
+        }
+        queryClient.invalidateQueries({
+          queryKey: ["get-infinite-communities"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["get-community"],
+        });
+        setEditing(false);
+        toast.success("Description updated successfully");
+      } catch (error) {
+        toast.error("Error", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to create new comment",
+        });
+      }
+    },
+  });
+
+  return (
+    <div>
+      <h3 className="text-lg font-medium mb-2">Community Description</h3>
+
+      {!editing ? (
+        <div className="space-y-4">
+          <p>{community.description}</p>
+          <Button onClick={() => setEditing(true)} variant={"outline"}>
+            Edit
+          </Button>
+        </div>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="space-y-4"
+        >
+          <form.Field
+            name="description"
+            children={(field) => (
+              <div>
+                <Label htmlFor={field.name} hidden>
+                  Description
+                </Label>
+                <Textarea
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  autoComplete="off"
+                  onBlur={field.handleBlur}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
+                  }}
+                  className={`${
+                    field.state.meta.isTouched && field.state.meta.errors.length
+                      ? "focus-visible:ring-2 focus-visible:ring-orange-500 ring-2 ring-red-700"
+                      : field.state.meta.isTouched &&
+                          field.state.value.length > 0
+                        ? "focus-visible:ring-green-500 ring-2 ring-green-500"
+                        : ""
+                  }`}
+                />
+                <FieldInfo field={field} />
+              </div>
+            )}
+          />
+
+          <div className="space-x-4">
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]) => (
+                <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <LoadingSpinner /> Loading
+                    </div>
+                  ) : (
+                    `Save Description`
+                  )}
+                </Button>
+              )}
+            />
+            <Button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                form.reset();
+              }}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

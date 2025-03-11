@@ -25,7 +25,7 @@ export default function ThreadCard({
   }
 
   return (
-    <article className="py-1">
+    <article className="py-1 px-2 md:px-0">
       <Link
         to={"/c/$name/$id"}
         params={{ name: thread.communityName, id: thread.id }}
@@ -88,7 +88,7 @@ export default function ThreadCard({
         </div>
 
         <div>
-          <span className="text-base sm:text-lg font-semibold">
+          <span className="text-sm sm:text-lg font-semibold">
             {thread.title}
           </span>
         </div>

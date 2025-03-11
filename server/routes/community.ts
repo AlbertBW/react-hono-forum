@@ -150,16 +150,18 @@ export const communitiesRoute = new Hono<AppVariables>()
           createdAt: community.createdAt,
           threadCount: countDistinct(thread.id),
           userCount: countDistinct(communityFollow.userId),
-          moderators: sql<CommunityMod[]>`COALESCE(
-          json_agg(
-            json_build_object(
-              'userId', ${user.id}, 
-              'username', ${user.name}, 
-              'avatar', ${user.image}
-            )
-          ) FILTER (WHERE ${user.id} IS NOT NULL),
-          '[]'
-        )`,
+          moderators: sql<CommunityMod[]>`
+          COALESCE(
+            jsonb_agg(
+              DISTINCT jsonb_build_object(
+                'userId', ${user.id},
+                'username', ${user.name},
+                'avatar', ${user.image}
+              )
+            ) FILTER (WHERE ${moderator.userId} IS NOT NULL),
+            '[]'::jsonb
+          )
+        `.as("moderators"),
         })
         .from(community)
         .where(sql`lower(${community.name}) = lower(${name})`)

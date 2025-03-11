@@ -42,7 +42,6 @@ export default function VoteButtons({
       return;
     }
 
-    // Determine vote action type and prepare data updates
     let action: () => Promise<unknown>;
     let newUserVote: number | null;
     let upvotesDelta = 0;
@@ -79,7 +78,6 @@ export default function VoteButtons({
       else if (value === -1) downvotesDelta = 1;
     }
 
-    // Update thread list data
     const existingThreadArray =
       await queryClient.ensureInfiniteQueryData(threadsQueryOptions);
     const newArray = existingThreadArray?.pages.map((page) =>
@@ -100,7 +98,6 @@ export default function VoteButtons({
       pageParams: existingThreadArray.pageParams,
     });
 
-    // Update single thread data
     const existingThread = await queryClient.ensureQueryData(
       singleThreadQueryOptions
     );
@@ -111,7 +108,6 @@ export default function VoteButtons({
       downvotes: downvotes + downvotesDelta,
     });
 
-    // Update "all" page threads data
     const allThreadsQueryOptions = getThreadsInfiniteQueryOptions({
       communityName: "all",
       limit: THREADS_PER_PAGE,
@@ -163,14 +159,16 @@ export default function VoteButtons({
     >
       <Button
         variant={"ghost"}
-        className={`rounded-full hover:text-green-500 ${userVote === 1 ? "text-green-500" : ""}`}
+        className={`rounded-full hover:text-green-500 ${userVote === 1 ? "text-green-500" : ""} `}
         onClick={() => mutation.mutate(1)}
         disabled={mutation.isPending || isSessionLoading}
       >
-        <ThumbsUp />
+        <ThumbsUp className="size-3 sm:size-4" />
       </Button>
 
-      <span className="text-center text-sm">{upvotes - downvotes}</span>
+      <span className="text-center text-xs sm:text-sm">
+        {upvotes - downvotes}
+      </span>
 
       <Button
         variant={"ghost"}
@@ -178,7 +176,7 @@ export default function VoteButtons({
         onClick={() => mutation.mutate(-1)}
         disabled={mutation.isPending || isSessionLoading}
       >
-        <ThumbsDown />
+        <ThumbsDown className="size-3 sm:size-4" />
       </Button>
     </div>
   );

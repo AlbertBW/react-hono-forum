@@ -25,6 +25,7 @@ export default function Aside({
   button?: boolean;
 }) {
   const { data } = useSession();
+
   return (
     <aside className="sticky top-18 self-start lg:w-md h-fit ml-2 hidden md:block">
       <Card className="py-3">

@@ -18,8 +18,8 @@ import { z } from "zod";
 
 export const commentsRoute = new Hono<AppVariables>()
   .get(
-    "/:threadId",
-    zValidator("param", z.object({ threadId: z.string().uuid() })),
+    "/thread/:id",
+    zValidator("param", z.object({ id: z.string().uuid() })),
     zValidator(
       "query",
       z.object({
@@ -30,10 +30,8 @@ export const commentsRoute = new Hono<AppVariables>()
     ),
     async (c) => {
       const currentUser = c.var.user!;
-      const threadId = c.req.valid("param").threadId;
-      const parentId = c.req.valid("query").parentId;
-      const cursor = c.req.valid("query").cursor;
-      const limit = c.req.valid("query").limit;
+      const { id: threadId } = c.req.valid("param");
+      const { parentId, cursor, limit } = c.req.valid("query");
 
       const threadData = await db.query.thread.findFirst({
         where: eq(thread.id, threadId),
@@ -131,6 +129,32 @@ export const commentsRoute = new Hono<AppVariables>()
       });
 
       return c.json(commentsWithUserVotes);
+    }
+  )
+  .get(
+    "/user",
+    zValidator(
+      "query",
+      z.object({
+        userId: z.string(),
+        limit: z.coerce.number().int().positive().default(30),
+        cursor: z.coerce.date().optional(),
+      })
+    ),
+    async (c) => {
+      const { userId, limit, cursor } = c.req.valid("query");
+
+      const comments = await db.query.comment.findMany({
+        where: and(
+          eq(comment.userId, userId),
+          cursor ? lt(comment.createdAt, cursor) : undefined
+        ),
+        with: { thread: { with: { community: true } } },
+        orderBy: desc(comment.createdAt),
+        limit,
+      });
+
+      return c.json(comments, 200);
     }
   )
   .post(

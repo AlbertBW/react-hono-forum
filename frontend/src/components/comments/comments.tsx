@@ -24,7 +24,7 @@ export default function Comments({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    status: threadStatus,
+    status: commentsStatus,
   } = useInfiniteQuery(
     getCommentsInfiniteQueryOptions(threadId, limit, parentId)
   );
@@ -42,15 +42,15 @@ export default function Comments({
           <CommentSkeleton comment={loadingNewComment.comment} />
         )}
 
-      {threadStatus === "pending" ? (
+      {commentsStatus === "pending" ? (
         <div className="flex items-center mx-4 w-full">
           <LoadingSpinner />
         </div>
-      ) : threadStatus === "error" ? (
+      ) : commentsStatus === "error" ? (
         <div className="flex flex-col justify-center items-center w-full gap-4 mt-4">
-          <h3 className="text-lg font-bold">Failed to Load threads</h3>
+          <h3 className="text-lg font-bold">Failed to Load comments</h3>
           <p className="text-sm text-muted-foreground">
-            An error occurred while trying to load threads.
+            An error occurred while trying to load comments.
           </p>
         </div>
       ) : comments.length > 0 ? (

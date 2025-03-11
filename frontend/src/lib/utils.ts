@@ -86,9 +86,9 @@ export function getTimeAgo(createdAt: string) {
     return createdAtDate.toLocaleDateString();
   }
   if (diffInHours >= 1) {
-    return `${diffInHours}h`;
+    return `${diffInHours}h ago`;
   }
-  return `${diffInMinutes}m`;
+  return `${diffInMinutes}m ago`;
 }
 
 export function getRandomIcon() {

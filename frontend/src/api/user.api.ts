@@ -16,6 +16,7 @@ export async function findUserByEmail(email: string) {
   return { data: data, error: null };
 }
 
+export type User = NonNullable<Awaited<ReturnType<typeof getUserById>>>;
 export async function getUserById(userId: string) {
   const res = await api.users.$get({ query: { userId } });
   if (!res.ok) {

@@ -23,9 +23,11 @@ function ThreadPage() {
   const { name, id } = Route.useParams();
   const communityQueryOption = getCommunityQueryOptions(name);
   const { data: community } = useQuery(communityQueryOption);
-
-  const getThread = getSingleThreadQueryOptions(id);
-  const { isPending, error, data: thread } = useQuery(getThread);
+  const {
+    isPending,
+    error,
+    data: thread,
+  } = useQuery(getSingleThreadQueryOptions(id));
 
   const navigate = useNavigate();
 

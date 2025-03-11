@@ -53,7 +53,6 @@ export const getThreadsList = async ({
   limit: number;
   cursor?: string;
 }) => {
-  await new Promise((r) => setTimeout(r, 1000));
   const res = await api.threads.list.$get({
     query: {
       userId,

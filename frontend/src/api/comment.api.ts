@@ -34,8 +34,8 @@ export async function getComments(
   cursor?: string
 ) {
   const limitString = limit.toString();
-  const res = await api.comments[":threadId"].$get({
-    param: { threadId },
+  const res = await api.comments.thread[":id"].$get({
+    param: { id: threadId },
     query: { cursor, parentId, limit: limitString },
   });
 
@@ -81,6 +81,43 @@ export const loadingCreateCommentQueryOptions = queryOptions<{
   },
   staleTime: Infinity,
 });
+
+export type UserComment = Awaited<ReturnType<typeof getUserComments>>[0];
+export async function getUserComments(
+  userId: string,
+  limit: number = 10,
+  cursor?: string
+) {
+  const res = await api.comments.user.$get({
+    query: { userId, limit: limit.toString(), cursor },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch user comments");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
+export const getUserCommentsInfiniteQueryOptions = (
+  userId: string,
+  limit: number = 10
+) =>
+  infiniteQueryOptions({
+    queryKey: ["user", userId],
+    queryFn: async ({ pageParam }) =>
+      await getUserComments(userId, limit, pageParam as string | undefined),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === 0 || lastPage.length < limit) {
+        return undefined;
+      }
+      return lastPage[lastPage.length - 1].createdAt;
+    },
+    initialPageParam: undefined as string | undefined,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
 
 export async function deleteComment(commentId: string) {
   const res = await api.comments.delete[":id"].$delete({

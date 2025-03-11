@@ -64,11 +64,11 @@ export default function CommentCard({
             <AvatarFallback></AvatarFallback>
           )}
         </Avatar>
-        {comment.username ? (
+        {comment.userId ? (
           <Link
             className="text-xs text-accent-foreground hover:text-blue-200 font-semibold"
-            to={"/user/$username"}
-            params={{ username: comment.username }}
+            to={"/user/$userId"}
+            params={{ userId: comment.userId }}
           >
             {comment.username}
           </Link>

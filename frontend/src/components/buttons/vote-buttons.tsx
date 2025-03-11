@@ -30,10 +30,10 @@ export default function VoteButtons({
 }) {
   const { isPending: isSessionLoading, data: sessionData } = useSession();
   const queryClient = useQueryClient();
-  const threadsQueryOptions = getThreadsInfiniteQueryOptions(
+  const threadsQueryOptions = getThreadsInfiniteQueryOptions({
     communityName,
-    THREADS_PER_PAGE
-  );
+    limit: THREADS_PER_PAGE,
+  });
   const singleThreadQueryOptions = getSingleThreadQueryOptions(threadId);
 
   const handleVote = async (value: number) => {
@@ -112,10 +112,10 @@ export default function VoteButtons({
     });
 
     // Update "all" page threads data
-    const allThreadsQueryOptions = getThreadsInfiniteQueryOptions(
-      "all",
-      THREADS_PER_PAGE
-    );
+    const allThreadsQueryOptions = getThreadsInfiniteQueryOptions({
+      communityName: "all",
+      limit: THREADS_PER_PAGE,
+    });
     const allThreads = await queryClient.ensureInfiniteQueryData(
       allThreadsQueryOptions
     );

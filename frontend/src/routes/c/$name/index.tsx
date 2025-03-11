@@ -39,7 +39,12 @@ function CommunityPage() {
     hasNextPage,
     isFetchingNextPage,
     status: threadStatus,
-  } = useInfiniteQuery(getThreadsInfiniteQueryOptions(name, THREADS_PER_PAGE));
+  } = useInfiniteQuery(
+    getThreadsInfiniteQueryOptions({
+      communityName: name,
+      limit: THREADS_PER_PAGE,
+    })
+  );
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {

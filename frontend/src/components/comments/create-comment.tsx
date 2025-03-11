@@ -144,7 +144,9 @@ export default function CreateComment({
         });
       } finally {
         queryClient.setQueryData(loadingCreateCommentQueryOptions.queryKey, {});
-        queryClient.invalidateQueries(getThreadsInfiniteQueryOptions("all"));
+        queryClient.invalidateQueries(
+          getThreadsInfiniteQueryOptions({ communityName: "all" })
+        );
       }
     },
   });

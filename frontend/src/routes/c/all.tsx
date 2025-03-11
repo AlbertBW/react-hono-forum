@@ -21,7 +21,12 @@ function AllThreadsPage() {
     hasNextPage,
     isFetchingNextPage,
     status: threadStatus,
-  } = useInfiniteQuery(getThreadsInfiniteQueryOptions("all", THREADS_PER_PAGE));
+  } = useInfiniteQuery(
+    getThreadsInfiniteQueryOptions({
+      communityName: "all",
+      limit: THREADS_PER_PAGE,
+    })
+  );
 
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {

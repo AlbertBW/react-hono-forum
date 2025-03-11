@@ -56,10 +56,14 @@ export function JoinButton({
 
       queryClient.invalidateQueries(getCommunityQueryOptions(name));
       queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions(name, THREADS_PER_PAGE)
+        getThreadsInfiniteQueryOptions({
+          communityName: name,
+          limit: THREADS_PER_PAGE,
+        })
       );
       queryClient.invalidateQueries({
-        queryKey: getThreadsInfiniteQueryOptions("all").queryKey,
+        queryKey: getThreadsInfiniteQueryOptions({ communityName: "all" })
+          .queryKey,
       });
       queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
     },
@@ -100,10 +104,16 @@ export function LeaveCommunity({
 
       queryClient.invalidateQueries(getCommunityQueryOptions(name));
       queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions(name, THREADS_PER_PAGE)
+        getThreadsInfiniteQueryOptions({
+          communityName: name,
+          limit: THREADS_PER_PAGE,
+        })
       );
       queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions("all", THREADS_PER_PAGE)
+        getThreadsInfiniteQueryOptions({
+          communityName: "all",
+          limit: THREADS_PER_PAGE,
+        })
       );
       queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
     },

@@ -102,8 +102,8 @@ export default function Aside({
                     <AvatarImage src={mod.avatar} />
                   </Avatar>
                   <Link
-                    to={`/user/$username`}
-                    params={{ username: mod.username }}
+                    to={`/user/$userId`}
+                    params={{ userId: mod.userId }}
                     className="text-accent-foreground/60 text-sm hover:underline"
                   >
                     {mod.username}

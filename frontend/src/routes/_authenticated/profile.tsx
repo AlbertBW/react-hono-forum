@@ -17,5 +17,9 @@ function RouteComponent() {
     return <div>Not authorised</div>;
   }
 
-  return <div>Hello {data.user.email}</div>;
+  if (!data) {
+    return <div>User not found</div>;
+  }
+
+  return <div>Hello {data.email}</div>;
 }

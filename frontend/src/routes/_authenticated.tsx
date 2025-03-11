@@ -13,7 +13,7 @@ const Login = () => {
 };
 
 const Component = () => {
-  const { user } = Route.useRouteContext();
+  const user = Route.useRouteContext();
   if (!user) {
     return <Login />;
   }

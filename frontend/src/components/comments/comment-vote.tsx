@@ -114,7 +114,10 @@ export default function VoteComment({
     },
     onSuccess: () => {
       queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions("all", THREADS_PER_PAGE)
+        getThreadsInfiniteQueryOptions({
+          communityName: "all",
+          limit: THREADS_PER_PAGE,
+        })
       );
     },
   });

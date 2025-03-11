@@ -41,20 +41,19 @@ export const threadsRoute = new Hono<AppVariables>()
     return c.json(newThread);
   })
   .get(
-    "/community/:name",
-    zValidator("param", z.object({ name: z.string() })),
+    "/list",
     zValidator(
       "query",
       z.object({
+        communityName: z.string().optional(),
+        userId: z.string().optional(),
         limit: z.coerce.number().int().positive().default(30),
         cursor: z.coerce.date().optional(),
       })
     ),
     async (c) => {
       const currentUser = c.var.user;
-      const communityName = c.req.valid("param").name;
-      const cursor = c.req.valid("query").cursor;
-      const limit = c.req.valid("query").limit;
+      const { communityName, userId, limit, cursor } = c.req.valid("query");
 
       const threads = await db
         .select({
@@ -73,10 +72,10 @@ export const threadsRoute = new Hono<AppVariables>()
     `.as("userFollow")
             : sql<boolean>`FALSE`.as("userFollow"),
           userAvatar: sql<string | null>`CASE WHEN ${sql.raw(
-            communityName === "all" ? "TRUE" : "FALSE"
+            !communityName || communityName === "all" ? "TRUE" : "FALSE"
           )} THEN NULL ELSE ${user.image} END`,
           communityIcon: sql<string | null>`CASE WHEN ${sql.raw(
-            communityName === "all" ? "TRUE" : "FALSE"
+            !communityName || communityName === "all" ? "TRUE" : "FALSE"
           )} THEN ${community.icon} ELSE NULL END`,
           communityName: community.name,
           communityId: thread.communityId,
@@ -95,11 +94,14 @@ export const threadsRoute = new Hono<AppVariables>()
         .innerJoin(community, eq(thread.communityId, community.id))
         .where(
           and(
-            communityName !== "all"
+            communityName && communityName !== "all"
               ? sql`lower(${community.name}) = lower(${communityName})`
               : undefined,
+            communityName && communityName === "all"
+              ? eq(community.isPrivate, false)
+              : undefined,
             cursor ? lt(thread.createdAt, cursor) : undefined,
-            communityName === "all" ? eq(community.isPrivate, false) : undefined
+            userId ? eq(thread.userId, userId) : undefined
           )
         )
         .leftJoin(user, eq(thread.userId, user.id))

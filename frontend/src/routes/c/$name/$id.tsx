@@ -89,11 +89,11 @@ function ThreadPage() {
                   {getTimeAgo(thread.createdAt)}
                 </span>
               </div>
-              {thread.username ? (
+              {thread.userId ? (
                 <Link
                   className="text-xs text-accent-foreground/70 hover:text-blue-200"
-                  to={"/user/$username"}
-                  params={{ username: thread.username }}
+                  to={"/user/$userId"}
+                  params={{ userId: thread.userId }}
                 >
                   {thread.username}{" "}
                   {postedByMod && <span className="text-green-600">MOD</span>}

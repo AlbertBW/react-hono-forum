@@ -41,17 +41,23 @@ export async function deleteThread(id: ThreadId) {
   }
 }
 
-export type ThreadCardType = Awaited<
-  ReturnType<typeof getThreadsByCommunityName>
->[number];
-export const getThreadsByCommunityName = async (
-  name: string,
-  limit?: number,
-  cursor?: string
-) => {
-  const res = await api.threads.community[":name"].$get({
-    param: { name },
+export type ThreadCardType = Awaited<ReturnType<typeof getThreadsList>>[number];
+export const getThreadsList = async ({
+  userId,
+  communityName,
+  limit,
+  cursor,
+}: {
+  userId?: string;
+  communityName?: string;
+  limit: number;
+  cursor?: string;
+}) => {
+  await new Promise((r) => setTimeout(r, 1000));
+  const res = await api.threads.list.$get({
     query: {
+      userId,
+      communityName,
       limit: String(limit),
       cursor,
     },
@@ -64,20 +70,26 @@ export const getThreadsByCommunityName = async (
   return res.json();
 };
 
-export const getThreadsInfiniteQueryOptions = (
-  name: string,
-  limit: number = 10
-) =>
+export const getThreadsInfiniteQueryOptions = ({
+  userId,
+  communityName,
+  limit = 10,
+}: {
+  userId?: string;
+  communityName?: string;
+  limit?: number;
+}) =>
   infiniteQueryOptions({
-    queryKey: ["threads", "infinite", name],
+    queryKey: ["threads", "infinite", communityName],
     queryFn: async ({ pageParam }) =>
-      await getThreadsByCommunityName(
-        name,
+      await getThreadsList({
+        userId,
+        communityName,
         limit,
-        pageParam as string | undefined
-      ),
+        cursor: pageParam as string | undefined,
+      }),
     getNextPageParam: (lastPage) => {
-      if (lastPage.length === 0) {
+      if (lastPage.length === 0 || lastPage.length < limit) {
         return undefined;
       }
       return lastPage[lastPage.length - 1].createdAt;

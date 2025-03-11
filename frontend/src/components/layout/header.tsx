@@ -20,7 +20,9 @@ function NavBar() {
       <div className="flex items-center gap-2">
         <SidebarTrigger />
         <Link to="/">
-          <h1 className="text-base sm:text-2xl font-bold font-mono">RHForum</h1>
+          <span className="text-base sm:text-2xl font-bold font-mono">
+            RHForum
+          </span>
         </Link>
       </div>
       <div className="p-2 flex justify-center items-center gap-2">

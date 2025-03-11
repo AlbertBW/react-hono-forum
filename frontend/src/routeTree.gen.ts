@@ -16,12 +16,16 @@ import { Route as SignInImport } from './routes/sign-in'
 import { Route as CommunitiesImport } from './routes/communities'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
-import { Route as UserUsernameImport } from './routes/user/$username'
+import { Route as UserUserIdImport } from './routes/user/$userId'
 import { Route as CAllImport } from './routes/c/all'
 import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sign-out'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCreateThreadImport } from './routes/_authenticated/create-thread'
 import { Route as CNameIndexImport } from './routes/c/$name/index'
+import { Route as UserUserIdUpvotedImport } from './routes/user/$userId/upvoted'
+import { Route as UserUserIdPostsImport } from './routes/user/$userId/posts'
+import { Route as UserUserIdDownvotedImport } from './routes/user/$userId/downvoted'
+import { Route as UserUserIdCommentsImport } from './routes/user/$userId/comments'
 import { Route as CNameSettingsImport } from './routes/c/$name/settings'
 import { Route as CNameIdImport } from './routes/c/$name/$id'
 import { Route as AuthenticatedCNameCreateThreadImport } from './routes/_authenticated/c/$name/create-thread'
@@ -57,9 +61,9 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const UserUsernameRoute = UserUsernameImport.update({
-  id: '/user/$username',
-  path: '/user/$username',
+const UserUserIdRoute = UserUserIdImport.update({
+  id: '/user/$userId',
+  path: '/user/$userId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -91,6 +95,30 @@ const CNameIndexRoute = CNameIndexImport.update({
   id: '/c/$name/',
   path: '/c/$name/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const UserUserIdUpvotedRoute = UserUserIdUpvotedImport.update({
+  id: '/upvoted',
+  path: '/upvoted',
+  getParentRoute: () => UserUserIdRoute,
+} as any)
+
+const UserUserIdPostsRoute = UserUserIdPostsImport.update({
+  id: '/posts',
+  path: '/posts',
+  getParentRoute: () => UserUserIdRoute,
+} as any)
+
+const UserUserIdDownvotedRoute = UserUserIdDownvotedImport.update({
+  id: '/downvoted',
+  path: '/downvoted',
+  getParentRoute: () => UserUserIdRoute,
+} as any)
+
+const UserUserIdCommentsRoute = UserUserIdCommentsImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => UserUserIdRoute,
 } as any)
 
 const CNameSettingsRoute = CNameSettingsImport.update({
@@ -179,11 +207,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CAllImport
       parentRoute: typeof rootRoute
     }
-    '/user/$username': {
-      id: '/user/$username'
-      path: '/user/$username'
-      fullPath: '/user/$username'
-      preLoaderRoute: typeof UserUsernameImport
+    '/user/$userId': {
+      id: '/user/$userId'
+      path: '/user/$userId'
+      fullPath: '/user/$userId'
+      preLoaderRoute: typeof UserUserIdImport
       parentRoute: typeof rootRoute
     }
     '/c/$name/$id': {
@@ -199,6 +227,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/c/$name/settings'
       preLoaderRoute: typeof CNameSettingsImport
       parentRoute: typeof rootRoute
+    }
+    '/user/$userId/comments': {
+      id: '/user/$userId/comments'
+      path: '/comments'
+      fullPath: '/user/$userId/comments'
+      preLoaderRoute: typeof UserUserIdCommentsImport
+      parentRoute: typeof UserUserIdImport
+    }
+    '/user/$userId/downvoted': {
+      id: '/user/$userId/downvoted'
+      path: '/downvoted'
+      fullPath: '/user/$userId/downvoted'
+      preLoaderRoute: typeof UserUserIdDownvotedImport
+      parentRoute: typeof UserUserIdImport
+    }
+    '/user/$userId/posts': {
+      id: '/user/$userId/posts'
+      path: '/posts'
+      fullPath: '/user/$userId/posts'
+      preLoaderRoute: typeof UserUserIdPostsImport
+      parentRoute: typeof UserUserIdImport
+    }
+    '/user/$userId/upvoted': {
+      id: '/user/$userId/upvoted'
+      path: '/upvoted'
+      fullPath: '/user/$userId/upvoted'
+      preLoaderRoute: typeof UserUserIdUpvotedImport
+      parentRoute: typeof UserUserIdImport
     }
     '/c/$name/': {
       id: '/c/$name/'
@@ -237,6 +293,24 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface UserUserIdRouteChildren {
+  UserUserIdCommentsRoute: typeof UserUserIdCommentsRoute
+  UserUserIdDownvotedRoute: typeof UserUserIdDownvotedRoute
+  UserUserIdPostsRoute: typeof UserUserIdPostsRoute
+  UserUserIdUpvotedRoute: typeof UserUserIdUpvotedRoute
+}
+
+const UserUserIdRouteChildren: UserUserIdRouteChildren = {
+  UserUserIdCommentsRoute: UserUserIdCommentsRoute,
+  UserUserIdDownvotedRoute: UserUserIdDownvotedRoute,
+  UserUserIdPostsRoute: UserUserIdPostsRoute,
+  UserUserIdUpvotedRoute: UserUserIdUpvotedRoute,
+}
+
+const UserUserIdRouteWithChildren = UserUserIdRoute._addFileChildren(
+  UserUserIdRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
@@ -247,9 +321,13 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
-  '/user/$username': typeof UserUsernameRoute
+  '/user/$userId': typeof UserUserIdRouteWithChildren
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/settings': typeof CNameSettingsRoute
+  '/user/$userId/comments': typeof UserUserIdCommentsRoute
+  '/user/$userId/downvoted': typeof UserUserIdDownvotedRoute
+  '/user/$userId/posts': typeof UserUserIdPostsRoute
+  '/user/$userId/upvoted': typeof UserUserIdUpvotedRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -264,9 +342,13 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
-  '/user/$username': typeof UserUsernameRoute
+  '/user/$userId': typeof UserUserIdRouteWithChildren
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/settings': typeof CNameSettingsRoute
+  '/user/$userId/comments': typeof UserUserIdCommentsRoute
+  '/user/$userId/downvoted': typeof UserUserIdDownvotedRoute
+  '/user/$userId/posts': typeof UserUserIdPostsRoute
+  '/user/$userId/upvoted': typeof UserUserIdUpvotedRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -282,9 +364,13 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
-  '/user/$username': typeof UserUsernameRoute
+  '/user/$userId': typeof UserUserIdRouteWithChildren
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/settings': typeof CNameSettingsRoute
+  '/user/$userId/comments': typeof UserUserIdCommentsRoute
+  '/user/$userId/downvoted': typeof UserUserIdDownvotedRoute
+  '/user/$userId/posts': typeof UserUserIdPostsRoute
+  '/user/$userId/upvoted': typeof UserUserIdUpvotedRoute
   '/c/$name/': typeof CNameIndexRoute
   '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -301,9 +387,13 @@ export interface FileRouteTypes {
     | '/profile'
     | '/sign-out'
     | '/c/all'
-    | '/user/$username'
+    | '/user/$userId'
     | '/c/$name/$id'
     | '/c/$name/settings'
+    | '/user/$userId/comments'
+    | '/user/$userId/downvoted'
+    | '/user/$userId/posts'
+    | '/user/$userId/upvoted'
     | '/c/$name'
     | '/c/$name/create-thread'
   fileRoutesByTo: FileRoutesByTo
@@ -317,9 +407,13 @@ export interface FileRouteTypes {
     | '/profile'
     | '/sign-out'
     | '/c/all'
-    | '/user/$username'
+    | '/user/$userId'
     | '/c/$name/$id'
     | '/c/$name/settings'
+    | '/user/$userId/comments'
+    | '/user/$userId/downvoted'
+    | '/user/$userId/posts'
+    | '/user/$userId/upvoted'
     | '/c/$name'
     | '/c/$name/create-thread'
   id:
@@ -333,9 +427,13 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/sign-out'
     | '/c/all'
-    | '/user/$username'
+    | '/user/$userId'
     | '/c/$name/$id'
     | '/c/$name/settings'
+    | '/user/$userId/comments'
+    | '/user/$userId/downvoted'
+    | '/user/$userId/posts'
+    | '/user/$userId/upvoted'
     | '/c/$name/'
     | '/_authenticated/c/$name/create-thread'
   fileRoutesById: FileRoutesById
@@ -348,7 +446,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   ThreadsRoute: typeof ThreadsRoute
   CAllRoute: typeof CAllRoute
-  UserUsernameRoute: typeof UserUsernameRoute
+  UserUserIdRoute: typeof UserUserIdRouteWithChildren
   CNameIdRoute: typeof CNameIdRoute
   CNameSettingsRoute: typeof CNameSettingsRoute
   CNameIndexRoute: typeof CNameIndexRoute
@@ -361,7 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   ThreadsRoute: ThreadsRoute,
   CAllRoute: CAllRoute,
-  UserUsernameRoute: UserUsernameRoute,
+  UserUserIdRoute: UserUserIdRouteWithChildren,
   CNameIdRoute: CNameIdRoute,
   CNameSettingsRoute: CNameSettingsRoute,
   CNameIndexRoute: CNameIndexRoute,
@@ -383,7 +481,7 @@ export const routeTree = rootRoute
         "/sign-in",
         "/threads",
         "/c/all",
-        "/user/$username",
+        "/user/$userId",
         "/c/$name/$id",
         "/c/$name/settings",
         "/c/$name/"
@@ -425,14 +523,36 @@ export const routeTree = rootRoute
     "/c/all": {
       "filePath": "c/all.tsx"
     },
-    "/user/$username": {
-      "filePath": "user/$username.tsx"
+    "/user/$userId": {
+      "filePath": "user/$userId.tsx",
+      "children": [
+        "/user/$userId/comments",
+        "/user/$userId/downvoted",
+        "/user/$userId/posts",
+        "/user/$userId/upvoted"
+      ]
     },
     "/c/$name/$id": {
       "filePath": "c/$name/$id.tsx"
     },
     "/c/$name/settings": {
       "filePath": "c/$name/settings.tsx"
+    },
+    "/user/$userId/comments": {
+      "filePath": "user/$userId/comments.tsx",
+      "parent": "/user/$userId"
+    },
+    "/user/$userId/downvoted": {
+      "filePath": "user/$userId/downvoted.tsx",
+      "parent": "/user/$userId"
+    },
+    "/user/$userId/posts": {
+      "filePath": "user/$userId/posts.tsx",
+      "parent": "/user/$userId"
+    },
+    "/user/$userId/upvoted": {
+      "filePath": "user/$userId/upvoted.tsx",
+      "parent": "/user/$userId"
     },
     "/c/$name/": {
       "filePath": "c/$name/index.tsx"

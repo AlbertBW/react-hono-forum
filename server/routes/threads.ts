@@ -64,12 +64,12 @@ export const threadsRoute = new Hono<AppVariables>()
           userId: user.id,
           userFollow: currentUser
             ? sql<boolean>`
-      EXISTS (
-        SELECT 1 FROM ${communityFollow} 
-        WHERE ${communityFollow.userId} = ${currentUser.id} 
-        AND ${communityFollow.communityId} = ${thread.communityId}
-      )
-    `.as("userFollow")
+            EXISTS (
+              SELECT 1 FROM ${communityFollow} 
+              WHERE ${communityFollow.userId} = ${currentUser.id} 
+              AND ${communityFollow.communityId} = ${thread.communityId}
+            )
+          `.as("userFollow")
             : sql<boolean>`FALSE`.as("userFollow"),
           userAvatar: sql<string | null>`CASE WHEN ${sql.raw(
             !communityName || communityName === "all" ? "TRUE" : "FALSE"

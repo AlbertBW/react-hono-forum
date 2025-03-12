@@ -44,7 +44,7 @@ export const getAllCommunitiesInfiniteQueryOptions = (
     },
     staleTime: 1000 * 60 * 5,
     initialPageParam: undefined as string | undefined,
-    retry: false,
+    retry: 3,
   });
 
 export type Community = Awaited<ReturnType<typeof getCommunityByName>>;
@@ -64,7 +64,7 @@ export const getCommunityQueryOptions = (name: string) => {
     queryKey: ["get-community", name],
     queryFn: () => getCommunityByName(name),
     staleTime: 1000 * 60 * 5,
-    retry: false,
+    retry: 3,
   });
 };
 

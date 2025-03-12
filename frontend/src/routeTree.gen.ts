@@ -11,7 +11,6 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as ThreadsImport } from './routes/threads'
 import { Route as SignInImport } from './routes/sign-in'
 import { Route as CommunitiesImport } from './routes/communities'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
@@ -20,23 +19,15 @@ import { Route as UserUserIdImport } from './routes/user/$userId'
 import { Route as CAllImport } from './routes/c/all'
 import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sign-out'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedCreateThreadImport } from './routes/_authenticated/create-thread'
 import { Route as CNameIndexImport } from './routes/c/$name/index'
-import { Route as UserUserIdUpvotedImport } from './routes/user/$userId/upvoted'
 import { Route as UserUserIdPostsImport } from './routes/user/$userId/posts'
-import { Route as UserUserIdDownvotedImport } from './routes/user/$userId/downvoted'
+import { Route as UserUserIdOverviewImport } from './routes/user/$userId/overview'
 import { Route as UserUserIdCommentsImport } from './routes/user/$userId/comments'
 import { Route as CNameSettingsImport } from './routes/c/$name/settings'
 import { Route as CNameIdImport } from './routes/c/$name/$id'
 import { Route as AuthenticatedCNameCreateThreadImport } from './routes/_authenticated/c/$name/create-thread'
 
 // Create/Update Routes
-
-const ThreadsRoute = ThreadsImport.update({
-  id: '/threads',
-  path: '/threads',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const SignInRoute = SignInImport.update({
   id: '/sign-in',
@@ -85,22 +76,10 @@ const AuthenticatedProfileRoute = AuthenticatedProfileImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
-const AuthenticatedCreateThreadRoute = AuthenticatedCreateThreadImport.update({
-  id: '/create-thread',
-  path: '/create-thread',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-
 const CNameIndexRoute = CNameIndexImport.update({
   id: '/c/$name/',
   path: '/c/$name/',
   getParentRoute: () => rootRoute,
-} as any)
-
-const UserUserIdUpvotedRoute = UserUserIdUpvotedImport.update({
-  id: '/upvoted',
-  path: '/upvoted',
-  getParentRoute: () => UserUserIdRoute,
 } as any)
 
 const UserUserIdPostsRoute = UserUserIdPostsImport.update({
@@ -109,9 +88,9 @@ const UserUserIdPostsRoute = UserUserIdPostsImport.update({
   getParentRoute: () => UserUserIdRoute,
 } as any)
 
-const UserUserIdDownvotedRoute = UserUserIdDownvotedImport.update({
-  id: '/downvoted',
-  path: '/downvoted',
+const UserUserIdOverviewRoute = UserUserIdOverviewImport.update({
+  id: '/overview',
+  path: '/overview',
   getParentRoute: () => UserUserIdRoute,
 } as any)
 
@@ -172,20 +151,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInImport
       parentRoute: typeof rootRoute
     }
-    '/threads': {
-      id: '/threads'
-      path: '/threads'
-      fullPath: '/threads'
-      preLoaderRoute: typeof ThreadsImport
-      parentRoute: typeof rootRoute
-    }
-    '/_authenticated/create-thread': {
-      id: '/_authenticated/create-thread'
-      path: '/create-thread'
-      fullPath: '/create-thread'
-      preLoaderRoute: typeof AuthenticatedCreateThreadImport
-      parentRoute: typeof AuthenticatedImport
-    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -235,11 +200,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserUserIdCommentsImport
       parentRoute: typeof UserUserIdImport
     }
-    '/user/$userId/downvoted': {
-      id: '/user/$userId/downvoted'
-      path: '/downvoted'
-      fullPath: '/user/$userId/downvoted'
-      preLoaderRoute: typeof UserUserIdDownvotedImport
+    '/user/$userId/overview': {
+      id: '/user/$userId/overview'
+      path: '/overview'
+      fullPath: '/user/$userId/overview'
+      preLoaderRoute: typeof UserUserIdOverviewImport
       parentRoute: typeof UserUserIdImport
     }
     '/user/$userId/posts': {
@@ -247,13 +212,6 @@ declare module '@tanstack/react-router' {
       path: '/posts'
       fullPath: '/user/$userId/posts'
       preLoaderRoute: typeof UserUserIdPostsImport
-      parentRoute: typeof UserUserIdImport
-    }
-    '/user/$userId/upvoted': {
-      id: '/user/$userId/upvoted'
-      path: '/upvoted'
-      fullPath: '/user/$userId/upvoted'
-      preLoaderRoute: typeof UserUserIdUpvotedImport
       parentRoute: typeof UserUserIdImport
     }
     '/c/$name/': {
@@ -276,14 +234,12 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedCreateThreadRoute: typeof AuthenticatedCreateThreadRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSignOutRoute: typeof AuthenticatedSignOutRoute
   AuthenticatedCNameCreateThreadRoute: typeof AuthenticatedCNameCreateThreadRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedCreateThreadRoute: AuthenticatedCreateThreadRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSignOutRoute: AuthenticatedSignOutRoute,
   AuthenticatedCNameCreateThreadRoute: AuthenticatedCNameCreateThreadRoute,
@@ -295,16 +251,14 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface UserUserIdRouteChildren {
   UserUserIdCommentsRoute: typeof UserUserIdCommentsRoute
-  UserUserIdDownvotedRoute: typeof UserUserIdDownvotedRoute
+  UserUserIdOverviewRoute: typeof UserUserIdOverviewRoute
   UserUserIdPostsRoute: typeof UserUserIdPostsRoute
-  UserUserIdUpvotedRoute: typeof UserUserIdUpvotedRoute
 }
 
 const UserUserIdRouteChildren: UserUserIdRouteChildren = {
   UserUserIdCommentsRoute: UserUserIdCommentsRoute,
-  UserUserIdDownvotedRoute: UserUserIdDownvotedRoute,
+  UserUserIdOverviewRoute: UserUserIdOverviewRoute,
   UserUserIdPostsRoute: UserUserIdPostsRoute,
-  UserUserIdUpvotedRoute: UserUserIdUpvotedRoute,
 }
 
 const UserUserIdRouteWithChildren = UserUserIdRoute._addFileChildren(
@@ -316,8 +270,6 @@ export interface FileRoutesByFullPath {
   '': typeof AuthenticatedRouteWithChildren
   '/communities': typeof CommunitiesRoute
   '/sign-in': typeof SignInRoute
-  '/threads': typeof ThreadsRoute
-  '/create-thread': typeof AuthenticatedCreateThreadRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
@@ -325,9 +277,8 @@ export interface FileRoutesByFullPath {
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/settings': typeof CNameSettingsRoute
   '/user/$userId/comments': typeof UserUserIdCommentsRoute
-  '/user/$userId/downvoted': typeof UserUserIdDownvotedRoute
+  '/user/$userId/overview': typeof UserUserIdOverviewRoute
   '/user/$userId/posts': typeof UserUserIdPostsRoute
-  '/user/$userId/upvoted': typeof UserUserIdUpvotedRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -337,8 +288,6 @@ export interface FileRoutesByTo {
   '': typeof AuthenticatedRouteWithChildren
   '/communities': typeof CommunitiesRoute
   '/sign-in': typeof SignInRoute
-  '/threads': typeof ThreadsRoute
-  '/create-thread': typeof AuthenticatedCreateThreadRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
@@ -346,9 +295,8 @@ export interface FileRoutesByTo {
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/settings': typeof CNameSettingsRoute
   '/user/$userId/comments': typeof UserUserIdCommentsRoute
-  '/user/$userId/downvoted': typeof UserUserIdDownvotedRoute
+  '/user/$userId/overview': typeof UserUserIdOverviewRoute
   '/user/$userId/posts': typeof UserUserIdPostsRoute
-  '/user/$userId/upvoted': typeof UserUserIdUpvotedRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -359,8 +307,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/communities': typeof CommunitiesRoute
   '/sign-in': typeof SignInRoute
-  '/threads': typeof ThreadsRoute
-  '/_authenticated/create-thread': typeof AuthenticatedCreateThreadRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/sign-out': typeof AuthenticatedSignOutRoute
   '/c/all': typeof CAllRoute
@@ -368,9 +314,8 @@ export interface FileRoutesById {
   '/c/$name/$id': typeof CNameIdRoute
   '/c/$name/settings': typeof CNameSettingsRoute
   '/user/$userId/comments': typeof UserUserIdCommentsRoute
-  '/user/$userId/downvoted': typeof UserUserIdDownvotedRoute
+  '/user/$userId/overview': typeof UserUserIdOverviewRoute
   '/user/$userId/posts': typeof UserUserIdPostsRoute
-  '/user/$userId/upvoted': typeof UserUserIdUpvotedRoute
   '/c/$name/': typeof CNameIndexRoute
   '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -382,8 +327,6 @@ export interface FileRouteTypes {
     | ''
     | '/communities'
     | '/sign-in'
-    | '/threads'
-    | '/create-thread'
     | '/profile'
     | '/sign-out'
     | '/c/all'
@@ -391,9 +334,8 @@ export interface FileRouteTypes {
     | '/c/$name/$id'
     | '/c/$name/settings'
     | '/user/$userId/comments'
-    | '/user/$userId/downvoted'
+    | '/user/$userId/overview'
     | '/user/$userId/posts'
-    | '/user/$userId/upvoted'
     | '/c/$name'
     | '/c/$name/create-thread'
   fileRoutesByTo: FileRoutesByTo
@@ -402,8 +344,6 @@ export interface FileRouteTypes {
     | ''
     | '/communities'
     | '/sign-in'
-    | '/threads'
-    | '/create-thread'
     | '/profile'
     | '/sign-out'
     | '/c/all'
@@ -411,9 +351,8 @@ export interface FileRouteTypes {
     | '/c/$name/$id'
     | '/c/$name/settings'
     | '/user/$userId/comments'
-    | '/user/$userId/downvoted'
+    | '/user/$userId/overview'
     | '/user/$userId/posts'
-    | '/user/$userId/upvoted'
     | '/c/$name'
     | '/c/$name/create-thread'
   id:
@@ -422,8 +361,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/communities'
     | '/sign-in'
-    | '/threads'
-    | '/_authenticated/create-thread'
     | '/_authenticated/profile'
     | '/_authenticated/sign-out'
     | '/c/all'
@@ -431,9 +368,8 @@ export interface FileRouteTypes {
     | '/c/$name/$id'
     | '/c/$name/settings'
     | '/user/$userId/comments'
-    | '/user/$userId/downvoted'
+    | '/user/$userId/overview'
     | '/user/$userId/posts'
-    | '/user/$userId/upvoted'
     | '/c/$name/'
     | '/_authenticated/c/$name/create-thread'
   fileRoutesById: FileRoutesById
@@ -444,7 +380,6 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CommunitiesRoute: typeof CommunitiesRoute
   SignInRoute: typeof SignInRoute
-  ThreadsRoute: typeof ThreadsRoute
   CAllRoute: typeof CAllRoute
   UserUserIdRoute: typeof UserUserIdRouteWithChildren
   CNameIdRoute: typeof CNameIdRoute
@@ -457,7 +392,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CommunitiesRoute: CommunitiesRoute,
   SignInRoute: SignInRoute,
-  ThreadsRoute: ThreadsRoute,
   CAllRoute: CAllRoute,
   UserUserIdRoute: UserUserIdRouteWithChildren,
   CNameIdRoute: CNameIdRoute,
@@ -479,7 +413,6 @@ export const routeTree = rootRoute
         "/_authenticated",
         "/communities",
         "/sign-in",
-        "/threads",
         "/c/all",
         "/user/$userId",
         "/c/$name/$id",
@@ -493,7 +426,6 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
-        "/_authenticated/create-thread",
         "/_authenticated/profile",
         "/_authenticated/sign-out",
         "/_authenticated/c/$name/create-thread"
@@ -504,13 +436,6 @@ export const routeTree = rootRoute
     },
     "/sign-in": {
       "filePath": "sign-in.tsx"
-    },
-    "/threads": {
-      "filePath": "threads.tsx"
-    },
-    "/_authenticated/create-thread": {
-      "filePath": "_authenticated/create-thread.tsx",
-      "parent": "/_authenticated"
     },
     "/_authenticated/profile": {
       "filePath": "_authenticated/profile.tsx",
@@ -527,9 +452,8 @@ export const routeTree = rootRoute
       "filePath": "user/$userId.tsx",
       "children": [
         "/user/$userId/comments",
-        "/user/$userId/downvoted",
-        "/user/$userId/posts",
-        "/user/$userId/upvoted"
+        "/user/$userId/overview",
+        "/user/$userId/posts"
       ]
     },
     "/c/$name/$id": {
@@ -542,16 +466,12 @@ export const routeTree = rootRoute
       "filePath": "user/$userId/comments.tsx",
       "parent": "/user/$userId"
     },
-    "/user/$userId/downvoted": {
-      "filePath": "user/$userId/downvoted.tsx",
+    "/user/$userId/overview": {
+      "filePath": "user/$userId/overview.tsx",
       "parent": "/user/$userId"
     },
     "/user/$userId/posts": {
       "filePath": "user/$userId/posts.tsx",
-      "parent": "/user/$userId"
-    },
-    "/user/$userId/upvoted": {
-      "filePath": "user/$userId/upvoted.tsx",
       "parent": "/user/$userId"
     },
     "/c/$name/": {

@@ -141,6 +141,11 @@ export const community = pgTable(
     description: text("description").notNull(),
     icon: text("icon").notNull(),
     banner: text("banner").notNull(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "set null",
+      }),
     isPrivate: boolean("is_private").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

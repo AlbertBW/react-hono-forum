@@ -29,7 +29,7 @@ export const getSingleThreadQueryOptions = (id: ThreadId) =>
     queryKey: ["get-thread", id],
     queryFn: () => getSingleThreadById(id),
     staleTime: 1000 * 60 * 5,
-    retry: false,
+    retry: 3,
   });
 
 export async function deleteThread(id: ThreadId) {
@@ -95,5 +95,5 @@ export const getThreadsInfiniteQueryOptions = ({
     },
     staleTime: 1000 * 60 * 5,
     initialPageParam: undefined as string | undefined,
-    retry: false,
+    retry: 3,
   });

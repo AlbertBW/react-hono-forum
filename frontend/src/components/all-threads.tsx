@@ -1,68 +1,14 @@
 import { getThreadsInfiniteQueryOptions } from "@/api/thread.api";
-import AllThreads from "@/components/all-threads";
-import ThreadCard from "@/components/thread-card";
-import { Separator } from "@/components/ui/separator";
-import { LoadingSpinner } from "@/components/ui/spinner";
 import { useSession } from "@/lib/auth-client";
 import { THREADS_PER_PAGE } from "@/lib/constants";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Fragment, useEffect } from "react";
+import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
+import { Fragment } from "react/jsx-runtime";
+import ThreadCard from "./thread-card";
+import { Separator } from "./ui/separator";
 
-export const Route = createFileRoute("/")({
-  component: Index,
-});
-
-function Index() {
-  const { data: session, isPending } = useSession();
-
-  if (isPending) {
-    return (
-      <div className="flex justify-center items-center h-32">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div>
-        <div className="p-2">
-          <div className="bg-gradient-to-br from-card to-ring/15 hover:bg-muted border-2 border-primary/20 rounded-lg p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
-            <h1 className="text-xl font-bold text-card-foreground mb-3 relative">
-              <span className="relative z-10 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-1/3 after:h-3 after:bg-primary/10 after:-z-10">
-                Welcome to <span className="font-mono">RHForum</span>!
-              </span>
-            </h1>
-            <p className="text-muted-foreground mb-5 leading-relaxed border-l-4 border-primary/20 pl-3">
-              Sign in to join communities, create threads, and participate in
-              discussions.
-            </p>
-            <Link
-              to="/sign-in"
-              className="inline-flex items-center px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 hover:-translate-y-1.5 transition-all duration-300 shadow-md hover:shadow-primary/20"
-            >
-              Sign in
-            </Link>
-          </div>
-        </div>
-
-        <AllThreads />
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto">
-      <div className="px-2">
-        <HomeFeed />
-      </div>
-    </div>
-  );
-}
-
-function HomeFeed() {
+export default function AllThreads() {
   const { ref, inView } = useInView();
   const { data: userData, isPending: userPending } = useSession();
   const {
@@ -85,6 +31,7 @@ function HomeFeed() {
   }, [fetchNextPage, hasNextPage, inView, isFetchingNextPage]);
 
   const threads = data?.pages.flatMap((page) => page) || [];
+
   return (
     <main className="w-full max-w-7xl mx-auto">
       {threadStatus === "pending" ? (

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/user/$userId")({
   beforeLoad: ({ params }) => {
     if (location.pathname === `/user/${params.userId}`) {
       throw redirect({
-        to: `/user/$userId/posts`,
+        to: `/user/$userId/overview`,
         params: { userId: params.userId },
       });
     }
@@ -69,6 +69,13 @@ function UserPage() {
         <div className="mb-2 flex flex-row gap-1 h-10">
           <Link
             className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+            to={"/user/$userId/overview"}
+            params={{ userId }}
+          >
+            Overview
+          </Link>
+          <Link
+            className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
             to={"/user/$userId/posts"}
             params={{ userId }}
           >
@@ -80,20 +87,6 @@ function UserPage() {
             params={{ userId }}
           >
             Comments
-          </Link>
-          <Link
-            className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
-            to={"/user/$userId/upvoted"}
-            params={{ userId }}
-          >
-            Upvoted
-          </Link>
-          <Link
-            className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
-            to={"/user/$userId/downvoted"}
-            params={{ userId }}
-          >
-            Downvoted
           </Link>
         </div>
       </div>

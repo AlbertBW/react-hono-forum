@@ -31,5 +31,5 @@ export const getUserByIdQueryOptions = (userId: string) =>
     queryKey: ["get-user", userId],
     queryFn: () => getUserById(userId),
     staleTime: 1000 * 60 * 5,
-    retry: false,
+    retry: 3,
   });

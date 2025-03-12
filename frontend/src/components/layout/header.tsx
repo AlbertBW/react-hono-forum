@@ -5,7 +5,7 @@ import { SidebarTrigger } from "../ui/sidebar";
 export default function Header() {
   return (
     <>
-      <header className="border-b border-foreground/20 fixed top-0 bg-background h-13 z-10">
+      <header className="border-b border-foreground/20 fixed top-0 bg-background h-13 z-20">
         <NavBar />
       </header>
 

@@ -1,12 +1,24 @@
-import { getThreadsInfiniteQueryOptions } from "@/api/thread.api";
+import {
+  getPopularThreadsQueryOptions,
+  getThreadsInfiniteQueryOptions,
+} from "@/api/thread.api";
 import AllThreads from "@/components/all-threads";
 import ThreadCard from "@/components/thread-card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import { useSession } from "@/lib/auth-client";
 import { THREADS_PER_PAGE } from "@/lib/constants";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MessageSquare, ThumbsUp } from "lucide-react";
 import { Fragment, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
@@ -56,7 +68,139 @@ function Index() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="px-2">
+        <HomeCarousel />
+
+        <h2 className="text-xl font-bold text-card-foreground p-3">
+          Following
+        </h2>
+        <Separator />
         <HomeFeed />
+      </div>
+    </div>
+  );
+}
+
+function HomeCarousel() {
+  const { data, isPending, error } = useQuery(
+    getPopularThreadsQueryOptions(10)
+  );
+
+  if (error) {
+    return null;
+  }
+
+  return (
+    <div className="py-2">
+      <div className="bg-gradient-to-br from-card to-ring/5 mt-1 border-2 border-primary/20 rounded-lg p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
+        <h1 className="text-xl font-bold mb-3 p-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Top Discussions
+        </h1>
+
+        {isPending && (
+          <div className="w-full relative">
+            <Carousel
+              opts={{
+                align: "start",
+              }}
+              className="w-full mx-auto"
+            >
+              <CarouselContent>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="md:basis-1/2 lg:basis-1/3]"
+                  >
+                    <div className="block w-full h-full">
+                      <div className="flex group flex-col gap-3 border border-border/70 rounded-xl px-5 py-4 bg-card shadow-sm h-full animate-pulse">
+                        <div className="h-5 w-full bg-muted rounded-md"></div>
+                        <div className="flex items-center gap-2.5 mt-1">
+                          <Avatar className="size-6">
+                            <AvatarFallback />
+                          </Avatar>
+                          <div className="h-4 w-24 bg-muted rounded-md"></div>
+                        </div>
+                        <div className="flex items-center gap-3 mt-auto pt-2 border-t border-border/30">
+                          <div className="flex items-center gap-1">
+                            <div className="size-3.5 rounded-full bg-muted"></div>
+                            <div className="h-3 w-16 bg-muted rounded-md"></div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="size-3.5 rounded-full bg-muted"></div>
+                            <div className="h-3 w-20 bg-muted rounded-md"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
+        )}
+
+        {data && (
+          <div className="relative px-1">
+            <Carousel
+              opts={{
+                align: "start",
+                containScroll: "trimSnaps",
+              }}
+            >
+              <CarouselContent>
+                {data.map((thread) => (
+                  <CarouselItem
+                    key={thread.id}
+                    className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                  >
+                    <Link
+                      to={"/c/$name/$id"}
+                      params={{ name: thread.communityName, id: thread.id }}
+                    >
+                      <div className="flex group flex-col gap-3 border border-border/70 hover:border-border rounded-xl px-5 py-4 bg-card hover:bg-accent/20 shadow-sm hover:shadow-md transition-all duration-300">
+                        <h2 className="font-semibold text-base line-clamp-2 text-foreground leading-tight">
+                          {thread.title}
+                        </h2>
+                        <div className="flex items-center gap-2.5 mt-1">
+                          <Avatar className="size-6 ring-1 ring-primary/20">
+                            {thread.communityIcon && (
+                              <AvatarImage
+                                src={thread.communityIcon}
+                                alt={`${thread.communityName} Icon`}
+                              />
+                            )}
+                            <AvatarFallback className="bg-primary/10 text-xs">
+                              {thread.communityName.slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="text-sm font-medium text-foreground/80 group-hover:text-accent-foreground duration-300">
+                            {thread.communityName}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground group-hover:text-accent-foreground mt-auto pt-2 border-t border-border/30 transition  duration-300">
+                          <span className="flex items-center gap-1">
+                            <ThumbsUp className="size-3.5" />
+                            {thread.upvotes - thread.downvotes} votes
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="size-3.5" />
+                            {thread.commentsCount} comments
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+
+              <div className="absolute top-1/2 left-8 -translate-y-1/2 z-10">
+                <CarouselPrevious className="bg-background/90 shadow-md hover:bg-background border border-border disabled:opacity-0 transition-all" />
+              </div>
+              <div className="absolute top-1/2 right-8 -translate-y-1/2 z-10">
+                <CarouselNext className="bg-background/90 shadow-md hover:bg-background border border-border disabled:opacity-0 transition-all" />
+              </div>
+            </Carousel>
+          </div>
+        )}
       </div>
     </div>
   );

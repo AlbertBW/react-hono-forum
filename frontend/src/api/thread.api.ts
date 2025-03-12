@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { CreateThread, ThreadId } from "../../../server/db/schema";
 import { handleRateLimitError } from "./ratelimit-response";
+import { OrderBy } from "../../../server/routes/threads";
 
 export async function createThread({ value }: { value: CreateThread }) {
   const res = await api.threads.$post({ json: value });
@@ -45,11 +46,13 @@ export type ThreadCardType = Awaited<ReturnType<typeof getThreadsList>>[number];
 export const getThreadsList = async ({
   userId,
   communityName,
+  orderBy,
   limit,
   cursor,
 }: {
   userId?: string;
   communityName?: string;
+  orderBy?: OrderBy;
   limit: number;
   cursor?: string;
 }) => {
@@ -57,6 +60,7 @@ export const getThreadsList = async ({
     query: {
       userId,
       communityName,
+      orderBy,
       limit: String(limit),
       cursor,
     },
@@ -95,5 +99,14 @@ export const getThreadsInfiniteQueryOptions = ({
     },
     staleTime: 1000 * 60 * 5,
     initialPageParam: undefined as string | undefined,
+    retry: 3,
+  });
+
+export const getPopularThreadsQueryOptions = (limit = 10) =>
+  queryOptions({
+    queryKey: ["popular-threads"],
+    queryFn: () =>
+      getThreadsList({ communityName: "all", orderBy: "popular", limit }),
+    staleTime: 1000 * 60 * 5,
     retry: 3,
   });

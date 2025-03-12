@@ -13,9 +13,11 @@ import {
   voteSchema,
 } from "../db/schema";
 import { db } from "../db";
-import { and, count, desc, eq, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, lt, sql, asc } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
+
+export type OrderBy = "newest" | "oldest" | "popular";
 
 export const threadsRoute = new Hono<AppVariables>()
   .post("/", requireAuth, zValidator("json", insertThreadSchema), async (c) => {
@@ -47,13 +49,24 @@ export const threadsRoute = new Hono<AppVariables>()
       z.object({
         communityName: z.string().optional(),
         userId: z.string().optional(),
+        orderBy: z.custom<OrderBy>().optional(),
         limit: z.coerce.number().int().positive().default(30),
         cursor: z.coerce.date().optional(),
       })
     ),
     async (c) => {
       const currentUser = c.var.user;
-      const { communityName, userId, limit, cursor } = c.req.valid("query");
+      const { communityName, userId, limit, cursor, orderBy } =
+        c.req.valid("query");
+
+      const voteScore = sql<number>`
+      (CAST((SELECT COUNT(*) FROM ${threadVote} 
+       WHERE ${threadVote.threadId} = ${thread.id} 
+       AND ${threadVote.value} > 0) AS INTEGER) - 
+       CAST((SELECT COUNT(*) FROM ${threadVote} 
+       WHERE ${threadVote.threadId} = ${thread.id} 
+       AND ${threadVote.value} < 0) AS INTEGER))
+    `.as("popularity_score");
 
       const threads = await db
         .select({
@@ -62,6 +75,7 @@ export const threadsRoute = new Hono<AppVariables>()
           createdAt: thread.createdAt,
           username: user.name,
           userId: user.id,
+          voteScore,
           userFollow: currentUser
             ? sql<boolean>`
             EXISTS (
@@ -107,7 +121,13 @@ export const threadsRoute = new Hono<AppVariables>()
         .leftJoin(user, eq(thread.userId, user.id))
         .leftJoin(threadVote, eq(threadVote.threadId, thread.id))
         .leftJoin(comment, eq(comment.threadId, thread.id))
-        .orderBy(desc(thread.createdAt))
+        .orderBy(
+          orderBy === "popular"
+            ? desc(voteScore)
+            : orderBy === "oldest"
+            ? asc(thread.createdAt)
+            : desc(thread.createdAt)
+        )
         .limit(limit)
         .groupBy(
           thread.id,

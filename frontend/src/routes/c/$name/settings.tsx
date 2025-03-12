@@ -92,10 +92,25 @@ function RouteComponent() {
       <h1 className="text-3xl font-bold mb-6">Community Settings</h1>
 
       <Tabs defaultValue="general">
-        <TabsList className="mb-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="moderators">Moderators</TabsTrigger>
-          <TabsTrigger value="danger">Danger Zone</TabsTrigger>
+        <TabsList className="mb-6 bg-transparent space-x-1">
+          <TabsTrigger
+            value="general"
+            className="data-[state=active]:bg-zinc-800 py-3 px-4 rounded-full hover:underline transition duration-300"
+          >
+            General
+          </TabsTrigger>
+          <TabsTrigger
+            value="moderators"
+            className="data-[state=active]:bg-zinc-800 py-3 px-4 rounded-full hover:underline transition duration-300"
+          >
+            Moderators
+          </TabsTrigger>
+          <TabsTrigger
+            value="danger"
+            className="data-[state=active]:bg-zinc-800 py-3 px-4 rounded-full hover:underline transition duration-300"
+          >
+            Danger Zone
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">

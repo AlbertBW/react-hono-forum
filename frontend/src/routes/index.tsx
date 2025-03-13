@@ -39,7 +39,7 @@ function Index() {
 
   if (!session) {
     return (
-      <div>
+      <div className="max-w-7xl mx-auto">
         <div className="p-2">
           <div className="bg-gradient-to-br from-card to-ring/15 hover:bg-muted border-2 border-primary/20 rounded-lg p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
             <h1 className="text-xl font-bold text-card-foreground mb-3 relative">
@@ -86,56 +86,70 @@ function HomeCarousel() {
   );
 
   if (error) {
-    return null;
+    return (
+      <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 my-2 shadow-sm">
+        <p className="text-destructive flex items-center gap-2">
+          <span className="size-5 rounded-full bg-destructive/20 flex items-center justify-center">
+            !
+          </span>
+          Error loading popular threads
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="py-2">
-      <div className="bg-gradient-to-br from-card to-ring/5 mt-1 border-2 border-primary/20 rounded-lg p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
-        <h1 className="text-xl font-bold mb-3 p-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+      <div className="bg-gradient-to-br from-card to-ring/5 mt-1 border-2 border-primary/20 rounded-lg p-2 sm:p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
+        <h1 className="text-xl font-bold mb-3 p-1 sm:p-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
           Top Discussions
         </h1>
 
         {isPending && (
-          <div className="w-full relative">
-            <Carousel
-              opts={{
-                align: "start",
-              }}
-              className="w-full mx-auto"
-            >
-              <CarouselContent>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <CarouselItem
-                    key={index}
-                    className="md:basis-1/2 lg:basis-1/3]"
-                  >
-                    <div className="block w-full h-full">
-                      <div className="flex group flex-col gap-3 border border-border/70 rounded-xl px-5 py-4 bg-card shadow-sm h-full animate-pulse">
-                        <div className="h-5 w-full bg-muted rounded-md"></div>
-                        <div className="flex items-center gap-2.5 mt-1">
-                          <Avatar className="size-6">
-                            <AvatarFallback />
-                          </Avatar>
-                          <div className="h-4 w-24 bg-muted rounded-md"></div>
-                        </div>
-                        <div className="flex items-center gap-3 mt-auto pt-2 border-t border-border/30">
-                          <div className="flex items-center gap-1">
-                            <div className="size-3.5 rounded-full bg-muted"></div>
-                            <div className="h-3 w-16 bg-muted rounded-md"></div>
+          <>
+            <div className="sr-only" aria-live="polite">
+              Loading popular discussions...
+            </div>
+
+            <div className="w-full relative" aria-hidden="true">
+              <Carousel
+                opts={{
+                  align: "start",
+                }}
+              >
+                <CarouselContent>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <CarouselItem
+                      key={index}
+                      className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                    >
+                      <div className="block w-full h-full">
+                        <div className="flex group flex-col gap-3 border border-border/70 rounded-xl px-5 py-4 bg-card shadow-sm h-full animate-pulse">
+                          <div className="h-5 w-full bg-muted rounded-md"></div>
+                          <div className="flex items-center gap-2.5 mt-1">
+                            <Avatar className="size-6">
+                              <AvatarFallback />
+                            </Avatar>
+                            <div className="h-4 w-24 bg-muted rounded-md"></div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <div className="size-3.5 rounded-full bg-muted"></div>
-                            <div className="h-3 w-20 bg-muted rounded-md"></div>
+                          <div className="flex items-center gap-3 mt-auto pt-2 border-t border-border/30">
+                            <div className="flex items-center gap-1">
+                              <div className="size-3.5 rounded-full bg-muted"></div>
+                              <div className="h-3 w-16 bg-muted rounded-md"></div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="size-3.5 rounded-full bg-muted"></div>
+                              <div className="h-3 w-20 bg-muted rounded-md"></div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            </div>
+          </>
         )}
 
         {data && (
@@ -143,7 +157,6 @@ function HomeCarousel() {
             <Carousel
               opts={{
                 align: "start",
-                containScroll: "trimSnaps",
               }}
             >
               <CarouselContent>
@@ -157,7 +170,7 @@ function HomeCarousel() {
                       params={{ name: thread.communityName, id: thread.id }}
                     >
                       <div className="flex group flex-col gap-3 border border-border/70 hover:border-border rounded-xl px-5 py-4 bg-card hover:bg-accent/20 shadow-sm hover:shadow-md transition-all duration-300">
-                        <h2 className="font-semibold text-base line-clamp-2 text-foreground leading-tight">
+                        <h2 className="font-semibold text-base line-clamp-1 text-foreground leading-tight">
                           {thread.title}
                         </h2>
                         <div className="flex items-center gap-2.5 mt-1">
@@ -218,6 +231,7 @@ function HomeFeed() {
   } = useInfiniteQuery(
     getThreadsInfiniteQueryOptions({
       communityName: "all",
+      following: true,
       limit: THREADS_PER_PAGE,
     })
   );
@@ -272,14 +286,24 @@ function HomeFeed() {
         </>
       ) : (
         <div className="flex flex-col gap-4 mt-4">
-          <h3 className="text-lg font-bold">No Threads Yet</h3>
-          <p className="text-sm text-muted-foreground">
-            {!userPending
-              ? userData
-                ? "Be the first to post in this community!"
-                : "Sign in to post in this community!"
-              : null}
+          <h3 className="text-lg font-semibold">
+            You don't follow any communities yet!
+          </h3>
+
+          {!userPending && userData && (
+            <Link
+              to="/communities"
+              className="inline-flex w-fit items-center px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-500/90 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              Find communities
+            </Link>
+          )}
+          <Separator />
+
+          <p className="text-sm text-foreground/50">
+            or view all latest threads
           </p>
+          <AllThreads />
         </div>
       )}
     </main>

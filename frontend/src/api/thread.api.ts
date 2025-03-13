@@ -47,12 +47,14 @@ export const getThreadsList = async ({
   userId,
   communityName,
   orderBy,
+  following,
   limit,
   cursor,
 }: {
   userId?: string;
   communityName?: string;
   orderBy?: OrderBy;
+  following?: boolean;
   limit: number;
   cursor?: string;
 }) => {
@@ -61,6 +63,7 @@ export const getThreadsList = async ({
       userId,
       communityName,
       orderBy,
+      following: following ? String(following) : undefined,
       limit: String(limit),
       cursor,
     },
@@ -76,18 +79,21 @@ export const getThreadsList = async ({
 export const getThreadsInfiniteQueryOptions = ({
   userId,
   communityName,
+  following,
   limit = 10,
 }: {
   userId?: string;
   communityName?: string;
+  following?: boolean;
   limit?: number;
 }) =>
   infiniteQueryOptions({
-    queryKey: ["threads", "infinite", communityName],
+    queryKey: ["threads", "infinite", userId, communityName, following, limit],
     queryFn: async ({ pageParam }) =>
       await getThreadsList({
         userId,
         communityName,
+        following,
         limit,
         cursor: pageParam as string | undefined,
       }),

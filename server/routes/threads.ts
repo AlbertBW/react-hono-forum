@@ -13,7 +13,7 @@ import {
   voteSchema,
 } from "../db/schema";
 import { db } from "../db";
-import { and, count, desc, eq, lt, sql, asc } from "drizzle-orm";
+import { and, count, desc, eq, lt, sql, asc, inArray } from "drizzle-orm";
 import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
 
@@ -50,14 +50,25 @@ export const threadsRoute = new Hono<AppVariables>()
         communityName: z.string().optional(),
         userId: z.string().optional(),
         orderBy: z.custom<OrderBy>().optional(),
+        following: z.coerce.boolean().optional(),
         limit: z.coerce.number().int().positive().default(30),
         cursor: z.coerce.date().optional(),
       })
     ),
     async (c) => {
       const currentUser = c.var.user;
-      const { communityName, userId, limit, cursor, orderBy } =
+      const { communityName, userId, limit, cursor, orderBy, following } =
         c.req.valid("query");
+
+      let followingIds: string[] | null = null;
+      if (currentUser && following) {
+        const communityFollows = await db.query.communityFollow.findMany({
+          where: (follow, { eq }) => eq(follow.userId, currentUser.id),
+          columns: { communityId: true },
+        });
+
+        followingIds = communityFollows.map((follow) => follow.communityId);
+      }
 
       const voteScore = sql<number>`
       (CAST((SELECT COUNT(*) FROM ${threadVote} 
@@ -115,7 +126,8 @@ export const threadsRoute = new Hono<AppVariables>()
               ? eq(community.isPrivate, false)
               : undefined,
             cursor ? lt(thread.createdAt, cursor) : undefined,
-            userId ? eq(thread.userId, userId) : undefined
+            userId ? eq(thread.userId, userId) : undefined,
+            followingIds ? inArray(community.id, followingIds) : undefined
           )
         )
         .leftJoin(user, eq(thread.userId, user.id))

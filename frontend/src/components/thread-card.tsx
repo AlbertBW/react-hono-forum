@@ -7,6 +7,7 @@ import VoteButtons from "./buttons/vote-buttons";
 import type { ThreadCardType } from "@/api/thread.api";
 import { JoinButton } from "./buttons/join-leave-community";
 import { useSession } from "@/lib/auth-client";
+import { MessageCircle } from "lucide-react";
 
 type ThreadViewContext = "all" | "community";
 
@@ -104,9 +105,16 @@ export default function ThreadCard({
           <div>
             <Button
               variant={"ghost"}
-              className="text-muted-foreground hover:text-foreground rounded-full"
+              className="text-muted-foreground hover:text-foreground rounded-full hidden sm:block"
             >
               {thread.commentsCount} Comments
+            </Button>
+
+            <Button
+              variant={"ghost"}
+              className="rounded-full sm:hidden bg-zinc-900"
+            >
+              <MessageCircle /> {thread.commentsCount}
             </Button>
           </div>
         </div>

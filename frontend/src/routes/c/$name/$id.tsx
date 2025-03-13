@@ -13,6 +13,7 @@ import CreateComment from "@/components/comments/create-comment";
 import Comments from "@/components/comments/comments";
 import { useSession } from "@/lib/auth-client";
 import DeleteThread from "@/components/buttons/delete-thread";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/c/$name/$id")({
   component: ThreadPage,
@@ -28,6 +29,7 @@ function ThreadPage() {
     error,
     data: thread,
   } = useQuery(getSingleThreadQueryOptions(id));
+  const commentsRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
 
@@ -133,13 +135,21 @@ function ThreadPage() {
             <Button
               variant={"ghost"}
               className="text-muted-foreground hover:text-foreground rounded-full"
+              onClick={() => {
+                commentsRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
             >
               {thread.commentsCount} Comments
             </Button>
           </div>
         </div>
 
-        <CreateComment threadId={thread.id} />
+        <div ref={commentsRef}>
+          <CreateComment threadId={thread.id} />
+        </div>
         <section className="space-y-3 pt-6">
           <Comments threadId={thread.id} communityName={name} />
         </section>

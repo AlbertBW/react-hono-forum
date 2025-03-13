@@ -163,7 +163,7 @@ export default function VoteButtons({
         onClick={() => mutation.mutate(1)}
         disabled={mutation.isPending || isSessionLoading}
       >
-        <ThumbsUp className="size-3 sm:size-4" />
+        <ThumbsUp className="size-3.5 sm:size-4" />
       </Button>
 
       <span className="text-center text-xs sm:text-sm">
@@ -176,7 +176,7 @@ export default function VoteButtons({
         onClick={() => mutation.mutate(-1)}
         disabled={mutation.isPending || isSessionLoading}
       >
-        <ThumbsDown className="size-3 sm:size-4" />
+        <ThumbsDown className="size-3.5 sm:size-4" />
       </Button>
     </div>
   );

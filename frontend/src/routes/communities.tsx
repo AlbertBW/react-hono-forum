@@ -40,6 +40,7 @@ function CommunitiesPage() {
   } = useInfiniteQuery(getAllCommunitiesInfiniteQueryOptions(12, search));
 
   useEffect(() => {
+    console.log("refetching");
     refetch();
   }, [search, refetch]);
 
@@ -100,7 +101,7 @@ function CommunitiesPage() {
 
 function CommunityCard({ community }: { community: CommunityCardType }) {
   return (
-    <div className="rounded-lg shadow-md border hover:bg-zinc-900 cursor-pointer basis-full md:basis-[calc(50%-1rem)] xl:basis-[calc(33.333%-1rem)]">
+    <div className="rounded-lg shadow-md border hover:bg-secondary/30 cursor-pointer basis-full md:basis-[calc(50%-1rem)] xl:basis-[calc(33.333%-1rem)]">
       <Link to="/c/$name" params={{ name: community.name }}>
         <div className="px-3 p-2.5">
           <div className="">

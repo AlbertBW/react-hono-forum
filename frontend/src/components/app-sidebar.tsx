@@ -29,7 +29,6 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "./ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useRef } from "react";
-import { randomGradient } from "@/lib/common-styles";
 import { getAllCommunitiesInfiniteQueryOptions } from "@/api/community.api";
 
 // Menu items.
@@ -95,7 +94,7 @@ export function AppSidebar() {
             <SidebarGroup>
               <SidebarGroupLabel
                 asChild
-                className="group/label text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="group/label text-sm text-muted-foreground hover:bg-sidebar-primary-foreground hover:text-sidebar-accent-foreground"
               >
                 <CollapsibleTrigger>
                   Communities
@@ -185,13 +184,11 @@ export function AppSidebar() {
                                 </Avatar>
                               ) : (
                                 <Avatar
-                                  className={`bg-zinc-800 flex justify-center items-center transition-all ${
+                                  className={`bg-secondary flex justify-center items-center transition-all ${
                                     open ? "size-8" : "size-4 text-transparent"
                                   }`}
                                 >
-                                  <AvatarFallback
-                                    className={`${randomGradient()}`}
-                                  ></AvatarFallback>
+                                  <AvatarFallback></AvatarFallback>
                                 </Avatar>
                               )}
                               <span>{community.name}</span>

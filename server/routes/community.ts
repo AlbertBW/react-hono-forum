@@ -12,7 +12,7 @@ import {
   user,
 } from "../db/schema";
 import { db } from "../db";
-import { lt, and, countDistinct, desc, eq, sql, exists } from "drizzle-orm";
+import { lt, and, countDistinct, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 type CommunityMod = {
@@ -76,7 +76,7 @@ export const communitiesRoute = new Hono<AppVariables>()
           search === "new"
             ? desc(community.createdAt)
             : search === "popular"
-            ? desc(countDistinct(thread.id))
+            ? desc(countDistinct(communityFollow.userId))
             : desc(community.createdAt)
         )
         .limit(limit)
@@ -85,7 +85,8 @@ export const communitiesRoute = new Hono<AppVariables>()
           community.name,
           community.description,
           community.icon,
-          community.isPrivate
+          community.isPrivate,
+          community.createdAt
         );
 
       return c.json(communities);

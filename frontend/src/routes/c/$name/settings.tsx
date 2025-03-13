@@ -95,19 +95,19 @@ function RouteComponent() {
         <TabsList className="mb-6 bg-transparent space-x-1">
           <TabsTrigger
             value="general"
-            className="data-[state=active]:bg-zinc-800 py-3 px-4 rounded-full hover:underline transition duration-300"
+            className="data-[state=active]:bg-secondary py-3 px-4 rounded-full hover:underline transition duration-300"
           >
             General
           </TabsTrigger>
           <TabsTrigger
             value="moderators"
-            className="data-[state=active]:bg-zinc-800 py-3 px-4 rounded-full hover:underline transition duration-300"
+            className="data-[state=active]:bg-secondary py-3 px-4 rounded-full hover:underline transition duration-300"
           >
             Moderators
           </TabsTrigger>
           <TabsTrigger
             value="danger"
-            className="data-[state=active]:bg-zinc-800 py-3 px-4 rounded-full hover:underline transition duration-300"
+            className="data-[state=active]:bg-secondary py-3 px-4 rounded-full hover:underline transition duration-300"
           >
             Danger Zone
           </TabsTrigger>

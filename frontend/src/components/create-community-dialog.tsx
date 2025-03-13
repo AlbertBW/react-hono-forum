@@ -229,7 +229,7 @@ export default function CreateCommunityDialog() {
                       />
                     </Avatar>
                   ) : (
-                    <Avatar className="bg-zinc-800 flex justify-center items-center size-12">
+                    <Avatar className="bg-accent shadow flex justify-center items-center size-12">
                       <AvatarFallback>
                         <ImagePlus />
                       </AvatarFallback>
@@ -294,7 +294,7 @@ export default function CreateCommunityDialog() {
                       className="aspect-5/1 rounded-lg object-cover max-w-80"
                     />
                   ) : (
-                    <div className="bg-zinc-800 size-12 rounded-lg flex justify-center items-center">
+                    <div className="bg-accent shadow size-12 rounded-lg flex justify-center items-center">
                       <ImagePlus />
                     </div>
                   )}

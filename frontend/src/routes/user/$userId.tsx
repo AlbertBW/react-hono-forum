@@ -68,21 +68,21 @@ function UserPage() {
       <div className="px-4">
         <div className="mb-2 flex flex-row gap-1 h-10">
           <Link
-            className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+            className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
             to={"/user/$userId/overview"}
             params={{ userId }}
           >
             Overview
           </Link>
           <Link
-            className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+            className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
             to={"/user/$userId/posts"}
             params={{ userId }}
           >
             Posts
           </Link>
           <Link
-            className={`data-[status=active]:bg-zinc-800 flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+            className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
             to={"/user/$userId/comments"}
             params={{ userId }}
           >

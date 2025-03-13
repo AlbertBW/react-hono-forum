@@ -115,7 +115,7 @@ export default function AddMod({ communityId }: { communityId: string }) {
         </div>
 
         {user && (
-          <div className="flex flex-col items-center space-y-4 mt-4 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 bg-slate-50 dark:bg-slate-900 shadow-sm">
+          <div className="flex flex-col items-center space-y-4 mt-4 border border-secondary rounded-2xl p-6 bg-secondary dark:bg-secondary shadow-sm">
             <Avatar className="size-24 ring-2 ring-primary/20 shadow-md">
               {user.image && <AvatarImage src={user.image} alt={user.name} />}
               <AvatarFallback className="bg-primary/10 text-primary font-medium text-lg">

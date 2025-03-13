@@ -151,7 +151,7 @@ export default function VoteButtons({
 
   return (
     <div
-      className="flex items-center gap-1 bg-zinc-900 size-fit rounded-full hover:cursor-default"
+      className="flex items-center gap-1 bg-secondary size-fit rounded-full hover:cursor-default"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

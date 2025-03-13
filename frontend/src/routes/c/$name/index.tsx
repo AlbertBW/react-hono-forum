@@ -78,7 +78,7 @@ function CommunityPage() {
     <>
       <div className="sm:p-4 mx-auto">
         <div
-          className={`w-full h-18 md:h-32 sm:rounded-md transition-all ${isPending ? "bg-zinc-900 opacity-0" : "bg-cover bg-center opacity-100"} `}
+          className={`w-full h-18 md:h-32 sm:rounded-md transition-all ${isPending ? "bg-secondary opacity-0" : "bg-cover bg-center opacity-100"} `}
           style={
             !isPending
               ? {

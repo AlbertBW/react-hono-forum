@@ -1,4 +1,8 @@
-import { relations, type InferSelectModel } from "drizzle-orm";
+import {
+  relations,
+  type InferInsertModel,
+  type InferSelectModel,
+} from "drizzle-orm";
 import {
   boolean,
   index,
@@ -281,8 +285,16 @@ export const moderatorRelations = relations(moderator, ({ one }) => ({
   }),
 }));
 
-// Types, Zod schemas, and other utilities
+// Select Types
 export type Thread = InferSelectModel<typeof thread>;
+export type ThreadId = Thread["id"];
+export type Community = InferSelectModel<typeof community>;
+export type CommunityId = Community["id"];
+export type Comment = InferSelectModel<typeof comment>;
+export type CommentId = Comment["id"];
+
+// Zod schemas
+export const insertUserSchema = createInsertSchema(user);
 export const insertThreadSchema = createInsertSchema(thread, {
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
   content: z
@@ -296,16 +308,12 @@ export const insertThreadSchema = createInsertSchema(thread, {
   createdAt: true,
   updatedAt: true,
 });
-export type CreateThread = z.infer<typeof insertThreadSchema>;
+export const insertThreadVoteSchema = createInsertSchema(threadVote);
 export const threadIdSchema = z.object({ id: z.string().uuid() });
-export type ThreadId = Thread["id"];
-
-export type Community = InferSelectModel<typeof community>;
 export const descriptionSchema = z
   .string()
   .min(10, "Description must be at least 10 characters")
   .max(1000);
-
 export const insertCommunitySchema = createInsertSchema(community, {
   name: z
     .string()
@@ -321,21 +329,7 @@ export const insertCommunitySchema = createInsertSchema(community, {
   icon: z.string(),
   isPrivate: z.boolean(),
 }).omit({ id: true, createdAt: true, updatedAt: true });
-export type CreateCommunity = z.infer<typeof insertCommunitySchema>;
-export type CommunityId = Community["id"];
-const fileSizeLimit = 5 * 1024 * 1024; // 5MB
-export type Image = z.infer<typeof imageSchema>;
-export const imageSchema = z
-  .instanceof(File)
-  .refine(
-    (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file.type),
-    { message: "Invalid image file type" }
-  )
-  .refine((file) => file.size <= fileSizeLimit, {
-    message: "File size should not exceed 5MB",
-  })
-  .nullable();
-
+export const insertCommunityFollowSchema = createInsertSchema(communityFollow);
 export const insertCommentSchema = createInsertSchema(comment, {
   content: z.string().min(3, "Content must be at least 3 characters").max(1000),
   threadId: z.string().uuid(),
@@ -346,12 +340,41 @@ export const insertCommentSchema = createInsertSchema(comment, {
   createdAt: true,
   updatedAt: true,
 });
-export type CreateComment = z.infer<typeof insertCommentSchema>;
-export type Comment = InferSelectModel<typeof comment>;
 export const commentIdSchema = z.object({ id: z.string().uuid() });
-export type CommentId = Comment["id"];
 
+const fileSizeLimit = 5 * 1024 * 1024; // 5MB
+export const imageSchema = z
+  .instanceof(File)
+  .refine(
+    (file) => ["image/png", "image/jpeg", "image/jpg"].includes(file.type),
+    { message: "Invalid image file type" }
+  )
+  .refine((file) => file.size <= fileSizeLimit, {
+    message: "File size should not exceed 5MB",
+  })
+  .nullable();
 export const voteSchema = z.object({
   id: z.string().uuid(),
   value: z.coerce.number().min(-1).max(1),
 });
+export const insertCommentVoteSchema = createInsertSchema(commentVote);
+
+// Create types from Zod schemas
+export type CreateUser = z.infer<typeof insertUserSchema>;
+export type CreateThread = z.infer<typeof insertThreadSchema>;
+export type CreateThreadVote = z.infer<typeof insertThreadVoteSchema>;
+export type CreateCommunity = z.infer<typeof insertCommunitySchema>;
+export type CreateCommunityFollow = z.infer<typeof insertCommunityFollowSchema>;
+export type CreateImage = z.infer<typeof imageSchema>;
+export type CreateComment = z.infer<typeof insertCommentSchema>;
+export type CreateCommentVote = z.infer<typeof insertCommentVoteSchema>;
+
+// Insert types from Drizzle ORM
+export type InsertUser = InferInsertModel<typeof user>;
+export type InsertCommunity = InferInsertModel<typeof community>;
+export type InsertModerator = InferInsertModel<typeof moderator>;
+export type InsertCommunityFollow = InferInsertModel<typeof communityFollow>;
+export type InsertThread = InferInsertModel<typeof thread>;
+export type InsertThreadVote = InferInsertModel<typeof threadVote>;
+export type InsertComment = InferInsertModel<typeof comment>;
+export type InsertCommentVote = InferInsertModel<typeof commentVote>;

@@ -13,7 +13,17 @@ import {
   voteSchema,
 } from "../db/schema";
 import { db } from "../db";
-import { and, count, desc, eq, lt, sql, asc, inArray } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  lt,
+  sql,
+  asc,
+  inArray,
+  countDistinct,
+} from "drizzle-orm";
 import { requireAuth } from "./auth";
 import type { AppVariables } from "../app";
 
@@ -113,7 +123,7 @@ export const threadsRoute = new Hono<AppVariables>()
             sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0) AS INTEGER)`.as(
               "downvotes"
             ),
-          commentsCount: count(comment.id),
+          commentsCount: countDistinct(comment.id),
         })
         .from(thread)
         .innerJoin(community, eq(thread.communityId, community.id))

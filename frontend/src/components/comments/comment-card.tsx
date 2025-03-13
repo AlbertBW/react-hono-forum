@@ -27,6 +27,7 @@ import { LoadingSpinner } from "../ui/spinner";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCommunityQueryOptions } from "@/api/community.api";
 import { toast } from "sonner";
+import { getSingleThreadQueryOptions } from "@/api/thread.api";
 
 export default function CommentCard({
   comment,
@@ -44,7 +45,8 @@ export default function CommentCard({
     loadingCreateCommentQueryOptions
   );
   const { data: community } = useQuery(getCommunityQueryOptions(communityName));
-  console.log(community);
+  const { data: thread } = useQuery(getSingleThreadQueryOptions(threadId));
+
   const openReplies = () => {
     setRepliesOpen(true);
   };
@@ -77,9 +79,11 @@ export default function CommentCard({
             [DELETED]
           </span>
         )}
-        {comment.isModerator && (
+        {comment.isModerator ? (
           <span className="text-green-600 text-xs">MOD</span>
-        )}
+        ) : thread && thread.userId === comment.userId ? (
+          <span className="text-blue-500 text-xs">OP</span>
+        ) : null}
         <span className="text-xs font-semibold text-muted-foreground">•</span>
         <span className="text-xs font-semibold text-muted-foreground">
           {getTimeAgo(comment.createdAt)}
@@ -97,8 +101,8 @@ export default function CommentCard({
       </div>
 
       <div className="flex gap-1.5 w-full pb-0.5">
-        <div className="w-8"></div>
-        <p className="text-accent-foreground/80 text-sm whitespace-pre">
+        <div className="min-w-8"></div>
+        <p className="text-accent-foreground/80 text-sm whitespace-pre-wrap">
           {comment.content}
         </p>
       </div>
@@ -156,7 +160,7 @@ export default function CommentCard({
           </div>
 
           {repliesOpen && (
-            <div className="flex gap-1.5 w-full">
+            <div className="flex gap-1.5 w-full mt-1">
               <div className="w-8"></div>
               <div className="w-full">
                 {loadingNewComment?.comment?.parentId === comment.id && (

@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/ui/spinner";
 import { THREADS_PER_PAGE } from "@/lib/constants";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { Fragment } from "react";
 
 export const Route = createFileRoute("/user/$userId/posts")({
   component: RouteComponent,
@@ -31,10 +32,10 @@ function RouteComponent() {
       ) : (
         <div>
           {pages?.map((thread) => (
-            <>
+            <Fragment key={thread.id}>
               <ThreadCard key={thread.id} thread={thread} viewContext="all" />
               <Separator />
-            </>
+            </Fragment>
           ))}
           {hasNextPage && (
             <div className="flex justify-center my-4">

@@ -42,7 +42,7 @@ export default function DeleteThread({ id }: { id: string }) {
 
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button variant={"destructive"}>Delete Community</Button>
       </DialogTrigger>
       <DialogContent>
@@ -56,7 +56,7 @@ export default function DeleteThread({ id }: { id: string }) {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogTrigger ref={triggerRef}>
+          <DialogTrigger ref={triggerRef} asChild>
             <Button variant={"outline"}>Cancel</Button>
           </DialogTrigger>
           <Button

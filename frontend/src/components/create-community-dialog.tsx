@@ -26,7 +26,7 @@ import SignInForm from "./auth/sign-in-form";
 import { useSession } from "@/lib/auth-client";
 import { useSidebar } from "./ui/sidebar";
 import {
-  Image,
+  CreateImage,
   imageSchema,
   insertCommunitySchema,
 } from "../../../server/db/schema";
@@ -87,8 +87,8 @@ export default function CreateCommunityDialog() {
       name: "",
       description: "",
       isPrivate: false,
-      iconImage: null as Image,
-      bannerImage: null as Image,
+      iconImage: null as CreateImage,
+      bannerImage: null as CreateImage,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -393,7 +393,7 @@ export default function CreateCommunityDialog() {
           )}
         />
         <DialogFooter>
-          <DialogTrigger ref={triggerRef}>
+          <DialogTrigger ref={triggerRef} asChild>
             <Button onClick={handleResetForm} variant={"outline"}>
               Cancel
             </Button>

@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import { getTimeAgo } from "@/lib/utils";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import React from "react";
 
 export const Route = createFileRoute("/user/$userId/comments")({
@@ -75,6 +75,7 @@ function ProfileCommentCard({
   comment: UserComment;
   user: User;
 }) {
+  const navigate = useNavigate();
   if (!comment.thread) {
     return null;
   }
@@ -88,25 +89,40 @@ function ProfileCommentCard({
       >
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Avatar
-              className={`flex justify-center items-center size-5 bg-black`}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                navigate({
+                  to: `/c/$name`,
+                  params: { name: comment.thread!.community.name },
+                });
+              }}
             >
-              <AvatarImage
-                src={comment.thread.community.icon}
-                alt={`${comment.thread.community.name} Icon`}
-              />
+              <Avatar
+                className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
+              >
+                <AvatarImage
+                  src={comment.thread.community.icon}
+                  alt={`${comment.thread.community.name} Icon`}
+                />
 
-              <AvatarFallback></AvatarFallback>
-            </Avatar>
+                <AvatarFallback></AvatarFallback>
+              </Avatar>
+            </button>
 
             <div className="flex flex-row items-center gap-1">
-              <Link
-                to={"/c/$name"}
-                params={{ name: comment.thread.community.name }}
-                className="text-xs font-semibold text-foreground hover:underline hover:text-blue-200/90"
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate({
+                    to: `/c/$name`,
+                    params: { name: comment.thread!.community.name },
+                  });
+                }}
+                className="text-xs font-semibold text-foreground hover:underline hover:text-blue-200/90 hover:cursor-pointer"
               >
                 c/{comment.thread.community.name}
-              </Link>
+              </button>
 
               <span className="text-xs font-semibold text-muted-foreground">
                 •
@@ -121,13 +137,18 @@ function ProfileCommentCard({
             <div className="w-5" />
 
             <div className="flex flex-row items-center gap-1">
-              <Link
-                to={"/user/$userId"}
-                params={{ userId: user.id }}
-                className="text-xs font-semibold text-foreground/90 hover:underline hover:text-blue-200/90"
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate({
+                    to: `/user/$userId`,
+                    params: { userId: user.id },
+                  });
+                }}
+                className="text-xs font-semibold text-foreground/90 hover:underline hover:text-blue-200/90 hover:cursor-pointer"
               >
                 {user.name}
-              </Link>
+              </button>
 
               <span className="text-xs font-semibold text-muted-foreground">
                 commented
@@ -149,16 +170,21 @@ function ProfileCommentCard({
         <div className="flex items-center gap-2">
           <div className="w-5" />
 
-          <Link
-            to={`/c/$name/$id`}
-            params={{
-              name: comment.thread.community.name,
-              id: comment.thread.id,
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              navigate({
+                to: `/c/$name/$id`,
+                params: {
+                  name: comment.thread!.community.name,
+                  id: comment.thread!.id,
+                },
+              });
             }}
-            className="text-muted-foreground hover:text-foreground text-xs rounded-full"
+            className="text-muted-foreground hover:text-foreground text-xs rounded-full hover:cursor-pointer"
           >
             View Thread
-          </Link>
+          </button>
         </div>
       </Link>
     </article>

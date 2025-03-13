@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Skeleton } from "./ui/skeleton";
 import { getTimeAgo } from "@/lib/utils";
@@ -21,60 +21,96 @@ export default function ThreadCard({
   viewContext?: ThreadViewContext;
 }) {
   const { data: userSession } = useSession();
+  const navigate = useNavigate();
   if (!thread.communityName) {
     throw new Error("Community name is required");
   }
 
   return (
-    <article className="pb-0 sm:pb-1 pt-1 px-2 md:px-0">
+    <article className="pb-0 sm:pb-1 pt-1 px-2 md:px-0 hover:cursor-pointer">
       <Link
         to={"/c/$name/$id"}
         params={{ name: thread.communityName, id: thread.id }}
         className="flex flex-col gap-2 p-2 hover:bg-muted/20 rounded-xl"
       >
-        <div className="flex items-center gap-2">
-          <Avatar
-            className={`flex justify-center items-center size-5 bg-black`}
-          >
-            {thread.userAvatar && thread.userId ? (
-              <Link to={"/user/$userId"} params={{ userId: thread.userId }}>
+        <div className="flex items-center gap-2 ">
+          {thread.userAvatar && thread.userId ? (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                navigate({
+                  to: `/user/$userId`,
+                  params: { userId: thread.userId! },
+                });
+              }}
+            >
+              <Avatar
+                className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
+              >
                 <AvatarImage
                   src={thread.userAvatar}
                   alt={`${thread.username} avatar`}
                 />
-              </Link>
-            ) : (
-              thread.communityIcon && (
-                <AvatarImage
-                  src={thread.communityIcon}
-                  alt={`${thread.communityName} icon`}
-                />
-              )
-            )}
-            <AvatarFallback>
-              <Skeleton />
-            </AvatarFallback>
-          </Avatar>
+                <AvatarFallback>
+                  <Skeleton />
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          ) : (
+            thread.communityIcon && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate({
+                    to: `/c/$name`,
+                    params: { name: thread.communityName },
+                  });
+                }}
+              >
+                <Avatar
+                  className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
+                >
+                  <AvatarImage
+                    src={thread.communityIcon}
+                    alt={`${thread.communityName} icon`}
+                  />
+                  <AvatarFallback>
+                    <Skeleton />
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            )
+          )}
 
           <div className="flex flex-row items-center gap-1">
             {viewContext === "community" ? (
               thread.userId && (
-                <Link
-                  to={"/user/$userId"}
-                  params={{ userId: thread.userId }}
-                  className="text-xs font-semibold text-muted-foreground hover:underline"
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate({
+                      to: `/user/$userId`,
+                      params: { userId: thread.userId! },
+                    });
+                  }}
+                  className="text-xs font-semibold text-muted-foreground hover:underline hover:cursor-pointer"
                 >
                   {thread.username || "Anonymous"}
-                </Link>
+                </button>
               )
             ) : (
-              <Link
-                to={"/c/$name"}
-                params={{ name: thread.communityName }}
-                className="text-xs font-semibold text-muted-foreground hover:underline"
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate({
+                    to: `/c/$name`,
+                    params: { name: thread.communityName },
+                  });
+                }}
+                className="text-xs font-semibold text-muted-foreground hover:underline hover:cursor-pointer"
               >
                 c/{thread.communityName}
-              </Link>
+              </button>
             )}
 
             {isMod && <span className="text-green-600 text-xs">MOD</span>}

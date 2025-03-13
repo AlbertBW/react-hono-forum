@@ -55,13 +55,13 @@ function UserPage() {
           <h1 className="text-2xl font-bold">
             {isPending ? <Skeleton className="w-40 h-8" /> : user.name}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {isPending ? (
-              <Skeleton className="w-42 h-5" />
-            ) : (
-              `Joined: ${new Date(user.createdAt).toDateString()}`
-            )}
-          </p>
+          {isPending ? (
+            <Skeleton className="w-42 h-5 text-sm" />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Joined: {new Date(user.createdAt).toDateString()}
+            </p>
+          )}
         </div>
       </div>
 

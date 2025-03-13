@@ -66,6 +66,7 @@ export function JoinButton({
           .queryKey,
       });
       queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
     },
   });
   return (
@@ -116,6 +117,7 @@ export function LeaveCommunity({
         })
       );
       queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
     },
   });
   return (

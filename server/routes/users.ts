@@ -10,7 +10,6 @@ import { user } from "../db/schema";
 export const usersRoute = new Hono<AppVariables>()
   .get(
     "/",
-    requireAuth,
     zValidator(
       "query",
       z.object({

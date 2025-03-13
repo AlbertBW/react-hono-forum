@@ -52,7 +52,7 @@ function RouteComponent() {
               </React.Fragment>
             ))}
             {hasNextPage && (
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center my-4">
                 <Button
                   disabled={!hasNextPage || isFetchingNextPage}
                   onClick={() => fetchNextPage()}

@@ -60,7 +60,9 @@ function Index() {
           </div>
         </div>
 
-        <AllThreads />
+        <div className="px-2">
+          <AllThreads />
+        </div>
       </div>
     );
   }
@@ -285,26 +287,28 @@ function HomeFeed() {
           )}
         </>
       ) : (
-        <div className="flex flex-col gap-4 mt-4">
-          <h3 className="text-lg font-semibold">
-            You don't follow any communities yet!
-          </h3>
+        <>
+          <div className="flex flex-col gap-4 mt-4 px-2 pb-2">
+            <h3 className="text-lg font-semibold">
+              You don't follow any communities yet!
+            </h3>
 
-          {!userPending && userData && (
-            <Link
-              to="/communities"
-              className="inline-flex w-fit items-center px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-500/90 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              Find communities
-            </Link>
-          )}
-          <Separator />
+            {!userPending && userData && (
+              <Link
+                to="/communities"
+                className="inline-flex w-fit items-center px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-500/90 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                Find communities
+              </Link>
+            )}
 
-          <p className="text-sm text-foreground/50">
-            or view all latest threads
-          </p>
+            <Separator />
+            <p className="text-sm text-foreground/50">
+              or view all latest threads
+            </p>
+          </div>
           <AllThreads />
-        </div>
+        </>
       )}
     </main>
   );

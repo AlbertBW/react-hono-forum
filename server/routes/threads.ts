@@ -160,8 +160,7 @@ export const threadsRoute = new Hono<AppVariables>()
           user.image,
           community.name,
           community.icon,
-          community.isPrivate,
-          threadVote.value
+          community.isPrivate
         );
 
       if (threads.length === 0) {

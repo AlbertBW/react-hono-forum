@@ -19,26 +19,24 @@ import {
 import { communitiesSeedData } from "./seed-data/communities-seed";
 import { threadsSeedData } from "./seed-data/threads-seed";
 
+function getRandomDate() {
+  // Generate a random date within the last 5 years
+  const now = new Date();
+  const fiveYearsAgo = new Date(now.setFullYear(now.getFullYear() - 5));
+  return new Date(
+    fiveYearsAgo.getTime() +
+      Math.random() * (Date.now() - fiveYearsAgo.getTime())
+  );
+}
+
 async function seed() {
   console.log("Seeding database...");
   try {
-    function getRandomDate() {
-      // Generate a random date within the last 5 years
-      const now = new Date();
-      const fiveYearsAgo = new Date(now.setFullYear(now.getFullYear() - 5));
-      return new Date(
-        fiveYearsAgo.getTime() +
-          Math.random() * (Date.now() - fiveYearsAgo.getTime())
-      );
-    }
-
     console.log("Fetching profile pictures...");
     const profilePictures: string[] = [];
 
     async function getProfilePicture() {
-      // const randomNumber = Math.floor(Math.random() * 1000) + 1;
       let imageString;
-
       do {
         const avatar = await fetch(
           `https://picsum.photos/id/${Math.floor(Math.random() * 1000) + 1}/300`
@@ -232,7 +230,7 @@ async function seed() {
           threadId: thread.id,
           userId:
             resultUsers[Math.floor(Math.random() * resultUsers.length)].id,
-          content: `Parent comment for thread ${thread.id}`,
+          content: `Parent comment for thread ${thread.title}`,
           parentId: null,
           createdAt: createdAt,
           updatedAt: updatedAt,

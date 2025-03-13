@@ -26,7 +26,7 @@ export default function ThreadCard({
   }
 
   return (
-    <article className="py-1 px-2 md:px-0">
+    <article className="pb-0 sm:pb-1 pt-1 px-2 md:px-0">
       <Link
         to={"/c/$name/$id"}
         params={{ name: thread.communityName, id: thread.id }}
@@ -36,11 +36,13 @@ export default function ThreadCard({
           <Avatar
             className={`flex justify-center items-center size-5 bg-black`}
           >
-            {thread.userAvatar ? (
-              <AvatarImage
-                src={thread.userAvatar}
-                alt={`${thread.username} avatar`}
-              />
+            {thread.userAvatar && thread.userId ? (
+              <Link to={"/user/$userId"} params={{ userId: thread.userId }}>
+                <AvatarImage
+                  src={thread.userAvatar}
+                  alt={`${thread.username} avatar`}
+                />
+              </Link>
             ) : (
               thread.communityIcon && (
                 <AvatarImage
@@ -55,15 +57,26 @@ export default function ThreadCard({
           </Avatar>
 
           <div className="flex flex-row items-center gap-1">
-            <Link
-              to={viewContext === "community" ? "/profile" : "/c/$name"}
-              params={{ name: thread.communityName }}
-              className="text-xs font-semibold text-muted-foreground hover:underline"
-            >
-              {viewContext === "community"
-                ? thread.username || "Anonymous"
-                : `c/${thread.communityName}`}
-            </Link>
+            {viewContext === "community" ? (
+              thread.userId && (
+                <Link
+                  to={"/user/$userId"}
+                  params={{ userId: thread.userId }}
+                  className="text-xs font-semibold text-muted-foreground hover:underline"
+                >
+                  {thread.username || "Anonymous"}
+                </Link>
+              )
+            ) : (
+              <Link
+                to={"/c/$name"}
+                params={{ name: thread.communityName }}
+                className="text-xs font-semibold text-muted-foreground hover:underline"
+              >
+                c/{thread.communityName}
+              </Link>
+            )}
+
             {isMod && <span className="text-green-600 text-xs">MOD</span>}
             {userSession && viewContext === "all" && !thread.userFollow && (
               <div
@@ -94,7 +107,7 @@ export default function ThreadCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-1 sm:pt-0">
           <VoteButtons
             communityName={thread.communityName}
             downvotes={thread.downvotes}

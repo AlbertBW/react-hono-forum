@@ -53,7 +53,7 @@ export const getCommentsInfiniteQueryOptions = (
   parentId?: string
 ) =>
   infiniteQueryOptions({
-    queryKey: ["threads", "infinite", threadId, limit, parentId],
+    queryKey: ["comments", "infinite", threadId, limit, parentId],
     queryFn: async ({ pageParam }) =>
       await getComments(
         threadId,

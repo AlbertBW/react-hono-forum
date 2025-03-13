@@ -43,7 +43,7 @@ export default function Comments({
         )}
 
       {commentsStatus === "pending" ? (
-        <div className="flex items-center mx-4 w-full">
+        <div className="flex items-center justify-center h-24 mx-4 w-full">
           <LoadingSpinner />
         </div>
       ) : commentsStatus === "error" ? (
@@ -92,7 +92,8 @@ export default function Comments({
           !parentId &&
           !hasNextPage &&
           comments.length > 0 && (
-            <div className="py-4">
+            <div className="flex py-4">
+              <div className="w-8" />
               <p className="text-center sm:text-start text-muted-foreground/60 text-sm">
                 All comments loaded
               </p>

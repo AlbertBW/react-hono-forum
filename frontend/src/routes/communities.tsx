@@ -30,16 +30,14 @@ export const Route = createFileRoute("/communities")({
 
 function CommunitiesPage() {
   const [search, setSearch] = useState<Search>("new");
-  const queryOptions = getAllCommunitiesInfiniteQueryOptions(12, search);
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isFetching,
     status,
     refetch,
-  } = useInfiniteQuery(queryOptions);
+  } = useInfiniteQuery(getAllCommunitiesInfiniteQueryOptions(12, search));
 
   useEffect(() => {
     refetch();
@@ -68,7 +66,7 @@ function CommunitiesPage() {
       </div>
 
       <Separator />
-      {status === "pending" || isFetching ? (
+      {status === "pending" ? (
         <div className="flex w-full justify-center items-center pt-4">
           <LoadingSpinner />
         </div>

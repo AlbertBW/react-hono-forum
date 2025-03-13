@@ -296,6 +296,8 @@ export const commentsRoute = new Hono<AppVariables>()
           where: eq(comment.parentId, id),
         });
 
+        await db.delete(commentVote).where(eq(commentVote.commentId, id));
+
         if (hasChildren) {
           const [anonymised] = await db
             .update(comment)

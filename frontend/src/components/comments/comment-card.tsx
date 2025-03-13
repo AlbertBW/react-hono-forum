@@ -24,7 +24,7 @@ import { type CreateComment as CreateCommentType } from "../../../../server/db/s
 import { Skeleton } from "../ui/skeleton";
 import { useSession } from "@/lib/auth-client";
 import { LoadingSpinner } from "../ui/spinner";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCommunityQueryOptions } from "@/api/community.api";
 import { toast } from "sonner";
 import { getSingleThreadQueryOptions } from "@/api/thread.api";
@@ -240,6 +240,7 @@ export function CommentSkeleton({ comment }: { comment?: CreateCommentType }) {
 
 function DeleteComment({ id }: { id: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: deleteComment,
     onError: () => {
@@ -248,6 +249,7 @@ function DeleteComment({ id }: { id: string }) {
     onSuccess: () => {
       toast.success("Comment deleted");
       setConfirmDelete(false);
+      queryClient.invalidateQueries({ queryKey: ["comments"] });
     },
   });
   return (

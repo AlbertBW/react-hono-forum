@@ -92,7 +92,7 @@ function UserPage() {
       </div>
       <Separator />
 
-      <main className="px-4">
+      <main className="px-2">
         <Outlet />
       </main>
     </div>

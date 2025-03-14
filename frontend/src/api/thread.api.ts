@@ -30,7 +30,7 @@ export const getSingleThreadQueryOptions = (id: ThreadId) =>
     queryKey: ["get-thread", id],
     queryFn: () => getSingleThreadById(id),
     staleTime: 1000 * 60 * 5,
-    retry: 3,
+    retry: false,
   });
 
 export async function deleteThread(id: ThreadId) {
@@ -105,7 +105,7 @@ export const getThreadsInfiniteQueryOptions = ({
     },
     staleTime: 1000 * 60 * 5,
     initialPageParam: undefined as string | undefined,
-    retry: 3,
+    retry: false,
   });
 
 export const getPopularThreadsQueryOptions = (limit = 10) =>
@@ -114,5 +114,5 @@ export const getPopularThreadsQueryOptions = (limit = 10) =>
     queryFn: () =>
       getThreadsList({ communityName: "all", orderBy: "popular", limit }),
     staleTime: 1000 * 60 * 5,
-    retry: 3,
+    retry: false,
   });

@@ -110,7 +110,7 @@ export const threadVote = pgTable(
   {
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "set null" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     threadId: text("thread_id")
       .notNull()
       .references(() => thread.id, { onDelete: "cascade" }),
@@ -231,7 +231,7 @@ export const commentVote = pgTable(
   {
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "set null" }),
+      .references(() => user.id, { onDelete: "cascade" }),
     commentId: text("comment_id")
       .notNull()
       .references(() => comment.id, { onDelete: "cascade" }),

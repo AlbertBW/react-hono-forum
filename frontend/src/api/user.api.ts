@@ -31,5 +31,13 @@ export const getUserByIdQueryOptions = (userId: string) =>
     queryKey: ["get-user", userId],
     queryFn: () => getUserById(userId),
     staleTime: 1000 * 60 * 5,
-    retry: 3,
+    retry: false,
   });
+
+export async function deleteAccount(reason?: string) {
+  const res = await api.users.$delete({ json: { reason } });
+  if (!res.ok) {
+    throw new Error("Failed to delete account");
+  }
+  return;
+}

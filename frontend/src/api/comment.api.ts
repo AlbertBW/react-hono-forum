@@ -69,7 +69,7 @@ export const getCommentsInfiniteQueryOptions = (
     },
     initialPageParam: undefined as string | undefined,
     staleTime: 1000 * 60 * 5,
-    retry: 3,
+    retry: false,
   });
 
 export const loadingCreateCommentQueryOptions = queryOptions<{
@@ -116,7 +116,7 @@ export const getUserCommentsInfiniteQueryOptions = (
     },
     initialPageParam: undefined as string | undefined,
     staleTime: 1000 * 60 * 5,
-    retry: 3,
+    retry: false,
   });
 
 export async function deleteComment(commentId: string) {

@@ -105,6 +105,7 @@ export const communitiesRoute = new Hono<AppVariables>()
           .insert(community)
           .values({
             ...communityThread,
+            ownerId: user.id,
           })
           .returning();
 

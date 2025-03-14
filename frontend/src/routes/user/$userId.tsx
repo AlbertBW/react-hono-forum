@@ -2,7 +2,7 @@ import { getUserByIdQueryOptions } from "@/api/user.api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-// import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import { useQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/user/$userId")({
 
 function UserPage() {
   const { userId } = Route.useParams();
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
   const {
     data: user,
     isPending,
@@ -37,7 +37,7 @@ function UserPage() {
   }
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto max-w-7xl">
       <div className="p-4 flex">
         <Avatar className="size-20 border-2 border-foreground">
           {isPending ? (
@@ -88,9 +88,18 @@ function UserPage() {
           >
             Comments
           </Link>
+          {session?.user?.id === userId && (
+            <Link
+              className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+              to={"/user/$userId/settings"}
+              params={{ userId }}
+            >
+              Settings
+            </Link>
+          )}
         </div>
       </div>
-      <Separator />
+      <Separator className="mb-4" />
 
       <main className="px-2">
         <Outlet />

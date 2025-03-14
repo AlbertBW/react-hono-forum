@@ -20,6 +20,7 @@ import { Route as CAllImport } from './routes/c/all'
 import { Route as AuthenticatedSignOutImport } from './routes/_authenticated/sign-out'
 import { Route as AuthenticatedProfileImport } from './routes/_authenticated/profile'
 import { Route as CNameIndexImport } from './routes/c/$name/index'
+import { Route as UserUserIdSettingsImport } from './routes/user/$userId/settings'
 import { Route as UserUserIdPostsImport } from './routes/user/$userId/posts'
 import { Route as UserUserIdOverviewImport } from './routes/user/$userId/overview'
 import { Route as UserUserIdCommentsImport } from './routes/user/$userId/comments'
@@ -80,6 +81,12 @@ const CNameIndexRoute = CNameIndexImport.update({
   id: '/c/$name/',
   path: '/c/$name/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const UserUserIdSettingsRoute = UserUserIdSettingsImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => UserUserIdRoute,
 } as any)
 
 const UserUserIdPostsRoute = UserUserIdPostsImport.update({
@@ -214,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserUserIdPostsImport
       parentRoute: typeof UserUserIdImport
     }
+    '/user/$userId/settings': {
+      id: '/user/$userId/settings'
+      path: '/settings'
+      fullPath: '/user/$userId/settings'
+      preLoaderRoute: typeof UserUserIdSettingsImport
+      parentRoute: typeof UserUserIdImport
+    }
     '/c/$name/': {
       id: '/c/$name/'
       path: '/c/$name'
@@ -253,12 +267,14 @@ interface UserUserIdRouteChildren {
   UserUserIdCommentsRoute: typeof UserUserIdCommentsRoute
   UserUserIdOverviewRoute: typeof UserUserIdOverviewRoute
   UserUserIdPostsRoute: typeof UserUserIdPostsRoute
+  UserUserIdSettingsRoute: typeof UserUserIdSettingsRoute
 }
 
 const UserUserIdRouteChildren: UserUserIdRouteChildren = {
   UserUserIdCommentsRoute: UserUserIdCommentsRoute,
   UserUserIdOverviewRoute: UserUserIdOverviewRoute,
   UserUserIdPostsRoute: UserUserIdPostsRoute,
+  UserUserIdSettingsRoute: UserUserIdSettingsRoute,
 }
 
 const UserUserIdRouteWithChildren = UserUserIdRoute._addFileChildren(
@@ -279,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/user/$userId/comments': typeof UserUserIdCommentsRoute
   '/user/$userId/overview': typeof UserUserIdOverviewRoute
   '/user/$userId/posts': typeof UserUserIdPostsRoute
+  '/user/$userId/settings': typeof UserUserIdSettingsRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -297,6 +314,7 @@ export interface FileRoutesByTo {
   '/user/$userId/comments': typeof UserUserIdCommentsRoute
   '/user/$userId/overview': typeof UserUserIdOverviewRoute
   '/user/$userId/posts': typeof UserUserIdPostsRoute
+  '/user/$userId/settings': typeof UserUserIdSettingsRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -316,6 +334,7 @@ export interface FileRoutesById {
   '/user/$userId/comments': typeof UserUserIdCommentsRoute
   '/user/$userId/overview': typeof UserUserIdOverviewRoute
   '/user/$userId/posts': typeof UserUserIdPostsRoute
+  '/user/$userId/settings': typeof UserUserIdSettingsRoute
   '/c/$name/': typeof CNameIndexRoute
   '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
 }
@@ -336,6 +355,7 @@ export interface FileRouteTypes {
     | '/user/$userId/comments'
     | '/user/$userId/overview'
     | '/user/$userId/posts'
+    | '/user/$userId/settings'
     | '/c/$name'
     | '/c/$name/create-thread'
   fileRoutesByTo: FileRoutesByTo
@@ -353,6 +373,7 @@ export interface FileRouteTypes {
     | '/user/$userId/comments'
     | '/user/$userId/overview'
     | '/user/$userId/posts'
+    | '/user/$userId/settings'
     | '/c/$name'
     | '/c/$name/create-thread'
   id:
@@ -370,6 +391,7 @@ export interface FileRouteTypes {
     | '/user/$userId/comments'
     | '/user/$userId/overview'
     | '/user/$userId/posts'
+    | '/user/$userId/settings'
     | '/c/$name/'
     | '/_authenticated/c/$name/create-thread'
   fileRoutesById: FileRoutesById
@@ -453,7 +475,8 @@ export const routeTree = rootRoute
       "children": [
         "/user/$userId/comments",
         "/user/$userId/overview",
-        "/user/$userId/posts"
+        "/user/$userId/posts",
+        "/user/$userId/settings"
       ]
     },
     "/c/$name/$id": {
@@ -472,6 +495,10 @@ export const routeTree = rootRoute
     },
     "/user/$userId/posts": {
       "filePath": "user/$userId/posts.tsx",
+      "parent": "/user/$userId"
+    },
+    "/user/$userId/settings": {
+      "filePath": "user/$userId/settings.tsx",
       "parent": "/user/$userId"
     },
     "/c/$name/": {

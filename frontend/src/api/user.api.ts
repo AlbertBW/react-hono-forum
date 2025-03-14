@@ -41,3 +41,20 @@ export async function deleteAccount(reason?: string) {
   }
   return;
 }
+
+export async function getUserOverview(userId: string) {
+  const res = await api.users.overview[":userId"].$get({ param: { userId } });
+  if (!res.ok) {
+    throw new Error("Failed to get user overview");
+  }
+  const data = await res.json();
+  return data;
+}
+
+export const getUserOverviewQueryOptions = (userId: string) =>
+  queryOptions({
+    queryKey: ["get-user-overview", userId],
+    queryFn: () => getUserOverview(userId),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });

@@ -37,7 +37,7 @@ function UserPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-3xl">
       <div className="p-4 flex">
         <Avatar className="size-20 border-2 border-foreground">
           {isPending ? (
@@ -65,8 +65,8 @@ function UserPage() {
         </div>
       </div>
 
-      <div className="px-4">
-        <div className="mb-2 flex flex-row gap-1 h-10">
+      <div className="px-2">
+        <div className="mb-2 flex flex-row gap-1 h-10 overflow-x-auto [&::-webkit-scrollbar]:hidden">
           <Link
             className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
             to={"/user/$userId/overview"}

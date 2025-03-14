@@ -1,4 +1,4 @@
-import { Cake, Globe } from "lucide-react";
+import { Cake, Globe, Shield } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -96,7 +96,12 @@ export default function Aside({
           {community.moderators.length > 0 && (
             <>
               <Separator className="mt-4 mb-2" />
-              <span className="text-sm text-muted-foreground">Moderators</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Moderators
+                </span>{" "}
+                <Shield size={16} className="text-muted-foreground" />
+              </div>
               {community.moderators.map((mod) => (
                 <div key={mod.userId} className="flex items-center gap-2 mt-2">
                   <Avatar className="size-8">

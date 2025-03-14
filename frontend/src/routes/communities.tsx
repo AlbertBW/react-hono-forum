@@ -40,7 +40,6 @@ function CommunitiesPage() {
   } = useInfiniteQuery(getAllCommunitiesInfiniteQueryOptions(12, search));
 
   useEffect(() => {
-    console.log("refetching");
     refetch();
   }, [search, refetch]);
 

@@ -81,9 +81,16 @@ export function getTimeAgo(createdAt: string) {
   );
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
+  const diffInWeeks = Math.floor(diffInDays / 7);
 
-  if (diffInDays >= 1) {
+  if (diffInWeeks >= 4) {
     return createdAtDate.toLocaleDateString();
+  }
+  if (diffInWeeks >= 1) {
+    return `${diffInWeeks} ${diffInWeeks === 1 ? "week" : "weeks"} ago`;
+  }
+  if (diffInDays >= 1) {
+    return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
   }
   if (diffInHours >= 1) {
     return `${diffInHours}h ago`;

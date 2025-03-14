@@ -64,7 +64,7 @@ function RouteComponent() {
       ) : (
         <div>
           {pages?.map((thread) => (
-            <Fragment key={1}>
+            <Fragment key={thread.threadId}>
               <UserVotedThread thread={thread} userId={userId} />
               <Separator />
             </Fragment>

@@ -88,6 +88,20 @@ function UserPage() {
           >
             Comments
           </Link>
+          <Link
+            className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+            to={"/user/$userId/votes/$votes"}
+            params={{ userId, votes: "upvotes" }}
+          >
+            Upvotes
+          </Link>
+          <Link
+            className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}
+            to={"/user/$userId/votes/$votes"}
+            params={{ userId, votes: "downvotes" }}
+          >
+            Downvotes
+          </Link>
           {session?.user?.id === userId && (
             <Link
               className={`data-[status=active]:bg-secondary flex justify-center items-center rounded-full data-[status=active]:text-foreground text-foreground/80 p-3 md:p-5 hover:underline hover:text-foreground transition text-sm md:text-base`}

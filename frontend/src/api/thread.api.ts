@@ -116,3 +116,61 @@ export const getPopularThreadsQueryOptions = (limit = 10) =>
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
+
+export type VotedThreadCardType = Awaited<
+  ReturnType<typeof getThreadsListByVoted>
+>[number];
+export async function getThreadsListByVoted({
+  userId,
+  voted,
+  limit,
+  cursor,
+}: {
+  userId: string;
+  voted: 1 | -1;
+  limit: number;
+  cursor?: string;
+}) {
+  const res = await api.threads.voted.$get({
+    query: {
+      userId,
+      voted: String(voted),
+      limit: String(limit),
+      cursor,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch threads");
+  }
+
+  return res.json();
+}
+export const getThreadsByVotedInfiniteQueryOptions = ({
+  userId,
+  voted,
+  limit = 10,
+}: {
+  userId: string;
+  voted: 1 | -1;
+  limit?: number;
+}) =>
+  infiniteQueryOptions({
+    queryKey: ["threads", "voted", userId, voted],
+    queryFn: async ({ pageParam }) =>
+      await getThreadsListByVoted({
+        userId,
+        voted,
+        limit,
+        cursor: pageParam as string | undefined,
+      }),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === 0 || lastPage.length < limit) {
+        return undefined;
+      }
+      return lastPage[lastPage.length - 1].votedAt;
+    },
+    staleTime: 1000 * 60 * 5,
+    initialPageParam: undefined as string | undefined,
+    retry: false,
+  });

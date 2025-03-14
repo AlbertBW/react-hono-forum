@@ -371,4 +371,44 @@ export const threadsRoute = new Hono<AppVariables>()
       c.status(200);
       return c.json(vote);
     }
+  )
+  .get(
+    "/voted",
+    zValidator(
+      "query",
+      z.object({
+        userId: z.string(),
+        voted: z.coerce.number().min(-1).max(1),
+        limit: z.coerce.number().int().positive().default(30),
+        cursor: z.coerce.date().optional(),
+      })
+    ),
+    async (c) => {
+      const { userId, voted, limit, cursor } = c.req.valid("query");
+
+      const data = await db
+        .select({
+          threadId: threadVote.threadId,
+          votedAt: threadVote.createdAt,
+          title: thread.title,
+          threadCreatedAt: thread.createdAt,
+          communityName: community.name,
+          communityId: thread.communityId,
+          communityIcon: community.icon,
+        })
+        .from(threadVote)
+        .where(
+          and(
+            eq(threadVote.userId, userId),
+            eq(threadVote.value, voted),
+            cursor ? lt(threadVote.createdAt, cursor) : undefined
+          )
+        )
+        .innerJoin(thread, eq(thread.id, threadVote.threadId))
+        .innerJoin(community, eq(community.id, thread.communityId))
+        .orderBy(desc(threadVote.createdAt))
+        .limit(limit);
+
+      return c.json(data, 200);
+    }
   );

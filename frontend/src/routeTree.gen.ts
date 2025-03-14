@@ -26,6 +26,7 @@ import { Route as UserUserIdOverviewImport } from './routes/user/$userId/overvie
 import { Route as UserUserIdCommentsImport } from './routes/user/$userId/comments'
 import { Route as CNameSettingsImport } from './routes/c/$name/settings'
 import { Route as CNameIdImport } from './routes/c/$name/$id'
+import { Route as UserUserIdVotesVotesImport } from './routes/user/$userId/votes/$votes'
 import { Route as AuthenticatedCNameCreateThreadImport } from './routes/_authenticated/c/$name/create-thread'
 
 // Create/Update Routes
@@ -117,6 +118,12 @@ const CNameIdRoute = CNameIdImport.update({
   id: '/c/$name/$id',
   path: '/c/$name/$id',
   getParentRoute: () => rootRoute,
+} as any)
+
+const UserUserIdVotesVotesRoute = UserUserIdVotesVotesImport.update({
+  id: '/votes/$votes',
+  path: '/votes/$votes',
+  getParentRoute: () => UserUserIdRoute,
 } as any)
 
 const AuthenticatedCNameCreateThreadRoute =
@@ -242,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCNameCreateThreadImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/user/$userId/votes/$votes': {
+      id: '/user/$userId/votes/$votes'
+      path: '/votes/$votes'
+      fullPath: '/user/$userId/votes/$votes'
+      preLoaderRoute: typeof UserUserIdVotesVotesImport
+      parentRoute: typeof UserUserIdImport
+    }
   }
 }
 
@@ -268,6 +282,7 @@ interface UserUserIdRouteChildren {
   UserUserIdOverviewRoute: typeof UserUserIdOverviewRoute
   UserUserIdPostsRoute: typeof UserUserIdPostsRoute
   UserUserIdSettingsRoute: typeof UserUserIdSettingsRoute
+  UserUserIdVotesVotesRoute: typeof UserUserIdVotesVotesRoute
 }
 
 const UserUserIdRouteChildren: UserUserIdRouteChildren = {
@@ -275,6 +290,7 @@ const UserUserIdRouteChildren: UserUserIdRouteChildren = {
   UserUserIdOverviewRoute: UserUserIdOverviewRoute,
   UserUserIdPostsRoute: UserUserIdPostsRoute,
   UserUserIdSettingsRoute: UserUserIdSettingsRoute,
+  UserUserIdVotesVotesRoute: UserUserIdVotesVotesRoute,
 }
 
 const UserUserIdRouteWithChildren = UserUserIdRoute._addFileChildren(
@@ -298,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/user/$userId/settings': typeof UserUserIdSettingsRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
+  '/user/$userId/votes/$votes': typeof UserUserIdVotesVotesRoute
 }
 
 export interface FileRoutesByTo {
@@ -317,6 +334,7 @@ export interface FileRoutesByTo {
   '/user/$userId/settings': typeof UserUserIdSettingsRoute
   '/c/$name': typeof CNameIndexRoute
   '/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
+  '/user/$userId/votes/$votes': typeof UserUserIdVotesVotesRoute
 }
 
 export interface FileRoutesById {
@@ -337,6 +355,7 @@ export interface FileRoutesById {
   '/user/$userId/settings': typeof UserUserIdSettingsRoute
   '/c/$name/': typeof CNameIndexRoute
   '/_authenticated/c/$name/create-thread': typeof AuthenticatedCNameCreateThreadRoute
+  '/user/$userId/votes/$votes': typeof UserUserIdVotesVotesRoute
 }
 
 export interface FileRouteTypes {
@@ -358,6 +377,7 @@ export interface FileRouteTypes {
     | '/user/$userId/settings'
     | '/c/$name'
     | '/c/$name/create-thread'
+    | '/user/$userId/votes/$votes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -376,6 +396,7 @@ export interface FileRouteTypes {
     | '/user/$userId/settings'
     | '/c/$name'
     | '/c/$name/create-thread'
+    | '/user/$userId/votes/$votes'
   id:
     | '__root__'
     | '/'
@@ -394,6 +415,7 @@ export interface FileRouteTypes {
     | '/user/$userId/settings'
     | '/c/$name/'
     | '/_authenticated/c/$name/create-thread'
+    | '/user/$userId/votes/$votes'
   fileRoutesById: FileRoutesById
 }
 
@@ -476,7 +498,8 @@ export const routeTree = rootRoute
         "/user/$userId/comments",
         "/user/$userId/overview",
         "/user/$userId/posts",
-        "/user/$userId/settings"
+        "/user/$userId/settings",
+        "/user/$userId/votes/$votes"
       ]
     },
     "/c/$name/$id": {
@@ -507,6 +530,10 @@ export const routeTree = rootRoute
     "/_authenticated/c/$name/create-thread": {
       "filePath": "_authenticated/c/$name/create-thread.tsx",
       "parent": "/_authenticated"
+    },
+    "/user/$userId/votes/$votes": {
+      "filePath": "user/$userId/votes/$votes.tsx",
+      "parent": "/user/$userId"
     }
   }
 }

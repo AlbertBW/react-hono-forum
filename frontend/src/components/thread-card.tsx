@@ -56,35 +56,41 @@ export default function ThreadCard({
                 </AvatarFallback>
               </Avatar>
             </button>
-          ) : (
-            thread.communityIcon && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate({
-                    to: `/c/$name`,
-                    params: { name: thread.communityName },
-                  });
-                }}
+          ) : thread.communityIcon ? (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                navigate({
+                  to: `/c/$name`,
+                  params: { name: thread.communityName },
+                });
+              }}
+            >
+              <Avatar
+                className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
               >
-                <Avatar
-                  className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
-                >
-                  <AvatarImage
-                    src={thread.communityIcon}
-                    alt={`${thread.communityName} icon`}
-                  />
-                  <AvatarFallback>
-                    <Skeleton />
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            )
+                <AvatarImage
+                  src={thread.communityIcon}
+                  alt={`${thread.communityName} icon`}
+                />
+                <AvatarFallback>
+                  <Skeleton />
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          ) : (
+            <Avatar
+              className={`flex justify-center items-center size-5 bg-black`}
+            >
+              <AvatarFallback>
+                <Skeleton />
+              </AvatarFallback>
+            </Avatar>
           )}
 
           <div className="flex flex-row items-center gap-1">
             {viewContext === "community" ? (
-              thread.userId && (
+              thread.userId ? (
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -97,6 +103,12 @@ export default function ThreadCard({
                 >
                   {thread.username || "Anonymous"}
                 </button>
+              ) : (
+                <div>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {`[deleted]`}
+                  </span>
+                </div>
               )
             ) : (
               <button

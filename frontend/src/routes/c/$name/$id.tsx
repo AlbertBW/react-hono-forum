@@ -125,7 +125,6 @@ function ThreadPage() {
         </div>
         <div className="flex items-center gap-2 py-6">
           <VoteButtons
-            communityName={thread.communityName!}
             downvotes={thread.downvotes}
             threadId={thread.id}
             upvotes={thread.upvotes}

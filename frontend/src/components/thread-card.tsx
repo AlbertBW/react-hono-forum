@@ -145,7 +145,6 @@ export default function ThreadCard({
 
         <div className="flex items-center gap-2 pt-1 sm:pt-0">
           <VoteButtons
-            communityName={thread.communityName}
             downvotes={thread.downvotes}
             threadId={thread.id}
             upvotes={thread.upvotes}

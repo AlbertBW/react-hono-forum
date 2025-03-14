@@ -102,7 +102,7 @@ function HomeCarousel() {
 
   return (
     <div className="py-2">
-      <div className="bg-gradient-to-br from-card to-ring/5 mt-1 border-2 border-primary/20 rounded-lg p-2 sm:p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
+      <div className="bg-gradient-to-br from-card to-ring/10 hover:bg-muted mt-1 border-2 border-primary/20 rounded-lg p-2 sm:p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all duration-300">
         <h1 className="text-xl font-bold mb-3 p-1 sm:p-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
           Top Discussions
         </h1>

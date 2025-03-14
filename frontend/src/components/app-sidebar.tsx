@@ -94,7 +94,7 @@ export function AppSidebar() {
             <SidebarGroup>
               <SidebarGroupLabel
                 asChild
-                className="group/label text-sm text-muted-foreground hover:bg-sidebar-primary-foreground hover:text-sidebar-accent-foreground"
+                className="group/label text-sm text-muted-foreground hover:text-sidebar-accent-foreground"
               >
                 <CollapsibleTrigger>
                   Communities

@@ -222,7 +222,7 @@ async function seed() {
           Math.random() < 0.2
             ? new Date(
                 createdAt.getTime() +
-                  Math.random() * (now - thread.createdAt.getTime())
+                  Math.random() * (now - createdAt.getTime())
               )
             : createdAt;
 

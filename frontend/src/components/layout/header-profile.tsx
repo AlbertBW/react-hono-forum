@@ -39,7 +39,14 @@ export default function HeaderProfile() {
       <DropdownMenuContent>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+        <DropdownMenuItem
+          onClick={() =>
+            navigate({
+              to: "/user/$userId",
+              params: { userId: session.user.id },
+            })
+          }
+        >
           Profile
         </DropdownMenuItem>
         <DropdownMenuItem

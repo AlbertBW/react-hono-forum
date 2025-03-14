@@ -9,32 +9,23 @@ import {
   updateThreadVote,
   createThreadVote,
 } from "@/api/thread-vote.api";
-import {
-  getSingleThreadQueryOptions,
-  getThreadsInfiniteQueryOptions,
-} from "@/api/thread.api";
-import { THREADS_PER_PAGE } from "@/lib/constants";
+import { useState } from "react";
 
 export default function VoteButtons({
   threadId,
-  communityName,
   upvotes,
   downvotes,
   userVote,
 }: {
   threadId: ThreadId;
-  communityName: string;
   upvotes: number;
   downvotes: number;
   userVote: number | null;
 }) {
   const { isPending: isSessionLoading, data: sessionData } = useSession();
+  const [votes, setVotes] = useState(upvotes - downvotes);
+  const [newUserVote, setUserVote] = useState(userVote);
   const queryClient = useQueryClient();
-  const threadsQueryOptions = getThreadsInfiniteQueryOptions({
-    communityName,
-    limit: THREADS_PER_PAGE,
-  });
-  const singleThreadQueryOptions = getSingleThreadQueryOptions(threadId);
 
   const handleVote = async (value: number) => {
     if (!sessionData) {
@@ -42,116 +33,45 @@ export default function VoteButtons({
       return;
     }
 
-    let action: () => Promise<unknown>;
-    let newUserVote: number | null;
-    let upvotesDelta = 0;
-    let downvotesDelta = 0;
-
-    if (userVote === value) {
+    if (newUserVote === value) {
       // Cancel vote
-      action = () => deleteThreadVote(threadId);
-      newUserVote = null;
-
-      // Update counts
-      if (value === 1) upvotesDelta = -1;
-      else if (value === -1) downvotesDelta = -1;
-    } else if (userVote !== null) {
+      setUserVote(null);
+      if (value === 1) setVotes((prev) => prev - 1);
+      else if (value === -1) setVotes((prev) => prev + 1);
+      return await deleteThreadVote(threadId);
+    } else if (newUserVote !== null) {
       // Change vote
-      action = () => updateThreadVote(threadId, value);
-      newUserVote = value;
-
-      // Update both counts
-      if (value === 1) {
-        upvotesDelta = 1;
-        downvotesDelta = -1;
-      } else {
-        upvotesDelta = -1;
-        downvotesDelta = 1;
-      }
+      setUserVote(value);
+      if (value === 1) setVotes((prev) => prev + 2);
+      else if (value === -1) setVotes((prev) => prev - 2);
+      return await updateThreadVote(threadId, value);
     } else {
       // New vote
-      action = () => createThreadVote(threadId, value);
-      newUserVote = value;
-
-      // Update one count
-      if (value === 1) upvotesDelta = 1;
-      else if (value === -1) downvotesDelta = 1;
+      setUserVote(value);
+      setVotes((prev) => prev + value);
+      return await createThreadVote(threadId, value);
     }
-
-    const existingThreadArray =
-      await queryClient.ensureInfiniteQueryData(threadsQueryOptions);
-    const newArray = existingThreadArray?.pages.map((page) =>
-      page.map((thread) =>
-        thread.id === threadId
-          ? {
-              ...thread,
-              userVote: newUserVote,
-              upvotes: thread.upvotes + upvotesDelta,
-              downvotes: thread.downvotes + downvotesDelta,
-            }
-          : thread
-      )
-    );
-
-    queryClient.setQueryData(threadsQueryOptions.queryKey, {
-      pages: newArray,
-      pageParams: existingThreadArray.pageParams,
-    });
-
-    const existingThread = await queryClient.ensureQueryData(
-      singleThreadQueryOptions
-    );
-    queryClient.setQueryData(singleThreadQueryOptions.queryKey, {
-      ...existingThread,
-      userVote: newUserVote,
-      upvotes: upvotes + upvotesDelta,
-      downvotes: downvotes + downvotesDelta,
-    });
-
-    const allThreadsQueryOptions = getThreadsInfiniteQueryOptions({
-      communityName: "all",
-      limit: THREADS_PER_PAGE,
-    });
-    const allThreads = await queryClient.ensureInfiniteQueryData(
-      allThreadsQueryOptions
-    );
-    const allNewArray = allThreads?.pages.map((page) =>
-      page.map((thread) =>
-        thread.id === threadId
-          ? {
-              ...thread,
-              userVote: newUserVote,
-              upvotes: thread.upvotes + upvotesDelta,
-              downvotes: thread.downvotes + downvotesDelta,
-            }
-          : thread
-      )
-    );
-
-    queryClient.setQueryData(allThreadsQueryOptions.queryKey, {
-      pages: allNewArray,
-      pageParams: allThreads.pageParams,
-    });
-
-    // Execute the action
-    return await action();
   };
 
   const mutation = useMutation({
     mutationFn: handleVote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["get-thread"] });
+    },
     onError: (error) => {
       toast.error("Error", {
         description: error instanceof Error ? error.message : `Failed to vote`,
       });
       // invalidate the query to refetch the data
-      queryClient.invalidateQueries(threadsQueryOptions);
-      queryClient.invalidateQueries(singleThreadQueryOptions);
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["get-thread"] });
     },
   });
 
   return (
     <div
-      className="flex items-center gap-1 bg-secondary size-fit rounded-full hover:cursor-default"
+      className={`flex items-center gap-1 bg-secondary size-fit rounded-full hover:cursor-default transition-colors ${newUserVote === 1 ? "bg-linear-to-br from-green-900" : newUserVote === -1 ? "bg-linear-to-tl from-destructive ring-" : ""}`}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -159,24 +79,26 @@ export default function VoteButtons({
     >
       <Button
         variant={"ghost"}
-        className={`rounded-full hover:text-green-500 ${userVote === 1 ? "text-green-500" : ""} `}
+        className={`rounded-full group transition hover:bg-transparent ${newUserVote === 1 ? "hover:fill-transparent" : newUserVote === -1 ? "hover:text-green-500" : ""}`}
         onClick={() => mutation.mutate(1)}
         disabled={mutation.isPending || isSessionLoading}
       >
-        <ThumbsUp className="size-3.5 sm:size-4" />
+        <ThumbsUp
+          className={`size-3.5 sm:size-4 ${newUserVote === 1 ? "fill-primary group-hover:fill-transparent" : newUserVote === -1 ? "" : "group-hover:text-green-500"}`}
+        />
       </Button>
 
-      <span className="text-center text-xs sm:text-sm">
-        {upvotes - downvotes}
-      </span>
+      <span className="text-center text-xs sm:text-sm">{votes}</span>
 
       <Button
         variant={"ghost"}
-        className={`rounded-full hover:text-red-500 ${userVote === -1 ? "text-red-500" : ""}`}
+        className={`rounded-full group transition hover:bg-transparent ${newUserVote === -1 ? "hover:fill-transparent" : newUserVote === 1 ? "hover:text-destructive-foreground" : ""}`}
         onClick={() => mutation.mutate(-1)}
         disabled={mutation.isPending || isSessionLoading}
       >
-        <ThumbsDown className="size-3.5 sm:size-4" />
+        <ThumbsDown
+          className={`size-3.5 sm:size-4 ${newUserVote === -1 ? "fill-primary group-hover:fill-transparent" : newUserVote === 1 ? "" : "group-hover:text-destructive-foreground"}`}
+        />
       </Button>
     </div>
   );

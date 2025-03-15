@@ -102,7 +102,7 @@ export default function CommentCard({
 
       <div className="flex gap-1.5 w-full pb-0.5">
         <div className="min-w-8"></div>
-        <p className="text-accent-foreground/80 text-sm whitespace-pre-wrap">
+        <p className="text-accent-foreground/90 text-sm whitespace-pre-wrap">
           {comment.content}
         </p>
       </div>

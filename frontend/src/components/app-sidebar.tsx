@@ -73,7 +73,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      className="text-lg font-normal text-muted-foreground h-10"
+                      className="text-lg font-normal h-10"
                       isActive={location.pathname === item.url}
                     >
                       <Link to={item.url}>
@@ -89,13 +89,10 @@ export function AppSidebar() {
           <Collapsible
             title={"Communities"}
             defaultOpen
-            className="group/collapsible text-muted-foreground"
+            className="group/collapsible"
           >
             <SidebarGroup>
-              <SidebarGroupLabel
-                asChild
-                className="group/label text-sm text-muted-foreground hover:text-sidebar-accent-foreground"
-              >
+              <SidebarGroupLabel asChild className="group/label text-sm">
                 <CollapsibleTrigger>
                   Communities
                   <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />

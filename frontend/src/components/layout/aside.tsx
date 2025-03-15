@@ -110,7 +110,7 @@ export default function Aside({
                   <Link
                     to={`/user/$userId`}
                     params={{ userId: mod.userId }}
-                    className="text-accent-foreground/60 text-sm hover:underline"
+                    className="text-accent-foreground/70 text-sm hover:underline"
                   >
                     {mod.username}
                   </Link>

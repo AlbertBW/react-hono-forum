@@ -6,7 +6,7 @@ import { ModeToggle } from "../theme-toggle";
 export default function Header() {
   return (
     <>
-      <header className="border-b border-foreground/20 fixed top-0 bg-background h-13 z-20">
+      <header className="border-b border-foreground/20 fixed top-0 h-13 z-20 bg-sidebar">
         <NavBar />
       </header>
 

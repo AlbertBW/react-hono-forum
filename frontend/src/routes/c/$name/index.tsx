@@ -149,7 +149,7 @@ function CommunityPage() {
                     <JoinButton
                       id={community.id}
                       name={community.name}
-                      className="bg-blue-600 hover:bg-blue-500 text-accent-foreground w-18"
+                      className="bg-blue-600 hover:bg-blue-500 dark:text-accent-foreground w-18"
                     />
                   ))
                 )}

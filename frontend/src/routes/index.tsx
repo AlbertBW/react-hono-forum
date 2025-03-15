@@ -75,6 +75,7 @@ function Index() {
         <h2 className="text-xl font-bold text-card-foreground p-3">
           Following
         </h2>
+
         <Separator />
         <HomeFeed />
       </div>
@@ -264,7 +265,6 @@ function HomeFeed() {
               <Separator />
             </Fragment>
           ))}
-
           {/* Invisible element to trigger loading more */}
           {hasNextPage ? (
             <div

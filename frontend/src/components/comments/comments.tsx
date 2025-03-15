@@ -73,33 +73,21 @@ export default function Comments({
         )
       )}
 
-      {comments.length > 0 &&
-        (hasNextPage ? (
-          <div className="py-4 flex justify-center sm:justify-start">
-            <Button
-              className="rounded-full"
-              variant={"secondary"}
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-            >
-              <ChevronDown />
-              <span className="text-xs pr-1">
-                {isFetchingNextPage ? "Loading..." : "View more comments"}
-              </span>
-            </Button>
-          </div>
-        ) : (
-          !parentId &&
-          !hasNextPage &&
-          comments.length > 0 && (
-            <div className="flex py-4">
-              <div className="w-8" />
-              <p className="text-center sm:text-start text-muted-foreground/60 text-sm">
-                All comments loaded
-              </p>
-            </div>
-          )
-        ))}
+      {comments.length > 0 && hasNextPage && (
+        <div className="py-4 flex justify-center sm:justify-start">
+          <Button
+            className="rounded-full"
+            variant={"secondary"}
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            <ChevronDown />
+            <span className="text-xs pr-1">
+              {isFetchingNextPage ? "Loading..." : "View more comments"}
+            </span>
+          </Button>
+        </div>
+      )}
     </>
   );
 }

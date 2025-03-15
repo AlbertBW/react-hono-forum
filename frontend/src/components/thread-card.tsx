@@ -172,7 +172,7 @@ export default function ThreadCard({
 
             <Button
               variant={"ghost"}
-              className="rounded-full sm:hidden bg-secondary"
+              className="rounded-full sm:hidden bg-secondary text-xs"
             >
               <MessageCircle /> {thread.commentsCount}
             </Button>

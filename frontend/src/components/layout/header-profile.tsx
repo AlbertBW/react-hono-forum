@@ -19,7 +19,7 @@ export default function HeaderProfile() {
 
   if (!session)
     return (
-      <Link to="/sign-in" className="[&.active]:font-bold min-w-20 text-center">
+      <Link to="/sign-in" className="[&.active]:font-bold min-w-16 text-center">
         Sign In
       </Link>
     );

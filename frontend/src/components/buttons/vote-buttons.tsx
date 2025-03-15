@@ -71,7 +71,7 @@ export default function VoteButtons({
 
   return (
     <div
-      className={`flex items-center gap-1 bg-secondary size-fit rounded-full hover:cursor-default transition-colors ${newUserVote === 1 ? "bg-linear-to-br from-green-900" : newUserVote === -1 ? "bg-linear-to-tl from-destructive ring-" : ""}`}
+      className={`flex items-center gap-1 bg-secondary size-fit rounded-full hover:cursor-default transition-all ring-2 ${newUserVote === 1 ? "dark:bg-linear-to-br dark:from-green-900 bg-linear-to-br from-green-500/20 ring-green-600/40 dark:ring-green-700/60" : newUserVote === -1 ? "dark:bg-linear-to-tl dark:from-destructive bg-linear-to-tl from-red-500/20 ring-red-500/60 dark:ring-red-700/60" : "ring-transparent"}`}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

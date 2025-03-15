@@ -74,7 +74,7 @@ export default function AllThreads() {
           )}
         </>
       ) : (
-        <div className="flex flex-col gap-4 mt-4">
+        <div className="flex flex-col gap-4 mt-4 justify-center items-center w-full">
           <h3 className="text-lg font-bold">No Threads Yet</h3>
           <p className="text-sm text-muted-foreground">
             {!userPending

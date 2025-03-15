@@ -23,7 +23,7 @@ const app = new Hono<AppVariables>();
 
 const ratelimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  maxRequests: 200,
+  maxRequests: 5,
 });
 
 app.use("*", logger());
@@ -38,8 +38,8 @@ app.use(
     credentials: true,
   })
 );
-app.use("*", ratelimiter);
-app.use("*", getUser);
+app.use("/api/*", ratelimiter);
+app.use("/api/*", getUser);
 
 const apiRoutes = app
   .basePath("/api")
@@ -52,7 +52,9 @@ const apiRoutes = app
   .route("/moderators", moderatorsRoute);
 
 app.get("*", serveStatic({ root: "../frontend/dist" }));
-app.get("*", serveStatic({ path: "../frontend/dist/index.html" }));
+app.get("*", async (c) => {
+  return c.html(await Bun.file("../frontend/dist/index.html").text());
+});
 
 export default app;
 export type ApiRoutes = typeof apiRoutes;

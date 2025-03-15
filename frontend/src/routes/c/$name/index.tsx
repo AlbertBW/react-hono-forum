@@ -90,9 +90,9 @@ function CommunityPage() {
         <div className="max-w-7xl mx-auto">
           <section className="-translate-y-1/5 sm:-translate-y-2/5 px-4 min-h-20 flex flex-col sm:flex-row justify-between w-full sm:items-end gap-2 sm:gap-4">
             <div className="flex items-end gap-2">
-              <div className="border-3 size-fit rounded-full border-black">
+              <div className="border-3 size-fit rounded-full border-secondary">
                 {isPending ? (
-                  <Avatar className={`size-14 md:size-20 lg:size-26 bg-black`}>
+                  <Avatar className={`size-14 md:size-20 lg:size-26`}>
                     <AvatarFallback>
                       <Skeleton className="h-full w-full rounded-full" />
                     </AvatarFallback>
@@ -224,7 +224,7 @@ function CommunityPage() {
                   )}
                 </>
               ) : (
-                <div className="flex flex-col gap-4 mt-4">
+                <div className="flex flex-col gap-4 mt-4 justify-center items-center w-full">
                   <h3 className="text-lg font-bold">No Threads Yet</h3>
                   <p className="text-sm text-muted-foreground">
                     {!userPending

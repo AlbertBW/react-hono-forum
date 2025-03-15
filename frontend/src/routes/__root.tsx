@@ -20,7 +20,7 @@ function Root() {
       <div className="flex flex-row h-[calc(100vh-4.6rem)]">
         <AppSidebar />
 
-        <div className="h-[calc(100vh-4.6rem)] w-full">
+        <div className="h-[calc(100vh-4.6rem)] w-full max-w-7xl mx-auto">
           <Outlet />
         </div>
       </div>

@@ -60,10 +60,11 @@ function RouteComponent() {
             }}
             className="p-4 transition-colors flex items-center group"
           >
-            <span className="font-medium mr-1">Commented on</span>
-            <span className="mr-1">"{comment.thread?.title}"</span>
-            <span className="text-sm text-primary/45 ml-1">
-              {getTimeAgo(comment.createdAt)}
+            <span className="font-medium mr-1">
+              Commented on "{comment.thread?.title}"{" "}
+              <span className="text-sm text-primary/45 ml-1">
+                {getTimeAgo(comment.createdAt)}
+              </span>
             </span>
           </Link>
         </li>
@@ -84,10 +85,11 @@ function RouteComponent() {
             }}
             className="p-4 transition-colors flex items-center group"
           >
-            <span className="font-medium mr-1">Posted</span>
-            <span className="mr-1">"{thread.title}"</span>
-            <span className="text-sm text-primary/45 ml-1">
-              {getTimeAgo(thread.createdAt)}
+            <span className="font-medium mr-1">
+              Posted "{thread.title}"
+              <span className="text-sm text-primary/45 ml-1">
+                {getTimeAgo(thread.createdAt)}
+              </span>
             </span>
           </Link>
         </li>

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import HeaderProfile from "./header-profile";
 import { SidebarTrigger } from "../ui/sidebar";
+import { ModeToggle } from "../theme-toggle";
 
 export default function Header() {
   return (
@@ -26,6 +27,7 @@ function NavBar() {
         </Link>
       </div>
       <div className="p-2 flex justify-center items-center gap-2">
+        <ModeToggle />
         <HeaderProfile />
       </div>
     </div>

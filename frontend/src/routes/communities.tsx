@@ -46,7 +46,7 @@ function CommunitiesPage() {
   const pages = data?.pages.flatMap((page) => page);
 
   return (
-    <div className="p-4">
+    <div className="p-4 max-w-7xl mx-auto">
       <div className="flex justify-between">
         <h2 className="text-2xl md:text-3xl font-semibold pb-4">
           Find Communities

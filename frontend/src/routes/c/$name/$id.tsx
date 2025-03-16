@@ -2,7 +2,6 @@ import VoteButtons from "@/components/buttons/vote-buttons";
 import Aside from "@/components/layout/aside";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { randomGradient } from "@/lib/common-styles";
 import { getTimeAgo } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -73,7 +72,7 @@ function ThreadPage() {
               <Avatar
                 className={`flex justify-center size-9 items-center bg-black`}
               >
-                <AvatarFallback className={randomGradient()}></AvatarFallback>
+                <AvatarFallback></AvatarFallback>
               </Avatar>
             )}
 

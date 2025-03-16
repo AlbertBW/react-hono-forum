@@ -102,10 +102,10 @@ export const communitiesRoute = new Hono<AppVariables>()
         );
 
         const communities = data.map((row) => ({
-          id: row.id,
-          name: row.name,
-          description: row.description,
-          icon: row.icon,
+          id: row.id as string,
+          name: row.name as string,
+          description: row.description as string,
+          icon: row.icon as string,
           threadCount: Number(row.threadCount || 0),
           userCount: Number(row.userCount || 0),
           userFollow: row.userFollow === true,
@@ -114,6 +114,7 @@ export const communitiesRoute = new Hono<AppVariables>()
 
         return c.json(communities);
       }
+
       const communities = await db
         .select({
           id: community.id,
@@ -153,8 +154,6 @@ export const communitiesRoute = new Hono<AppVariables>()
         .orderBy(
           search === "new"
             ? desc(community.createdAt)
-            : search === "popular"
-            ? desc(countDistinct(communityFollow.userId))
             : desc(community.createdAt)
         )
         .limit(limit)

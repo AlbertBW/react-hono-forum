@@ -8,7 +8,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { randomGradient } from "@/lib/common-styles";
 import { insertThreadSchema } from "../../../../../../server/db/schema";
 import { getCommunityQueryOptions } from "@/api/community.api";
 import { createThread } from "@/api/thread.api";
@@ -87,7 +86,7 @@ function RouteComponent() {
           <Avatar
             className={`flex justify-center items-center size-8 text-xl bg-black`}
           >
-            <AvatarFallback className={randomGradient()}></AvatarFallback>
+            <AvatarFallback></AvatarFallback>
           </Avatar>
         )}
         <h3 className="font-semibold pr-1">{community.name}</h3>

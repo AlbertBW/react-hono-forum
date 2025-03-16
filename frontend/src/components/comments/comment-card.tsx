@@ -1,4 +1,3 @@
-import { randomGradient } from "@/lib/common-styles";
 import { getTimeAgo } from "@/lib/utils";
 import {
   ArrowBigDown,
@@ -186,7 +185,7 @@ export function CommentSkeleton({ comment }: { comment?: CreateCommentType }) {
     <div className="flex flex-col w-full">
       <div className="flex items-center gap-1.5 w-full">
         <Avatar className={`size-8`}>
-          <AvatarFallback className={randomGradient()}>
+          <AvatarFallback>
             <LoadingSpinner />
           </AvatarFallback>
         </Avatar>

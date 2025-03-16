@@ -80,88 +80,99 @@ export const threadsRoute = new Hono<AppVariables>()
         followingIds = communityFollows.map((follow) => follow.communityId);
       }
 
-      const voteScore = sql<number>`
-      (CAST((SELECT COUNT(*) FROM ${threadVote} 
-       WHERE ${threadVote.threadId} = ${thread.id} 
-       AND ${threadVote.value} > 0) AS INTEGER) - 
-       CAST((SELECT COUNT(*) FROM ${threadVote} 
-       WHERE ${threadVote.threadId} = ${thread.id} 
-       AND ${threadVote.value} < 0) AS INTEGER))
-    `.as("popularity_score");
-
-      const threads = await db
-        .select({
-          id: thread.id,
-          title: thread.title,
-          createdAt: thread.createdAt,
-          username: user.name,
-          userId: user.id,
-          voteScore,
-          userFollow: currentUser
-            ? sql<boolean>`
+      const unformattedThreads = await db.execute(sql`
+        WITH vote_counts AS (
+          SELECT 
+            thread_id,
+            SUM(CASE WHEN value > 0 THEN 1 ELSE 0 END) AS upvotes,
+            SUM(CASE WHEN value < 0 THEN 1 ELSE 0 END) AS downvotes
+          FROM ${threadVote}
+          GROUP BY thread_id
+        )
+        SELECT
+          t.id,
+          t.title,
+          t.created_at AS "createdAt",
+          u.name AS "username",
+          u.id AS "userId",
+          COALESCE(vc.upvotes, 0) - COALESCE(vc.downvotes, 0) AS "voteScore",
+          ${
+            currentUser
+              ? sql`
             EXISTS (
               SELECT 1 FROM ${communityFollow} 
               WHERE ${communityFollow.userId} = ${currentUser.id} 
-              AND ${communityFollow.communityId} = ${thread.communityId}
+              AND ${communityFollow.communityId} = t.community_id
             )
-          `.as("userFollow")
-            : sql<boolean>`FALSE`.as("userFollow"),
-          userAvatar: sql<string | null>`CASE WHEN ${sql.raw(
-            !communityName || communityName === "all" ? "TRUE" : "FALSE"
-          )} THEN NULL ELSE ${user.image} END`,
-          communityIcon: sql<string | null>`CASE WHEN ${sql.raw(
-            !communityName || communityName === "all" ? "TRUE" : "FALSE"
-          )} THEN ${community.icon} ELSE NULL END`,
-          communityName: community.name,
-          communityId: thread.communityId,
-          communityPrivate: community.isPrivate,
-          upvotes:
-            sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} > 0) AS INTEGER)`.as(
-              "upvotes"
-            ),
-          downvotes:
-            sql<number>`CAST((SELECT COUNT(*) FROM ${threadVote} WHERE ${threadVote.threadId} = ${thread.id} AND ${threadVote.value} < 0) AS INTEGER)`.as(
-              "downvotes"
-            ),
-          commentsCount: countDistinct(comment.id),
-        })
-        .from(thread)
-        .innerJoin(community, eq(thread.communityId, community.id))
-        .where(
-          and(
+          `
+              : sql`FALSE`
+          } AS "userFollow",
+          CASE WHEN ${
+            !communityName || communityName === "all"
+          } THEN NULL ELSE u.image END AS "userAvatar",
+          CASE WHEN ${
+            !communityName || communityName === "all"
+          } THEN c.icon ELSE NULL END AS "communityIcon",
+          c.name AS "communityName",
+          t.community_id AS "communityId",
+          c.is_private AS "communityPrivate",
+          COALESCE(vc.upvotes, 0) AS "upvotes",
+          COALESCE(vc.downvotes, 0) AS "downvotes",
+          COUNT(DISTINCT cm.id) AS "commentsCount"
+        FROM ${thread} t
+        INNER JOIN ${community} c ON t.community_id = c.id
+        LEFT JOIN ${user} u ON t.user_id = u.id
+        LEFT JOIN vote_counts vc ON t.id = vc.thread_id
+        LEFT JOIN ${comment} cm ON cm.thread_id = t.id
+        WHERE
+          ${
             communityName && communityName !== "all"
-              ? sql`lower(${community.name}) = lower(${communityName})`
-              : undefined,
+              ? sql`LOWER(c.name) = LOWER(${communityName})`
+              : sql`TRUE`
+          }
+          ${
             communityName && communityName === "all"
-              ? eq(community.isPrivate, false)
-              : undefined,
-            cursor ? lt(thread.createdAt, cursor) : undefined,
-            userId ? eq(thread.userId, userId) : undefined,
-            followingIds ? inArray(community.id, followingIds) : undefined
-          )
-        )
-        .leftJoin(user, eq(thread.userId, user.id))
-        .leftJoin(threadVote, eq(threadVote.threadId, thread.id))
-        .leftJoin(comment, eq(comment.threadId, thread.id))
-        .orderBy(
-          orderBy === "popular"
-            ? desc(voteScore)
-            : orderBy === "oldest"
-            ? asc(thread.createdAt)
-            : desc(thread.createdAt)
-        )
-        .limit(limit)
-        .groupBy(
-          thread.id,
-          thread.title,
-          thread.createdAt,
-          user.name,
-          user.id,
-          user.image,
-          community.name,
-          community.icon,
-          community.isPrivate
-        );
+              ? sql`AND c.is_private = FALSE`
+              : sql``
+          }
+          ${cursor ? sql`AND t.created_at < ${cursor}` : sql``}
+          ${userId ? sql`AND t.user_id = ${userId}` : sql``}
+          ${
+            followingIds && followingIds.length > 0
+              ? sql`AND c.id IN (${sql.join(followingIds)})`
+              : sql``
+          }
+        GROUP BY
+          t.id, t.title, t.created_at, u.name, u.id, u.image, c.name, c.icon, c.is_private, vc.upvotes, vc.downvotes
+        ORDER BY
+          ${
+            orderBy === "popular"
+              ? sql`(COALESCE(vc.upvotes, 0) - COALESCE(vc.downvotes, 0)) DESC`
+              : orderBy === "oldest"
+              ? sql`t.created_at ASC`
+              : sql`t.created_at DESC`
+          }
+        LIMIT ${limit}
+      `);
+
+      // Format the result to match your expected output
+      const threads = unformattedThreads.map((row) => ({
+        id: row.id as string,
+        title: row.title as string,
+        createdAt: new Date(row.createdAt as string),
+        username: row.username as string,
+        userId: row.userId as string,
+        voteScore: Number(row.voteScore || 0),
+        userFollow: row.userFollow === true,
+        userAvatar: row.userAvatar as string,
+        communityIcon: row.communityIcon as string,
+        communityName: row.communityName as string,
+        communityId: row.communityId as string,
+        communityPrivate: row.communityPrivate === true,
+        upvotes: Number(row.upvotes || 0),
+        downvotes: Number(row.downvotes || 0),
+        commentsCount: Number(row.commentsCount || 0),
+      }));
 
       if (threads.length === 0) {
         return c.json([], 200);

@@ -80,6 +80,10 @@ export const threadsRoute = new Hono<AppVariables>()
         followingIds = communityFollows.map((follow) => follow.communityId);
       }
 
+      if (following && (!followingIds || followingIds.length === 0)) {
+        return c.json([], 200);
+      }
+
       const unformattedThreads = await db.execute(sql`
         WITH vote_counts AS (
           SELECT 
@@ -139,7 +143,9 @@ export const threadsRoute = new Hono<AppVariables>()
           ${userId ? sql`AND t.user_id = ${userId}` : sql``}
           ${
             followingIds && followingIds.length > 0
-              ? sql`AND c.id IN (${sql.join(followingIds)})`
+              ? sql`AND c.id IN (${followingIds
+                  .map((id) => sql`${id}`)
+                  .reduce((acc, curr) => sql`${acc}, ${curr}`)})`
               : sql``
           }
         GROUP BY
@@ -155,8 +161,7 @@ export const threadsRoute = new Hono<AppVariables>()
         LIMIT ${limit}
       `);
 
-      // Format the result to match your expected output
-      const threads = unformattedThreads.map((row) => ({
+      const threads = unformattedThreads.rows.map((row) => ({
         id: row.id as string,
         title: row.title as string,
         createdAt: new Date(row.createdAt as string),
@@ -281,7 +286,6 @@ export const threadsRoute = new Hono<AppVariables>()
       });
 
       if (userThread) {
-        // User is a mod or the thread owner
         const authorisedUser =
           userThread?.community.moderators.some(
             (mod) => mod.userId === user.id

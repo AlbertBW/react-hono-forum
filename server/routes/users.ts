@@ -128,7 +128,7 @@ export const usersRoute = new Hono<AppVariables>()
   )
   .get(
     "/overview/:userId",
-    zValidator("param", z.object({ userId: z.string().uuid() })),
+    zValidator("param", z.object({ userId: z.string() })),
     async (c) => {
       const { userId } = c.req.valid("param");
 
@@ -246,7 +246,7 @@ export const usersRoute = new Hono<AppVariables>()
         postCount,
         commentCount,
         communitiesCreatedCount,
-      } = statsResult[0] || {
+      } = statsResult.rows[0] || {
         threadUpvotes: 0,
         threadDownvotes: 0,
         commentUpvotes: 0,

@@ -101,7 +101,7 @@ export const communitiesRoute = new Hono<AppVariables>()
         `
         );
 
-        const communities = data.map((row) => ({
+        const communities = data.rows.map((row) => ({
           id: row.id as string,
           name: row.name as string,
           description: row.description as string,

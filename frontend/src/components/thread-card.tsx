@@ -45,7 +45,7 @@ export default function ThreadCard({
               }}
             >
               <Avatar
-                className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
+                className={`flex justify-center items-center size-5 hover:cursor-pointer`}
               >
                 <AvatarImage
                   src={thread.userAvatar}
@@ -67,7 +67,7 @@ export default function ThreadCard({
               }}
             >
               <Avatar
-                className={`flex justify-center items-center size-5 bg-black hover:cursor-pointer`}
+                className={`flex justify-center items-center size-5 hover:cursor-pointer`}
               >
                 <AvatarImage
                   src={thread.communityIcon}
@@ -79,9 +79,7 @@ export default function ThreadCard({
               </Avatar>
             </button>
           ) : (
-            <Avatar
-              className={`flex justify-center items-center size-5 bg-black`}
-            >
+            <Avatar className={`flex justify-center items-center size-5`}>
               <AvatarFallback>
                 <Skeleton />
               </AvatarFallback>

@@ -40,7 +40,16 @@ export const getAllCommunitiesInfiniteQueryOptions = (
       if (lastPage.length === 0 || lastPage.length < limit) {
         return undefined;
       }
-      return lastPage[lastPage.length - 1].createdAt;
+
+      const lastItem = lastPage[lastPage.length - 1];
+
+      if (search === "popular") {
+        return JSON.stringify({
+          count: lastItem.userCount,
+          id: lastItem.id,
+        });
+      }
+      return lastItem.createdAt;
     },
     staleTime: 1000 * 60 * 5,
     initialPageParam: undefined as string | undefined,

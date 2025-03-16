@@ -22,7 +22,6 @@ import { Fragment } from "react";
 
 export const Route = createFileRoute("/user/$userId/votes/$votes")({
   beforeLoad: async ({ params }) => {
-    console.log(location.pathname);
     if (
       location.pathname !== `/user/${params.userId}/votes/upvotes` &&
       location.pathname !== `/user/${params.userId}/votes/downvotes`
@@ -51,8 +50,6 @@ function RouteComponent() {
 
   const pages = data?.pages.flatMap((page) => page);
 
-  console.log(votes);
-
   return (
     <div>
       {status === "pending" ? (
@@ -65,7 +62,7 @@ function RouteComponent() {
         <div>
           {pages?.map((thread) => (
             <Fragment key={thread.threadId}>
-              <UserVotedThread thread={thread} userId={userId} />
+              <UserVotedThread thread={thread} userId={userId} votes={votes} />
               <Separator />
             </Fragment>
           ))}
@@ -89,9 +86,11 @@ function RouteComponent() {
 function UserVotedThread({
   userId,
   thread,
+  votes,
 }: {
   userId: string;
   thread: VotedThreadCardType;
+  votes: number;
 }) {
   const navigate = useNavigate();
 
@@ -174,7 +173,8 @@ function UserVotedThread({
                 {user?.name}
               </button>
               <span className="text-xs font-semibold text-muted-foreground">
-                upvoted on {getTimeAgo(thread.threadCreatedAt)}
+                {votes === 1 ? "upvoted" : "downvoted"}{" "}
+                {getTimeAgo(thread.votedAt)}
               </span>
             </div>
           </div>

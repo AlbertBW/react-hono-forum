@@ -131,7 +131,6 @@ export const usersRoute = new Hono<AppVariables>()
     zValidator("param", z.object({ userId: z.string().uuid() })),
     async (c) => {
       const { userId } = c.req.valid("param");
-      const startTime = performance.now();
 
       const [userData, statsResult] = await Promise.all([
         db.query.user.findFirst({
@@ -273,7 +272,7 @@ export const usersRoute = new Hono<AppVariables>()
         (userData?.moderator?.length || 0) * 15;
 
       const endTime = performance.now();
-      console.log(`User overview took ${endTime - startTime}ms`);
+
       return c.json(
         {
           user: userData,

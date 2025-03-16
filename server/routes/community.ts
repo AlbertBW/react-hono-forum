@@ -29,7 +29,7 @@ export const communitiesRoute = new Hono<AppVariables>()
       z.object({
         limit: z.coerce.number().int().positive().default(30),
         search: z.coerce.string().optional(),
-        cursor: z.coerce.date().optional(),
+        cursor: z.string().optional(),
       })
     ),
     async (c) => {
@@ -38,18 +38,94 @@ export const communitiesRoute = new Hono<AppVariables>()
       const search = c.req.valid("query").search;
       const cursor = c.req.valid("query").cursor;
 
+      const isPopularSort = search === "popular";
+      let dateTimeCursor: Date | undefined;
+      let popularCursor: { count: number; id: string } | undefined;
+
+      if (cursor) {
+        if (isPopularSort) {
+          // For popular sort, just use ID as cursor
+          popularCursor = JSON.parse(cursor);
+        } else if (search === "new") {
+          dateTimeCursor = new Date(cursor);
+        }
+      }
+
+      if (popularCursor) {
+        const { id: idCursorValue, count: followerCount } = popularCursor;
+
+        const data = await db.execute(
+          sql`
+          WITH community_stats AS (
+            SELECT 
+              c.id,
+              c.name,
+              c.description,
+              c.icon,
+              c.banner,
+              c.is_private,
+              c.created_at,
+              COUNT(DISTINCT cf.user_id) AS follower_count,
+              COUNT(DISTINCT t.id) AS thread_count,
+              ${
+                user
+                  ? sql`
+                EXISTS (
+                  SELECT 1 FROM ${communityFollow} 
+                  WHERE ${communityFollow.userId} = ${user.id} 
+                  AND ${communityFollow.communityId} = c.id
+                )
+              `
+                  : sql`FALSE`
+              } AS user_follow
+            FROM ${community} c
+            LEFT JOIN ${communityFollow} cf ON c.id = cf.community_id
+            LEFT JOIN ${thread} t ON t.community_id = c.id
+            GROUP BY c.id, c.name, c.description, c.icon, c.banner, c.is_private, c.created_at
+          )
+          SELECT 
+            id,
+            name,
+            description,
+            icon,
+            banner,
+            is_private AS "isPrivate",
+            created_at AS "createdAt",
+            follower_count AS "userCount",
+            thread_count AS "threadCount",
+            user_follow AS "userFollow"
+          FROM community_stats
+          WHERE (follower_count < ${followerCount}) OR (follower_count = ${followerCount} AND id < ${idCursorValue})
+          ORDER BY follower_count DESC, id DESC
+          LIMIT ${limit};
+        `
+        );
+
+        const communities = data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          icon: row.icon,
+          threadCount: Number(row.threadCount || 0),
+          userCount: Number(row.userCount || 0),
+          userFollow: row.userFollow === true,
+          createdAt: new Date(row.createdAt as string),
+        }));
+
+        return c.json(communities);
+      }
       const communities = await db
         .select({
           id: community.id,
           name: community.name,
           userFollow: user
             ? sql<boolean>`
-              EXISTS (
-                SELECT 1 FROM ${communityFollow} 
-                WHERE ${communityFollow.userId} = ${user.id} 
-                AND ${communityFollow.communityId} = ${community.id}
-              )
-            `.as("userFollow")
+        EXISTS (
+          SELECT 1 FROM ${communityFollow} 
+          WHERE ${communityFollow.userId} = ${user.id} 
+          AND ${communityFollow.communityId} = ${community.id}
+        )
+      `.as("userFollow")
             : sql<boolean>`FALSE`.as("userFollow"),
           description: community.description,
           icon: community.icon,
@@ -65,7 +141,9 @@ export const communitiesRoute = new Hono<AppVariables>()
         )
         .where(
           and(
-            cursor ? lt(community.createdAt, cursor) : undefined,
+            dateTimeCursor
+              ? lt(community.createdAt, dateTimeCursor)
+              : undefined,
             search !== "following" ? eq(community.isPrivate, false) : undefined,
             user && search === "following"
               ? eq(communityFollow.userId, user.id)

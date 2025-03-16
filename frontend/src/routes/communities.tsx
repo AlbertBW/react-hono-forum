@@ -117,7 +117,7 @@ function CommunityCard({ community }: { community: CommunityCardType }) {
                 </Avatar>
                 <div className="flex flex-col font-semibold">
                   <span>{community.name}</span>
-                  <span className="text-xs text-accent-foreground/60 font-light">
+                  <span className="text-xs text-accent-foreground/80 font-light">
                     {community.userCount} Members
                   </span>
                 </div>
@@ -149,7 +149,7 @@ function CommunityCard({ community }: { community: CommunityCardType }) {
               )}
             </div>
             <div className="">
-              <div className="text-sm font-light text-accent-foreground/60 line-clamp-2 mr-2.5">
+              <div className="text-sm font-light text-accent-foreground/80 line-clamp-2 mr-2.5">
                 {community.description}
               </div>
             </div>

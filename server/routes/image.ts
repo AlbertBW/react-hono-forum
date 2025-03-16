@@ -9,7 +9,7 @@ export const imageRoute = new Hono<AppVariables>().post(
   async (c) => {
     const body = await c.req.parseBody();
     const image = body["image"];
-    console.log(image);
+
     if (typeof image === "string" || !image.type.startsWith("image/")) {
       return c.json({ error: "Invalid file type" }, 400);
     }

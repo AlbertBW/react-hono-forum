@@ -226,11 +226,20 @@ async function seed() {
               )
             : createdAt;
 
+        const commentTexts = [
+          "I completely agree with this post! The way this topic impacts our community is fascinating.",
+          "Has anyone else noticed how this relates to recent events? I'm curious about your thoughts.",
+          "This is a controversial take, but I think this post misses some important context...",
+          "As someone who's studied this topic for years, this brings up several interesting points.",
+          "I'm not convinced by the arguments in this post. Here's why I think differently...",
+        ];
+
         parentComments.push({
           threadId: thread.id,
           userId:
             resultUsers[Math.floor(Math.random() * resultUsers.length)].id,
-          content: `Parent comment for thread ${thread.title}`,
+          content:
+            commentTexts[Math.floor(Math.random() * commentTexts.length)],
           parentId: null,
           createdAt: createdAt,
           updatedAt: updatedAt,
@@ -270,11 +279,22 @@ async function seed() {
               )
             : createdAt;
 
+        const childResponseTexts = [
+          "I totally agree with your point...",
+          "Have you considered the opposite perspective? I think this could be viewed differently.",
+          "This is such an insightful comment! I especially like your thoughts on this topic.",
+          "I've been researching this topic and can add some additional context that connects to broader trends.",
+          "Not sure I follow your logic here. Can you elaborate?",
+        ];
+
         childComments.push({
           threadId: comment.threadId,
           userId:
             resultUsers[Math.floor(Math.random() * resultUsers.length)].id,
-          content: `Child comment for comment ${comment.id}`,
+          content:
+            childResponseTexts[
+              Math.floor(Math.random() * childResponseTexts.length)
+            ],
           parentId: comment.id,
           createdAt: createdAt,
           updatedAt: updatedAt,

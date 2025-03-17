@@ -1,6 +1,6 @@
 # React Hono Forum
 
-A modern, full-stack Reddit-inspired forum application built with React, Hono, and Bun.
+A modern, full-stack Reddit-inspired forum application built with React, Hono, Bun, Drizzle ORM, and TanStack libraries.
 
 ## Overview
 
@@ -63,6 +63,12 @@ In the root directory (in one terminal window):
 ```bash
 # Install dependencies
 bun install
+
+# Push schema to the database
+bun drizzle-kit push
+
+# Seed database with data
+npx tsx server/db/seed/seed.ts
 
 # Start development server
 bun dev

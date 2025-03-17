@@ -51,9 +51,9 @@ const apiRoutes = app
   .route("/image", imageRoute)
   .route("/moderators", moderatorsRoute);
 
-app.get("*", serveStatic({ root: "../frontend/dist" }));
+app.get("*", serveStatic({ root: "./frontend/dist" }));
 app.get("*", async (c) => {
-  return c.html(await Bun.file("../frontend/dist/index.html").text());
+  return c.html(await Bun.file("./frontend/dist/index.html").text());
 });
 
 export default app;

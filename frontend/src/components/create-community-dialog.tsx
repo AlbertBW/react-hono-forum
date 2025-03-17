@@ -151,7 +151,7 @@ export default function CreateCommunityDialog() {
     );
 
   return (
-    <DialogContent>
+    <DialogContent className="max-h-[calc(100svh-1rem)] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>Create a community</DialogTitle>
         <DialogDescription>

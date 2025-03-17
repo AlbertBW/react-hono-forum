@@ -5,8 +5,9 @@
   "scripts": {
     "start": "bun server/index.ts",
     "dev": "bun --watch server/index.ts",
+    "build": "bun install && bun run build:frontend",
     "build:frontend": "cd frontend && bun install && bunx --bun vite build",
-    "start:prod": "bun install && bun run build:frontend && bun server/index.ts"
+    "start:prod": "bun server/index.ts"
   },
   "private": true,
   "devDependencies": {

@@ -60,10 +60,10 @@ export default function VoteButtons({
       queryClient.invalidateQueries({ queryKey: ["get-thread"] });
     },
     onError: (error) => {
+      setVotes(upvotes - downvotes);
       toast.error("Error", {
         description: error instanceof Error ? error.message : `Failed to vote`,
       });
-      // invalidate the query to refetch the data
       queryClient.invalidateQueries({ queryKey: ["threads"] });
       queryClient.invalidateQueries({ queryKey: ["get-thread"] });
     },

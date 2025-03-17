@@ -47,10 +47,10 @@ function CommunitiesPage() {
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
-      <div className="flex justify-between">
-        <h2 className="text-2xl md:text-3xl font-semibold pb-4">
+      <div className="flex justify-between pb-4">
+        <h1 className="flex justify-center items-center text-lg sm:text-xl md:text-2xl font-semibold">
           Find Communities
-        </h2>
+        </h1>
         <Select
           onValueChange={(value) => setSearch(value as Search)}
           defaultValue="new"

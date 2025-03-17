@@ -16,11 +16,6 @@ import {
   getCommunityQueryOptions,
   leaveCommunity,
 } from "@/api/community.api";
-import { THREADS_PER_PAGE } from "@/lib/constants";
-import {
-  getSingleThreadQueryOptions,
-  getThreadsInfiniteQueryOptions,
-} from "@/api/thread.api";
 import { useSession } from "@/lib/auth-client";
 
 export function JoinButton({
@@ -55,18 +50,7 @@ export function JoinButton({
       });
 
       queryClient.invalidateQueries(getCommunityQueryOptions(name));
-      queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions({
-          communityName: name,
-          limit: THREADS_PER_PAGE,
-        })
-      );
-      queryClient.invalidateQueries({
-        queryKey: getThreadsInfiniteQueryOptions({ communityName: "all" })
-          .queryKey,
-      });
-      queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
-      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["get-infinite-communities"] });
     },
   });
   return (
@@ -104,20 +88,7 @@ export function LeaveCommunity({
       });
 
       queryClient.invalidateQueries(getCommunityQueryOptions(name));
-      queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions({
-          communityName: name,
-          limit: THREADS_PER_PAGE,
-        })
-      );
-      queryClient.invalidateQueries(
-        getThreadsInfiniteQueryOptions({
-          communityName: "all",
-          limit: THREADS_PER_PAGE,
-        })
-      );
-      queryClient.invalidateQueries(getSingleThreadQueryOptions(id));
-      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["get-infinite-communities"] });
     },
   });
   return (

@@ -17,6 +17,10 @@ React Hono Forum is a full-stack community platform where users can create and j
 - **User Authentication**: Social login options using Better Auth
 - **Responsive Design**: Works on mobile and desktop devices
 
+## Live Demo
+
+Check out the live demo of React Hono Forum at [https://forum.albertbw.dev/](https://forum.albertbw.dev/)
+
 ## Technology Stack
 
 ### Frontend

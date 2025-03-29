@@ -35,6 +35,7 @@ export default function CreateComment({
   close?: () => void;
   openReplies?: () => void;
 }) {
+  const { data: userSession } = useSession();
   const [formOpen, setFormOpen] = useState(parentId ? true : false);
   const queryClient = useQueryClient();
   const dialogRef = useRef<HTMLButtonElement>(null);
@@ -49,6 +50,10 @@ export default function CreateComment({
       content: "",
     },
     onSubmit: async ({ value }) => {
+      if (!userSession) {
+        toast.error("You must be logged in to comment");
+        return;
+      }
       const limit = parentId ? REPLIES_PER_COMMENT : COMMENTS_PER_PAGE;
       const commentsQueryOptions = getCommentsInfiniteQueryOptions(
         threadId,
@@ -117,6 +122,7 @@ export default function CreateComment({
                 upvotes: 1,
                 downvotes: 0,
                 childrenCount: 0,
+                isModerator: false,
               },
               ...page,
             ];

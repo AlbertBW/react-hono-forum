@@ -119,6 +119,7 @@ export default function CommentCard({
         <div className="flex gap-1.5 items-center text-accent-foreground/80">
           {!comment.parentId && (
             <Button
+              disabled={!session}
               variant={"ghost"}
               className="text-muted-foreground hover:text-foreground rounded-full "
               onClick={() => setCreateCommentOpen(true)}

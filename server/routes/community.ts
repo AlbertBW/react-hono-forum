@@ -46,7 +46,7 @@ export const communitiesRoute = new Hono<AppVariables>()
         if (isPopularSort) {
           // For popular sort, just use ID as cursor
           popularCursor = JSON.parse(cursor);
-        } else if (search === "new") {
+        } else {
           dateTimeCursor = new Date(cursor);
         }
       }
@@ -114,7 +114,7 @@ export const communitiesRoute = new Hono<AppVariables>()
 
         return c.json(communities);
       }
-
+      console.log("dateTimeCursor", dateTimeCursor);
       const communities = await db
         .select({
           id: community.id,

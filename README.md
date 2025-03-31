@@ -12,7 +12,6 @@ React Hono Forum is a full-stack community platform where users can create and j
 - **Moderation Tools**: Community creators can assign moderators with special privileges
 - **User Profiles**: View stats, activity history, and managed communities
 - **Feed Customization**: Browse all posts or filter by followed communities
-- **Search Functionality**: Find communities based on keywords
 - **Privacy Controls**: Private communities require following to view content
 - **User Authentication**: Social login options using Better Auth
 - **Responsive Design**: Works on mobile and desktop devices
